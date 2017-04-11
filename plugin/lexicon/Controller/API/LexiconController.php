@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Claroline\LexiqueBundle\Controller\API;
+namespace Claroline\LexiconBundle\Controller\API;
 
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\Controller\Annotations\View;
@@ -22,7 +22,7 @@ use Claroline\CoreBundle\Entity\User;
 /**
  * This class still needs to be able to handle pagination.
  */
-class LexiqueController extends FOSRestController
+class LexiconController extends FOSRestController
 {
     private $messageManager;
 

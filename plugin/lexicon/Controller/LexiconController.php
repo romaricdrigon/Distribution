@@ -26,6 +26,7 @@ use Claroline\MessageBundle\Manager\MessageManager;
 use JMS\DiExtraBundle\Annotation as DI;
 use JMS\SecurityExtraBundle\Annotation as SEC;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Form\FormFactory;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -36,9 +37,9 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 
-class LexiconController
+class LexiconController extends Controller
 {
-   
+
     /**
      * @EXT\Route(
      *     "/lexicon",
@@ -50,7 +51,10 @@ class LexiconController
      */
     public function indexStartAction()
     {
-        return $this->render('ClarolineLexiconBundle:Lexicon:Workspace_lexicon.html.twig', array('dico' => 'Cool, c"est mon premier lexique !!!!!'));
+        return $this->render(
+          'ClarolineLexiconBundle:Lexicon:Workspace_lexicon.html.twig',
+          array('dico' => 'Cool, c"est mon premier lexique !!!!!')
+        );
     }
 
     /**

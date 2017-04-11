@@ -33,7 +33,6 @@ class LexiconListener
     private $router;
     private $request;
     private $httpKernel;
-    private $agendaManager;
 
     /**
      * @DI\InjectParams({
@@ -43,8 +42,7 @@ class LexiconListener
      *     "container"      = @DI\Inject("service_container"),
      *     "router"         = @DI\Inject("router"),
      *     "requestStack"   = @DI\Inject("request_stack"),
-     *     "httpKernel"     = @DI\Inject("http_kernel"),
-     *     "agendaManager"  = @DI\Inject("claroline.manager.agenda_manager")
+     *     "httpKernel"     = @DI\Inject("http_kernel")
      * })
      */
     public function __construct(
@@ -54,8 +52,7 @@ class LexiconListener
         ContainerInterface $container,
         RouterInterface $router,
         RequestStack $requestStack,
-        HttpKernelInterface $httpKernel,
-        AgendaManager $agendaManager
+        HttpKernelInterface $httpKernel
     ) {
         $this->templating = $templating;
         $this->tokenStorage = $tokenStorage;
@@ -64,7 +61,6 @@ class LexiconListener
         $this->router = $router;
         $this->request = $requestStack->getCurrentRequest();
         $this->httpKernel = $httpKernel;
-        $this->agendaManager = $agendaManager;
     }
 
     /**
