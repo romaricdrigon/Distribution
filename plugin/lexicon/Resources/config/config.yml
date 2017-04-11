@@ -1,0 +1,9 @@
+plugin:
+    # Tools declared by your plugin.
+    tools:
+    - name: claroline_lexicon
+        is_displayable_in_workspace: false
+        is_displayable_in_desktop: true
+        has_options: false (default = false: does the tool need a configuration page)
+      
+

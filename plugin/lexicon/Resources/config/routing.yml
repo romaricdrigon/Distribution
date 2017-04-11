@@ -1,0 +1,9 @@
+lexicon_bundle:
+    resource: "@ClarolineLexiconBundle/Controller/LexiconController.php"
+    prefix:   lexicon
+    type:     annotation
+
+lexicon_bundle_api:
+    resource: "@ClarolineLexiconBundle/Controller/API/LexiconController.php"
+    prefix: api
+    type: annotation
