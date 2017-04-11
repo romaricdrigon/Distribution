@@ -64,7 +64,7 @@ class LexiconListener
     }
 
     /**
-     * @DI\Observe("open_tool_desktop_dashboard")
+     * @DI\Observe("open_tool_desktop_claroline_lexicon")
      *
      * @param DisplayToolEvent $event
      */
@@ -75,8 +75,9 @@ class LexiconListener
 
     private function desktop()
     {
+
         return $this->container->get('templating')->render(
-            'ClarolineLexiconBundle::desktop_lexicon.html.twig'
+            'ClarolineLexiconBundle:Tool:home.html.twig', ["dico" => "C'est mon premier dico"]
         );
     }
 }

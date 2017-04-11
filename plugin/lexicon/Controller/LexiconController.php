@@ -52,7 +52,7 @@ class LexiconController extends Controller
     public function indexStartAction()
     {
         return $this->render(
-          'ClarolineLexiconBundle:Lexicon:Workspace_lexicon.html.twig',
+          'ClarolineLexiconBundle:Lexicon:lexicon.html.twig',
           array('dico' => 'Cool, c"est mon premier lexique !!!!!')
         );
     }
