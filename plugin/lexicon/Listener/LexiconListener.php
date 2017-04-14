@@ -20,6 +20,7 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Claroline\CoreBundle\Event\PluginOptionsEvent;
 
 /**
  *  @DI\Service()
@@ -77,7 +78,21 @@ class LexiconListener
     {
 
         return $this->container->get('templating')->render(
-            'ClarolineLexiconBundle:Tool:home.html.twig', ["dico" => "C'est mon premier dico"]
+            'ClarolineLexiconBundle:Pages:home.html.twig', ["dico" => "C'est mon premier dico, youpiiii !!! :) "]
         );
     }
+
+    /**
+     * @DI\Observe("plugin_options_lexiconbundle")
+     */
+    public function onConfig(PluginOptionsEvent $event)
+    {
+        $params = [];
+        $params['_controller'] = 'ClarolineLexiconBundle:Lexicon:pluginConfigureForm';
+        $subRequest = $this->container->get('request')->duplicate([], null, $params);
+        $response = $this->container->get('http_kernel')->handle($subRequest, KernelInterface::SUB_REQUEST);
+        $event->setResponse($response);
+        $event->stopPropagation();
+    }
+
 }
