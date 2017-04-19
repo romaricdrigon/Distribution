@@ -1,9 +1,10 @@
 import React, {PropTypes as T} from 'react'
 import {connect} from 'react-redux'
 
-import selectors from './../../selectors'
-import {selectors as paperSelectors} from './../selectors'
-import {tex} from './../../../utils/translate'
+import quizSelect from './../selectors'
+import {select as resourceSelect} from '#/main/core/layout/resource/selectors'
+import {selectors as paperSelect} from './../selectors'
+import {tex} from '#/main/core/translation'
 import {ScoreBox} from './../../../items/components/score-box.jsx'
 import {utils} from './../utils'
 
@@ -32,7 +33,7 @@ export const PaperRow = props =>
     </td>
     <td className="text-right table-actions">
       <a href={`#papers/${props.id}`} disabled={!props.showCorrection} className="btn btn-link">
-        <span className="fa fa-fw fa-eye"></span>
+        <span className="fa fa-fw fa-eye" />
       </a>
     </td>
   </tr>
@@ -70,28 +71,33 @@ let Papers = props =>
         </tr>
       </thead>
       <tbody>
-        {props.papers.map((paper, idx) =>
-          <PaperRow
-            key={idx}
-            admin={props.admin}
-            {...paper}
-            showScore={utils.showScore(props.admin, paper.finished, paperSelectors.showScoreAt(paper), paperSelectors.showCorrectionAt(paper), paperSelectors.correctionDate(paper))}
-            showCorrection={utils.showCorrection(props.admin, paper.finished, paperSelectors.showCorrectionAt(paper), paperSelectors.correctionDate(paper))}
-            scoreMax={paperSelectors.paperScoreMax(paper)} />
-        )}
+        {Object.keys(props.papers).map((paperId) => {
+          const paper = props.papers[paperId]
+
+          return (
+              <PaperRow
+                key={paperId}
+                admin={props.admin}
+                {...paper}
+                showScore={utils.showScore(props.admin, paper.finished, paperSelect.showScoreAt(paper), paperSelect.showCorrectionAt(paper), paperSelect.correctionDate(paper))}
+                showCorrection={utils.showCorrection(props.admin, paper.finished, paperSelect.showCorrectionAt(paper), paperSelect.correctionDate(paper))}
+                scoreMax={paperSelect.paperScoreMax(paper)}
+              />
+            )
+        })}
       </tbody>
     </table>
   </div>
 
 Papers.propTypes = {
   admin: T.bool.isRequired,
-  papers: T.arrayOf(T.object).isRequired
+  papers: T.object.isRequired
 }
 
 function mapStateToProps(state) {
   return {
-    admin: selectors.editable(state) || selectors.papersAdmin(state),
-    papers: paperSelectors.papers(state)
+    admin: resourceSelect.editable(state) || quizSelect.papersAdmin(state),
+    papers: paperSelect.papers(state)
   }
 }
 
