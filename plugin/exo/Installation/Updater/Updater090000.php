@@ -7,13 +7,13 @@ use Claroline\CoreBundle\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use UJM\ExoBundle\Entity\Attempt\Answer;
 use UJM\ExoBundle\Entity\Attempt\Paper;
-use UJM\ExoBundle\Entity\Item\Item;
+use UJM\ExoBundle\Entity\Question\Question;
 use UJM\ExoBundle\Entity\Step;
 use UJM\ExoBundle\Library\Options\ExerciseType;
 use UJM\ExoBundle\Library\Options\Recurrence;
 use UJM\ExoBundle\Library\Options\Transfer;
 use UJM\ExoBundle\Serializer\ExerciseSerializer;
-use UJM\ExoBundle\Serializer\Item\ItemSerializer;
+use UJM\ExoBundle\Serializer\Question\QuestionSerializer;
 use UJM\ExoBundle\Serializer\StepSerializer;
 
 class Updater090000
@@ -41,9 +41,9 @@ class Updater090000
     private $stepSerializer;
 
     /**
-     * @var ItemSerializer
+     * @var QuestionSerializer
      */
-    private $itemSerializer;
+    private $questionSerializer;
 
     /**
      * Updater080000 constructor.
@@ -52,20 +52,20 @@ class Updater090000
      * @param ObjectManager      $om
      * @param ExerciseSerializer $exerciseSerializer
      * @param StepSerializer     $stepSerializer
-     * @param ItemSerializer     $itemSerializer
+     * @param QuestionSerializer $questionSerializer
      */
     public function __construct(
         Connection $connection,
         ObjectManager $om,
         ExerciseSerializer $exerciseSerializer,
         StepSerializer $stepSerializer,
-        ItemSerializer $itemSerializer)
+        QuestionSerializer $questionSerializer)
     {
         $this->connection = $connection;
         $this->om = $om;
         $this->exerciseSerializer = $exerciseSerializer;
         $this->stepSerializer = $stepSerializer;
-        $this->itemSerializer = $itemSerializer;
+        $this->questionSerializer = $questionSerializer;
     }
 
     public function postUpdate()
@@ -156,8 +156,7 @@ class Updater090000
 
         $sth->execute();
         $answers = $sth->fetchAll();
-        $this->log(count($answers).' answers to process.');
-        foreach ($answers as $index => $answer) {
+        foreach ($answers as $answer) {
             $newData = null;
 
             // Calculate new data string (it's the json_encode of the data structure transferred in the API)
@@ -331,10 +330,6 @@ class Updater090000
                 'id' => $answer['answerId'],
                 'data' => $insertData,
             ]);
-
-            if ($index % 200 === 0) {
-                $this->log('200 answers processed.');
-            }
         }
 
         $this->log('done !');
@@ -432,33 +427,25 @@ class Updater090000
 
         $oldHints = $this->fetchHints();
 
-        $questions = $this->om->getRepository('UJMExoBundle:Item\Item')->findAll();
+        $questions = $this->om->getRepository('UJMExoBundle:Question\Question')->findAll();
         $decodedQuestions = [];
 
         $papers = $this->om->getRepository('UJMExoBundle:Attempt\Paper')->findAll();
 
         $this->om->startFlushSuite();
 
-        $this->log(count($papers).' papers to process.');
-
         /** @var Paper $paper */
         foreach ($papers as $i => $paper) {
-            // Checks the format of the structure to know if it has already been transformed
-            $structure = $paper->getStructure();
-            if (substr($structure, 0, 1) !== '{') {
-                // The structure is not a JSON (this is a little bit hacky)
-                // Update structure
-                $this->updatePaperStructure($paper, $questions, $decodedQuestions);
+            // Update structure
+            $this->updatePaperStructure($paper, $questions, $decodedQuestions);
 
-                // Update hints
-                $this->updatePaperHints($paper, $oldHints);
+            // Update hints
+            $this->updatePaperHints($paper, $oldHints);
 
-                $this->om->persist($paper);
-            }
+            $this->om->persist($paper);
 
             if ($i % 200 === 0) {
                 $this->om->forceFlush();
-                $this->log('200 papers processed.');
             }
         }
 
@@ -469,13 +456,9 @@ class Updater090000
 
     private function updatePaperStructure(Paper $paper, array $questions, array $decodedQuestions)
     {
-        $this->log('Update structure for paper: '.$paper->getId());
-
-        $this->log('Serialize quiz definition...');
         $quizDef = $this->exerciseSerializer->serialize($paper->getExercise(), [Transfer::INCLUDE_SOLUTIONS]);
 
         // Replace steps and questions by the one from paper
-        $this->log('Rebuild paper structure');
         $stepsToKeep = [];
         $questionIds = explode(';', $paper->getStructure());
         foreach ($questionIds as $index => $questionId) {
@@ -512,13 +495,12 @@ class Updater090000
         $quizDef->steps = array_values($stepsToKeep);
 
         if (!empty($questionIds)) {
-            $this->log('Process deleted questions...');
             // There are questions that are no longer linked to the exercise
             // Create a default step and add all
             $stepForOrphans = $this->stepSerializer->serialize(new Step(), [Transfer::INCLUDE_SOLUTIONS]);
 
             foreach ($questionIds as $questionId) {
-                /** @var Item $question */
+                /** @var Question $question */
                 $question = $this->pullQuestion($questionId, $questions, $decodedQuestions);
                 if ($question) {
                     $stepForOrphans->items[] = $question;
@@ -532,7 +514,6 @@ class Updater090000
             // We invalidate papers for exercise that are configured to reuse old attempts structure to generate new ones
             // The generator assumes the old data still are in the exercise
             // As we don't know if this is true for migrated data, we invalidate it to avoid possible bugs
-            $this->log('Invalidate paper...');
             $paper->setInvalidated(true);
         }
 
@@ -543,7 +524,7 @@ class Updater090000
     {
         // Get cloze questions
         $sth = $this->connection->prepare(
-            'SELECT * FROM ujm_interaction_hole WHERE originalText IS NULL'
+            'SELECT * FROM ujm_interaction_hole'
         );
 
         $sth->execute();
@@ -618,7 +599,7 @@ class Updater090000
         if (empty($decodedQuestions[$questionId])) {
             foreach ($questions as $index => $question) {
                 if ($question->getId() === (int) $questionId && !empty($question->getMimeType())) {
-                    $decodedQuestions[$questionId] = $this->itemSerializer->serialize($question, [Transfer::INCLUDE_SOLUTIONS]);
+                    $decodedQuestions[$questionId] = $this->questionSerializer->serialize($question, [Transfer::INCLUDE_SOLUTIONS]);
                     unset($questions[$index]);
                     break;
                 }
@@ -630,8 +611,6 @@ class Updater090000
 
     private function updatePaperHints(Paper $paper, array $oldHints = [])
     {
-        $this->log('Update hints for paper: '.$paper->getId());
-
         $hints = $this->pullHint($paper->getId(), $oldHints);
         foreach ($hints as $hint) {
             $answer = $paper->getAnswer($hint);

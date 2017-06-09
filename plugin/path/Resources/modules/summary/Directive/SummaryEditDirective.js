@@ -7,7 +7,9 @@ export default class SummaryEditDirective {
     this.controller = 'SummaryEditCtrl'
     this.controllerAs = 'summaryEditCtrl'
     this.template = template
-    this.scope = {}
+    this.scope = {
+      title: '='
+    }
     this.bindToController = true
   }
 }

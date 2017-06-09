@@ -8,7 +8,8 @@
  */
 
 export default class SessionCreationCoursesListModalCtrl {
-  constructor($http, $uibModalInstance, NgTableParams, CourseService, SessionService, callback) {
+
+  constructor ($http, $uibModalInstance, NgTableParams, CourseService, SessionService, callback) {
     this.$http = $http
     this.$uibModalInstance = $uibModalInstance
     this.CourseService = CourseService
@@ -22,7 +23,7 @@ export default class SessionCreationCoursesListModalCtrl {
     this.CourseService.loadCourses()
   }
 
-  selectCourse(courseId) {
+  selectCourse (courseId) {
     const course = this.courses.find(c => c['id'] === courseId)
     this.$uibModalInstance.close()
     this.SessionService.createSession(course, this.callback)

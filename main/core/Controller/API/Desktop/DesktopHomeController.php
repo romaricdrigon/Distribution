@@ -687,23 +687,22 @@ class DesktopHomeController extends Controller
 
     /**
      * @EXT\Route(
-     *     "/api/home/tab/widget/{widgetInstance}/content/configure/form/{admin}",
+     *     "/api/home/tab/widget/{widgetInstance}/content/configure/form",
      *     name="api_get_widget_instance_content_configuration_form",
-     *     defaults={"admin"=""},
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("user", options={"authenticatedUser" = true})
      *
      * Returns the widget instance content configuration form
      */
-    public function getWidgetInstanceContentConfigurationFormAction(WidgetInstance $widgetInstance, $admin = '')
+    public function getWidgetInstanceContentConfigurationFormAction(WidgetInstance $widgetInstance)
     {
         $widget = $widgetInstance->getWidget();
 
         if ($widget->isConfigurable()) {
             $event = $this->eventDispatcher->dispatch(
                 "widget_{$widgetInstance->getWidget()->getName()}_configuration",
-                new ConfigureWidgetEvent($widgetInstance, !empty($admin))
+                new ConfigureWidgetEvent($widgetInstance)
             );
             $content = $event->getContent();
         } else {

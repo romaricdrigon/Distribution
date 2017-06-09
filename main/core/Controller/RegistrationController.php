@@ -12,9 +12,12 @@
 namespace Claroline\CoreBundle\Controller;
 
 use Claroline\CoreBundle\Entity\User;
+use Claroline\CoreBundle\Form\BaseProfileType;
 use Claroline\CoreBundle\Library\Configuration\PlatformConfigurationHandler;
 use Claroline\CoreBundle\Library\HttpFoundation\XmlResponse;
-use Claroline\CoreBundle\Manager\RegistrationManager;
+use Claroline\CoreBundle\Library\Security\PlatformRoles;
+use Claroline\CoreBundle\Manager\FacetManager;
+use Claroline\CoreBundle\Manager\RoleManager;
 use Claroline\CoreBundle\Manager\UserManager;
 use JMS\DiExtraBundle\Annotation as DI;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -26,8 +29,9 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Translation\TranslatorInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Validator\ValidatorInterface;
 
 /**
  * Controller for user self-registration. Access to this functionality requires
@@ -40,40 +44,36 @@ class RegistrationController extends Controller
     private $userManager;
     private $configHandler;
     private $validator;
-    /** @var RegistrationManager */
-    private $registrationManager;
+    private $roleManager;
+    private $facetManager;
     private $translator;
 
     /**
      * @DI\InjectParams({
-     *     "request"                = @DI\Inject("request"),
-     *     "userManager"            = @DI\Inject("claroline.manager.user_manager"),
-     *     "registrationManager"    = @DI\Inject("claroline.manager.registration_manager"),
-     *     "configHandler"          = @DI\Inject("claroline.config.platform_config_handler"),
-     *     "validator"              = @DI\Inject("validator"),
-     *     "translator"             = @DI\Inject("translator")
+     *     "request"       = @DI\Inject("request"),
+     *     "userManager"   = @DI\Inject("claroline.manager.user_manager"),
+     *     "roleManager"   = @DI\Inject("claroline.manager.role_manager"),
+     *     "facetManager"  = @DI\Inject("claroline.manager.facet_manager"),
+     *     "configHandler" = @DI\Inject("claroline.config.platform_config_handler"),
+     *     "validator"     = @DI\Inject("validator"),
+     *     "translator"    = @DI\Inject("translator")
      * })
-     *
-     * @param Request                      $request
-     * @param UserManager                  $userManager
-     * @param PlatformConfigurationHandler $configHandler
-     * @param ValidatorInterface           $validator
-     * @param RegistrationManager          $registrationManager
-     * @param TranslatorInterface          $translator
      */
     public function __construct(
         Request $request,
         UserManager $userManager,
         PlatformConfigurationHandler $configHandler,
         ValidatorInterface $validator,
-        RegistrationManager $registrationManager,
+        RoleManager $roleManager,
+        FacetManager $facetManager,
         TranslatorInterface $translator
     ) {
         $this->request = $request;
         $this->userManager = $userManager;
         $this->configHandler = $configHandler;
         $this->validator = $validator;
-        $this->registrationManager = $registrationManager;
+        $this->roleManager = $roleManager;
+        $this->facetManager = $facetManager;
         $this->translator = $translator;
     }
     /**
@@ -92,7 +92,13 @@ class RegistrationController extends Controller
     {
         $this->checkAccess();
         $user = new User();
-        $form = $this->registrationManager->getRegistrationForm($user);
+        $localeManager = $this->get('claroline.manager.locale_manager');
+        $termsOfService = $this->get('claroline.common.terms_of_service_manager');
+        $facets = $this->facetManager->findForcedRegistrationFacet();
+        $form = $this->get('form.factory')->create(
+            new BaseProfileType($localeManager, $termsOfService, $this->translator, $facets),
+            $user
+        );
 
         return ['form' => $form->createView()];
     }
@@ -113,22 +119,44 @@ class RegistrationController extends Controller
     {
         $this->checkAccess();
         $user = new User();
-        $form = $this->registrationManager->getRegistrationForm($user);
-        $form->handleRequest($this->request);
+        $localeManager = $this->get('claroline.manager.locale_manager');
+        $termsOfService = $this->get('claroline.common.terms_of_service_manager');
+        $facets = $this->facetManager->findForcedRegistrationFacet();
+        $form = $this->get('form.factory')->create(new BaseProfileType($localeManager, $termsOfService, $this->translator, $facets), $user);
+        $form->handleRequest($this->get('request'));
 
         if ($form->isValid()) {
-            $this->registrationManager->registerNewUser($user, $form);
-
-            $msg = $this->translator->trans('account_created', [], 'platform');
-            $this->request->getSession()->getFlashBag()->add('success', $msg);
-
-            if ($this->configHandler->getParameter('registration_mail_validation')) {
-                $msg = $this->translator->trans('please_validate_your_account', [], 'platform');
-                $this->request->getSession()->getFlashBag()->add('success', $msg);
+            $user = $this->get('claroline.manager.user_manager')->createUser(
+                $user,
+                true,
+                [PlatformRoles::USER]
+            );
+            $this->roleManager->setRoleToRoleSubject($user, $this->configHandler->getParameter('default_role'));
+            //then we adds the differents value for facets.
+            foreach ($facets as $facet) {
+                foreach ($facet->getPanelFacets() as $panel) {
+                    foreach ($panel->getFieldsFacet() as $field) {
+                        $this->facetManager->setFieldValue($user, $field, $form->get($field->getPrettyName())->getData(), true);
+                    }
+                }
             }
 
-            if ($this->configHandler->getParameter('auto_logging_after_registration')) {
-                return $this->registrationManager->loginUser($user, $this->request);
+            $msg = $this->get('translator')->trans('account_created', [], 'platform');
+            $this->get('request')->getSession()->getFlashBag()->add('success', $msg);
+
+            if ($this->configHandler->getParameter('registration_mail_validation')) {
+                $msg = $this->get('translator')->trans('please_validate_your_account', [], 'platform');
+                $this->get('request')->getSession()->getFlashBag()->add('success', $msg);
+            }
+
+            if ($this->get('claroline.config.platform_config_handler')->getParameter('auto_logging_after_registration')) {
+                //this is bad but I don't know any other way (yet)
+                $tokenStorage = $this->get('security.token_storage');
+                $providerKey = 'main';
+                $token = new UsernamePasswordToken($user, $user->getPassword(), $providerKey, $user->getRoles());
+                $tokenStorage->setToken($token);
+                //a bit hacky I know ~
+                return $this->get('claroline.authentication_handler')->onAuthenticationSuccess($this->request, $token);
             }
 
             return $this->redirect($this->generateUrl('claro_security_login'));

@@ -14,11 +14,10 @@ namespace Claroline\CoreBundle\Controller;
 use Claroline\CoreBundle\Entity\Resource\File;
 use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Claroline\CoreBundle\Entity\User;
+use Claroline\CoreBundle\Library\Security\Collection\ResourceCollection;
 use Claroline\CoreBundle\Form\TinyMceUploadModalType;
 use Claroline\CoreBundle\Form\UpdateFileType;
-use Claroline\CoreBundle\Library\Security\Collection\ResourceCollection;
 use Claroline\CoreBundle\Library\Utilities\ClaroUtilities;
-use Claroline\CoreBundle\Library\Utilities\FileUtilities;
 use Claroline\CoreBundle\Library\Utilities\MimeTypeGuesser;
 use Claroline\CoreBundle\Manager\FileManager;
 use Claroline\CoreBundle\Manager\ResourceManager;
@@ -53,7 +52,6 @@ class FileController extends Controller
     private $tokenStorage;
     private $translator;
     private $ut;
-    private $fileUtils;
 
     /**
      * Constructor.
@@ -71,8 +69,7 @@ class FileController extends Controller
      *     "session"         = @DI\Inject("session"),
      *     "tokenStorage"    = @DI\Inject("security.token_storage"),
      *     "translator"      = @DI\Inject("translator"),
-     *     "ut"              = @DI\Inject("claroline.utilities.misc"),
-     *     "fileUtils"       = @DI\Inject("claroline.utilities.file")
+     *     "ut"              = @DI\Inject("claroline.utilities.misc")
      * })
      */
     public function __construct(
@@ -88,8 +85,7 @@ class FileController extends Controller
         SessionInterface $session,
         TokenStorageInterface $tokenStorage,
         TranslatorInterface $translator,
-        ClaroUtilities $ut,
-        FileUtilities $fileUtils
+        ClaroUtilities $ut
     ) {
         $this->authorization = $authorization;
         $this->fileDir = $fileDir;
@@ -104,7 +100,6 @@ class FileController extends Controller
         $this->tokenStorage = $tokenStorage;
         $this->translator = $translator;
         $this->ut = $ut;
-        $this->fileUtils = $fileUtils;
     }
 
     /**
@@ -120,7 +115,7 @@ class FileController extends Controller
      */
     public function streamMediaAction(ResourceNode $node)
     {
-        $collection = new ResourceCollection([$node]);
+        $collection = new ResourceCollection(array($node));
         $this->checkAccess('OPEN', $collection);
 
         // free the session as soon as possible
@@ -153,8 +148,8 @@ class FileController extends Controller
     public function uploadWithAjaxAction(ResourceNode $parent, User $user)
     {
         $parent = $this->resourceManager->getById($parent);
-        $collection = new ResourceCollection([$parent]);
-        $collection->setAttributes(['type' => 'file']);
+        $collection = new ResourceCollection(array($parent));
+        $collection->setAttributes(array('type' => 'file'));
         $this->checkAccess('CREATE', $collection);
         $file = new File();
         $fileName = $this->request->get('fileName');
@@ -186,7 +181,7 @@ class FileController extends Controller
         );
 
         return new JsonResponse(
-            [$this->resourceManager->toArray($file->getResourceNode(), $this->tokenStorage->getToken())]
+            array($this->resourceManager->toArray($file->getResourceNode(), $this->tokenStorage->getToken()))
         );
     }
 
@@ -210,19 +205,19 @@ class FileController extends Controller
     {
         $parent = $this->resourceManager->getById($parent);
         $workspace = $parent ? $parent->getWorkspace() : null;
-        $collection = new ResourceCollection([$parent]);
-        $collection->setAttributes(['type' => 'file']);
+        $collection = new ResourceCollection(array($parent));
+        $collection->setAttributes(array('type' => 'file'));
         $this->checkAccess('CREATE', $collection);
 
         if (!$this->authorization->isGranted('CREATE', $collection)) {
             //use different header so we know something went wrong
             $content = $this->translator->trans(
                 'resource_creation_denied',
-                ['%path%' => $parent->getPathForDisplay()],
+                array('%path%' => $parent->getPathForDisplay()),
                 'platform'
             );
             $response = new Response($content, 403);
-            $response->headers->add(['XXX-Claroline' => 'resource-error']);
+            $response->headers->add(array('XXX-Claroline' => 'resource-error'));
 
             return $response;
         }
@@ -241,14 +236,14 @@ class FileController extends Controller
         );
 
         if ($workspace) {
-            $rights = [];
+            $rights = array();
         } else {
-            $rights = [
-                'ROLE_ANONYMOUS' => [
-                    'open' => true, 'export' => true, 'create' => [],
+            $rights = array(
+                'ROLE_ANONYMOUS' => array(
+                    'open' => true, 'export' => true, 'create' => array(),
                     'role' => $this->roleManager->getRoleByName('ROLE_ANONYMOUS'),
-                ],
-            ];
+                ),
+            );
         }
 
         $file = $this->resourceManager->create(
@@ -278,9 +273,9 @@ class FileController extends Controller
     {
         $destinations = $this->resourceManager->getDefaultUploadDestinations();
 
-        return [
+        return array(
             'form' => $this->formFactory->create(new TinyMceUploadModalType($destinations))->createView(),
-        ];
+        );
     }
 
     /**
@@ -290,16 +285,16 @@ class FileController extends Controller
      */
     public function updateFileFormAction(File $file)
     {
-        $collection = new ResourceCollection([$file->getResourceNode()]);
+        $collection = new ResourceCollection(array($file->getResourceNode()));
         $this->checkAccess('EDIT', $collection);
         $form = $this->formFactory->create(new UpdateFileType(), new File());
 
-        return [
+        return array(
             'form' => $form->createView(),
             'resourceType' => 'file',
             'file' => $file,
             '_resource' => $file,
-        ];
+        );
     }
 
     /**
@@ -309,7 +304,7 @@ class FileController extends Controller
      */
     public function updateFileAction(File $file)
     {
-        $collection = new ResourceCollection([$file->getResourceNode()]);
+        $collection = new ResourceCollection(array($file->getResourceNode()));
         $this->checkAccess('EDIT', $collection);
         $form = $this->formFactory->create(new UpdateFileType(), new File());
         $form->handleRequest($this->request);
@@ -319,62 +314,26 @@ class FileController extends Controller
             $this->fileManager->changeFile($file, $tmpFile);
 
             if ($this->homeExtension->isDesktop()) {
-                $url = $this->generateUrl('claro_desktop_open_tool', ['toolName' => 'resource_manager']);
+                $url = $this->generateUrl('claro_desktop_open_tool', array('toolName' => 'resource_manager'));
             } else {
                 $url = $this->generateUrl(
                     'claro_workspace_open_tool',
-                    [
+                    array(
                         'toolName' => 'resource_manager',
                         'workspaceId' => $file->getResourceNode()->getWorkspace()->getId(),
-                    ]
+                    )
                 );
             }
 
             return $this->redirect($url);
         }
 
-        return [
+        return array(
             'form' => $form->createView(),
             'resourceType' => 'file',
             'file' => $file,
             '_resource' => $file,
-        ];
-    }
-
-    /**
-     * Saves a file.
-     *
-     * @EXT\Route(
-     *     "/public/file/upload",
-     *     name="upload_public_file",
-     *     options = {"expose" = true}
-     * )
-     * @EXT\Method("POST")
-     *
-     * @return JsonResponse
-     */
-    public function fileSaveAction()
-    {
-        $url = null;
-        $fileName = $this->request->get('fileName');
-        $objectClass = $this->request->get('objectClass');
-        $objectUuid = $this->request->get('objectUuid');
-        $objectName = $this->request->get('objectName');
-        $sourceType = $this->request->get('sourceType');
-
-        if ($this->request->files->get('file')) {
-            $publicFile = $this->fileUtils->createFile(
-                $this->request->files->get('file'),
-                $fileName,
-                $objectClass,
-                $objectUuid,
-                $objectName,
-                $sourceType
-            );
-            $url = $publicFile->getUrl();
-        }
-
-        return new JsonResponse($url, 200);
+        );
     }
 
     /**

@@ -1,6 +1,6 @@
 import React, { Component, PropTypes as T } from 'react'
 import { DropdownButton, MenuItem } from 'react-bootstrap'
-import {tex, trans, transChoice} from '#/main/core/translation'
+import {tex, trans, transChoice} from './../../utils/translate'
 import {getDefinition} from './../../items/item-types'
 import {Icon as ItemIcon} from './../../items/components/icon.jsx'
 
@@ -17,7 +17,7 @@ import {
 const SelectedRow = props =>
   <tr className="selected-rows active">
     <td className="text-center">
-      <span className="fa fa-fw fa-check-square" />
+      <span className="fa fa-check-square"></span>
     </td>
     <td
       colSpan={5}
@@ -27,7 +27,7 @@ const SelectedRow = props =>
     <td className="table-actions text-right">
       <button
         role="button"
-        className="btn btn-link"
+        className="btn btn-sm btn-link"
         onClick={() => props.onShare(props.selected)}
       >
         <span className="fa fa-fw fa-share" />
@@ -35,7 +35,7 @@ const SelectedRow = props =>
       </button>
       <button
         role="button"
-        className="btn btn-link btn-link-danger"
+        className="btn btn-sm btn-link btn-link-danger"
         onClick={() => props.onDelete(props.selected)}
       >
         <span className="fa fa-fw fa-trash-o" />
@@ -142,10 +142,11 @@ const QuestionRow = props =>
     <TableCell align="right" className="table-actions">
       <DropdownButton
         id={`dropdown-other-actions-${props.question.id}`}
-        title={<span className="fa fa-fw fa-ellipsis-v" />}
+        title={<span className="fa fa-fw fa-ellipsis-v"></span>}
         bsStyle="link"
         noCaret={true}
         pullRight={true}
+        className="btn-sm"
       >
         <MenuItem header>Actions</MenuItem>
         <MenuItem
@@ -157,7 +158,7 @@ const QuestionRow = props =>
         <MenuItem divider />
 
         <MenuItem
-          className="dropdown-link-danger"
+          className="link-danger"
           onClick={() => props.onDelete([props.question.id])}
         >
           <span className="fa fa-fw fa-trash-o" />&nbsp;
@@ -186,7 +187,6 @@ QuestionRow.propTypes = {
     }).isRequired
   }).isRequired,
   isSelected: T.bool,
-  toggleSelect: T.func.isRequired,
   onShare: T.func.isRequired,
   onDelete: T.func.isRequired
 }

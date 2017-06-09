@@ -11,7 +11,6 @@
 
 namespace Claroline\ClacoFormBundle;
 
-use Claroline\ClacoFormBundle\Library\Installation\AdditionalInstaller;
 use Claroline\CoreBundle\Library\PluginBundle;
 
 class ClarolineClacoFormBundle extends PluginBundle
@@ -19,15 +18,5 @@ class ClarolineClacoFormBundle extends PluginBundle
     public function hasMigrations()
     {
         return true;
-    }
-
-    public function getAdditionalInstaller()
-    {
-        return new AdditionalInstaller();
-    }
-
-    public function getRequiredPlugins()
-    {
-        return ['Claroline\\MessageBundle\\ClarolineMessageBundle'];
     }
 }

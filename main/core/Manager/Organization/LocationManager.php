@@ -359,9 +359,4 @@ class LocationManager
     {
         return isset($this->countries[$code]) ? $this->countries[$code] : null;
     }
-
-    public function getCountries()
-    {
-        return $this->countries;
-    }
 }

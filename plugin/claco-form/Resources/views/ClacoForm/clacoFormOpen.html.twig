@@ -8,10 +8,12 @@
 
 {% set _resource = clacoForm %}
 
-{% block section_panel %}
-    <div id="claco-form-app" ng-cloak="" ng-app="ClacoFormModule">
-        <div ui-view></div>
-    </div>
+{% block chat_content %}
+    {% block section_panel %}
+        <div id="claco-form-app" ng-cloak="" ng-app="ClacoFormModule">
+            <div ui-view></div>
+        </div>
+    {% endblock %}
 {% endblock %}
 
 {% block stylesheets %}
@@ -45,8 +47,6 @@
         window.template = `{{ clacoForm.getTemplate()|raw }}`
         window.nbEntries = {{ nbEntries }}
         window.nbPublishedEntries = {{ nbPublishedEntries }}
-        window.canGeneratePdf = {{ canGeneratePdf ? 'true' : 'false' }}
-        window.sharedEntries = {{ sharedEntries|json_encode|raw }}
     </script>
     <script type='text/javascript' src="{{ asset('packages/angular/angular.min.js') }}"></script>
     <script type='text/javascript' src="{{ asset('packages/ng-table/dist/ng-table.js') }}"></script>

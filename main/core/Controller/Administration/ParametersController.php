@@ -11,7 +11,6 @@
 
 namespace Claroline\CoreBundle\Controller\Administration;
 
-use Claroline\CoreBundle\Entity\Icon\IconSetTypeEnum;
 use Claroline\CoreBundle\Entity\SecurityToken;
 use Claroline\CoreBundle\Event\StrictDispatcher;
 use Claroline\CoreBundle\Form\Administration as AdminForm;
@@ -24,7 +23,6 @@ use Claroline\CoreBundle\Library\Maintenance\MaintenanceHandler;
 use Claroline\CoreBundle\Library\Session\DatabaseSessionValidator;
 use Claroline\CoreBundle\Manager\CacheManager;
 use Claroline\CoreBundle\Manager\ContentManager;
-use Claroline\CoreBundle\Manager\IconSetManager;
 use Claroline\CoreBundle\Manager\IPWhiteListManager;
 use Claroline\CoreBundle\Manager\LocaleManager;
 use Claroline\CoreBundle\Manager\MailManager;
@@ -65,6 +63,7 @@ class ParametersController extends Controller
     private $cacheManager;
     private $dbSessionValidator;
     private $refresher;
+    private $hwiManager;
     private $router;
     private $tokenManager;
     private $ipwlm;
@@ -74,7 +73,6 @@ class ParametersController extends Controller
     private $themeManager;
     private $pluginManager;
     private $session;
-    private $iconSetManager;
 
     /**
      * @DI\InjectParams({
@@ -99,8 +97,7 @@ class ParametersController extends Controller
      *     "eventDispatcher"    = @DI\Inject("claroline.event.event_dispatcher"),
      *     "themeManager"       = @DI\Inject("claroline.manager.theme_manager"),
      *     "pluginManager"      = @DI\Inject("claroline.manager.plugin_manager"),
-     *     "session"            = @DI\Inject("session"),
-     *     "iconSetManager"        = @DI\Inject("claroline.manager.icon_set_manager")
+     *     "session"            = @DI\Inject("session")
      * })
      */
     public function __construct(
@@ -125,8 +122,7 @@ class ParametersController extends Controller
         StrictDispatcher $eventDispatcher,
         ThemeManager $themeManager,
         PluginManager $pluginManager,
-        SessionInterface $session,
-        IconSetManager $iconSetManager
+        SessionInterface $session
     ) {
         $this->configHandler = $configHandler;
         $this->roleManager = $roleManager;
@@ -151,7 +147,6 @@ class ParametersController extends Controller
         $this->themeManager = $themeManager;
         $this->pluginManager = $pluginManager;
         $this->session = $session;
-        $this->iconSetManager = $iconSetManager;
     }
 
     /**
@@ -180,16 +175,6 @@ class ParametersController extends Controller
         $descriptions = $this->contentManager->getTranslatedContent(['type' => 'platformDescription']);
         $platformConfig = $this->configHandler->getPlatformConfig();
         $role = $this->roleManager->getRoleByName($platformConfig->getDefaultRole());
-        $targetEvent = $this->eventDispatcher->dispatch('external_login_target_url_event', 'LoginTargetUrl');
-        $targetLoginUrls = $targetEvent->getTargets();
-        $targetLoginUrls = array_merge(['Claroline' => 'claro_security_login'], $targetLoginUrls);
-        $currentTargetLoginUrl = $this->configHandler->getParameter('login_target_route');
-        if (!empty($currentTargetLoginUrl) && !in_array($currentTargetLoginUrl, $targetLoginUrls)) {
-            $targetLoginUrls = array_merge(
-                ["Custom [${currentTargetLoginUrl}]" => $currentTargetLoginUrl],
-                $targetLoginUrls
-            );
-        }
         $form = $this->formFactory->create(
             new AdminForm\GeneralType(
                 $this->localeManager->getAvailableLocales(),
@@ -197,8 +182,7 @@ class ParametersController extends Controller
                 $descriptions,
                 $this->translator->trans('date_form_format', [], 'platform'),
                 $this->localeManager->getUserLocale($request),
-                $this->configHandler->getLockedParamaters(),
-                $targetLoginUrls
+                $this->configHandler->getLockedParamaters()
             ),
             $platformConfig
         );
@@ -276,7 +260,6 @@ class ParametersController extends Controller
         $form = $this->formFactory->create(
             new AdminForm\AppearanceType(
                 $this->themeManager->listThemeNames(),
-                $this->iconSetManager->listIconSetNamesByType(IconSetTypeEnum::RESOURCE_ICON_SET),
                 $this->configHandler->getLockedParamaters()
             ),
             $platformConfig
@@ -288,16 +271,13 @@ class ParametersController extends Controller
                 try {
                     $this->configHandler->setParameters(
                         [
-                            'name_active' => $form['name_active']->getData(),
+                            'nameActive' => $form['name_active']->getData(),
                             'theme' => $form['theme']->getData(),
-                            'resource_icon_set' => $form['resource_icon_set']->getData(),
                             'footer' => $form['footer']->getData(),
                             'logo' => $this->request->get('selectlogo'),
                         ]
                     );
                     $theme = $this->themeManager->getThemeByNormalizedName($form['theme']->getData());
-
-                    $this->iconSetManager->setActiveResourceIconSetByCname($form['resource_icon_set']->getData());
 
                     if (!is_null($theme)) {
                         $this->configHandler->setParameter('theme_extending_default', $theme->isExtendingDefault());
@@ -746,18 +726,6 @@ class ParametersController extends Controller
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function oauthIndexAction()
-    {
-        return [];
-    }
-
-    /**
-     * @EXT\Route("/third-party-authentication", name="claro_admin_parameters_third_party_authentication_index")
-     * @EXT\Template
-     * @SEC\PreAuthorize("canOpenAdminTool('platform_parameters')")
-     *
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    public function thirdPartyAuthenticationIndexAction()
     {
         return [];
     }

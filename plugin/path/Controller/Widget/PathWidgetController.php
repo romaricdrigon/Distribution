@@ -3,115 +3,122 @@
 namespace Innova\PathBundle\Controller\Widget;
 
 use Claroline\CoreBundle\Entity\Widget\WidgetInstance;
-use Claroline\CoreBundle\Persistence\ObjectManager;
-use Claroline\TagBundle\Entity\Tag;
 use Claroline\TagBundle\Manager\TagManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Innova\PathBundle\Entity\PathWidgetConfig;
-use Innova\PathBundle\Form\Type\PathWidgetConfigType;
-use Innova\PathBundle\Manager\WidgetManager;
-use JMS\DiExtraBundle\Annotation as DI;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
+use Innova\PathBundle\Manager\PathManager;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
+/**
+ * Class PathWidgetConfigController.
+ *
+ * @Route(
+ *      "/",
+ *      name    = "innova_path_widget",
+ *      service = "innova_path.controller.path_widget"
+ * )
+ */
 class PathWidgetController
 {
     /**
-     * @var ObjectManager
+     * Current Entity Manager.
+     *
+     * @var \Doctrine\Common\Persistence\ObjectManager
      */
     protected $om;
 
     /**
-     * @var FormFactoryInterface
+     * @var \Symfony\Component\Form\FormFactoryInterface
      */
     protected $formFactory;
 
     /**
-     * @var AuthorizationCheckerInterface
+     * @var \Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface
      */
-    protected $authorization;
+    protected $authorizationChecker;
 
     /**
-     * @var WidgetManager
+     * Current path manager.
+     *
+     * @var \Innova\PathBundle\Manager\PathManager
      */
-    protected $widgetManager;
+    protected $pathManager;
 
     /**
-     * @var TagManager
+     * @var \Claroline\TagBundle\Manager\TagManager
      */
     protected $tagManager;
 
     /**
-     * PathWidgetController constructor.
+     * Class constructor.
      *
-     * @DI\InjectParams({
-     *     "authorization" = @DI\Inject("security.authorization_checker"),
-     *     "om"            = @DI\Inject("claroline.persistence.object_manager"),
-     *     "formFactory"   = @DI\Inject("form.factory"),
-     *     "widgetManager" = @DI\Inject("innova_path.manager.widget"),
-     *     "tagManager"    = @DI\Inject("claroline.manager.tag_manager")
-     * })
-     *
-     * @param AuthorizationCheckerInterface $authorization
-     * @param ObjectManager                 $om
-     * @param FormFactoryInterface          $formFactory
-     * @param WidgetManager                 $widgetManager
-     * @param TagManager                    $tagManager
+     * @param \Doctrine\Common\Persistence\ObjectManager                                   $om
+     * @param \Symfony\Component\Form\FormFactoryInterface                                 $formFactory
+     * @param \Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface $authorizationChecker
+     * @param \Innova\PathBundle\Manager\PathManager                                       $pathManager
+     * @param \Claroline\TagBundle\Manager\TagManager                                      $tagManager
      */
     public function __construct(
-        AuthorizationCheckerInterface $authorization,
         ObjectManager                 $om,
         FormFactoryInterface          $formFactory,
-        WidgetManager                 $widgetManager,
+        AuthorizationCheckerInterface $authorizationChecker,
+        PathManager                   $pathManager,
         TagManager                    $tagManager)
     {
-        $this->authorization = $authorization;
         $this->om = $om;
         $this->formFactory = $formFactory;
-        $this->widgetManager = $widgetManager;
+        $this->authorizationChecker = $authorizationChecker;
+        $this->pathManager = $pathManager;
         $this->tagManager = $tagManager;
     }
 
     /**
      * Update or create the configuration of a Widget instance.
      *
-     * @EXT\Route("/widget/config/{widgetInstance}", name= "innova_path_widget_config")
-     * @EXT\Method("POST")
-     * @EXT\Template("InnovaPathBundle:Widget:config.html.twig")
+     * @param WidgetInstance                            $widgetInstance
+     * @param \Symfony\Component\HttpFoundation\Request $request
      *
-     * @param WidgetInstance $widgetInstance
-     * @param Request        $request
+     * @throws \Symfony\Component\Security\Core\Exception\AccessDeniedException
      *
-     * @throws AccessDeniedException
+     * @return array
      *
-     * @return array|Response
+     * @Route(
+     *      "/widget/config/{widgetInstance}",
+     *      name= "innova_path_widget_config"
+     * )
+     * @Method("POST")
+     * @Template("InnovaPathBundle:Widget:config.html.twig")
      */
     public function updateConfigAction(WidgetInstance $widgetInstance, Request $request)
     {
         // User can not edit the Widget
-        if (!$this->authorization->isGranted('edit', $widgetInstance)) {
+        if (!$this->authorizationChecker->isGranted('edit', $widgetInstance)) {
             throw new AccessDeniedException();
         }
 
-        $config = $this->widgetManager->getConfig($widgetInstance);
+        $config = $this->pathManager->getWidgetConfig($widgetInstance);
         if (null === $config) {
             $config = new PathWidgetConfig();
             $config->setWidgetInstance($widgetInstance);
         }
 
-        $form = $this->formFactory->create(new PathWidgetConfigType(), $config);
+        $form = $this->formFactory->create('innova_path_widget_config', $config);
 
-        $form->handleRequest($request);
+        $form->bind($request);
         if ($form->isValid()) {
             // Remove tags
             $tagsToRemove = $form->get('removeTags')->getData();
             if (!empty($tagsToRemove)) {
                 // Search the Tag by ID
                 $existingTags = $config->getTags()->toArray();
-                $toRemoveArray = array_filter($existingTags, function (Tag $entry) use ($tagsToRemove) {
+                $toRemoveArray = array_filter($existingTags, function ($entry) use ($tagsToRemove) {
                     return in_array($entry->getId(), $tagsToRemove);
                 });
 

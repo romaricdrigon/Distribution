@@ -87,12 +87,12 @@
                 {% endif %}
                 {% if not _resource.getPrimaryResource() is empty %}
                     <hr>
-                    <iframe class="claroline-app-iframe" src="{{ path('claro_resource_open', { 'resourceType': _resource.getPrimaryResource().getResourceType().getName(), 'node': _resource.getPrimaryResource().getId() }) }}?iframe=1"></iframe>
+                    <iframe class="activity-iframe" src="{{ path('claro_resource_open', { 'resourceType': _resource.getPrimaryResource().getResourceType().getName(), 'node': _resource.getPrimaryResource().getId() }) }}"></iframe>
                 {% endif %}
             </div>
             {% for resource in _resource.getParameters().getSecondaryResources() %}
                 <div class="hide" id="resource-{{ resource.getId() }}">
-                    <iframe class="claroline-app-iframe" src="{{ path('claro_resource_open', { 'resourceType': resource.getResourceType().getName(), 'node': resource.getId() }) }}?iframe=1"></iframe>
+                    <iframe class="activity-iframe" src="{{ path('claro_resource_open', { 'resourceType': resource.getResourceType().getName(), 'node': resource.getId() }) }}"></iframe>
                 </div>
             {% endfor %}
         </div>

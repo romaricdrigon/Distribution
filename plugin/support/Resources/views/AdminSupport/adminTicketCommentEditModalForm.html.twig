@@ -10,16 +10,12 @@
                 &times;
             </button>
             <h3 class="modal-title">
-                {% if type == constant('FormaLibre\\SupportBundle\\Entity\\Comment::PUBLIC_COMMENT') %}
-                    {{ 'message_edition'|trans({}, 'support') }}
-                {% else %}
-                    {{ 'note_edition'|trans({}, 'support') }}
-                {% endif %}
+                {{ 'comment_edition'|trans({}, 'support') }}
             </h3>
         </div>
         <div class="modal-body">
             <form id="ticket-comment-edit-modal-form"
-                  action="{{ path('formalibre_admin_ticket_comment_edit', {'comment': comment.getId(), 'type': type}) }}"
+                  action="{{ path('formalibre_admin_ticket_comment_edit', {'comment': comment.getId()}) }}"
                   method="POST"
                   {{ form_enctype(form) }}
             > 

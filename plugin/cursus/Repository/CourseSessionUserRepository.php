@@ -229,10 +229,10 @@ class CourseSessionUserRepository extends EntityRepository
         return $executeQuery ? $query->getResult() : $query;
     }
 
-    public function findUnregisteredUsersBySessionAndOrganizations(
+    public function findSearchedUnregisteredUsersBySession(
         CourseSession $session,
-        array $organizations,
         $userType,
+        $search = '',
         $orderedBy = 'firstName',
         $order = 'ASC',
         $executeQuery = true
@@ -240,9 +240,13 @@ class CourseSessionUserRepository extends EntityRepository
         $dql = "
             SELECT DISTINCT u
             FROM Claroline\CoreBundle\Entity\User u
-            JOIN u.organizations o
             WHERE u.isRemoved = false
-            AND o IN (:organizations)
+            AND
+            (
+                UPPER(u.firstName) LIKE :search
+                OR UPPER(u.lastName) LIKE :search
+                OR UPPER(u.username) LIKE :search
+            )
             AND NOT EXISTS (
                 SELECT csu
                 FROM Claroline\CursusBundle\Entity\CourseSessionUser csu
@@ -255,7 +259,8 @@ class CourseSessionUserRepository extends EntityRepository
         $query = $this->_em->createQuery($dql);
         $query->setParameter('session', $session);
         $query->setParameter('userType', $userType);
-        $query->setParameter('organizations', $organizations);
+        $upperSearch = strtoupper($search);
+        $query->setParameter('search', "%{$upperSearch}%");
 
         return $executeQuery ? $query->getResult() : $query;
     }

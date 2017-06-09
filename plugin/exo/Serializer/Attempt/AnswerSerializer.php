@@ -62,8 +62,15 @@ class AnswerSerializer extends AbstractSerializer
      */
     public function deserialize($data, $answer = null, array $options = [])
     {
-        $answer = $answer ?: new Answer();
-        $answer->setUuid($data->id);
+        if (empty($answer)) {
+            $answer = new Answer();
+        }
+
+        // Force client ID if needed
+        if (!in_array(Transfer::USE_SERVER_IDS, $options)) {
+            $answer->setUuid($data->id);
+        }
+
         $answer->setQuestionId($data->questionId);
 
         $this->mapObjectToEntity([

@@ -6,7 +6,7 @@ use JMS\DiExtraBundle\Annotation as DI;
 use UJM\ExoBundle\Library\Options\Recurrence;
 use UJM\ExoBundle\Library\Validator\JsonSchemaValidator;
 use UJM\ExoBundle\Validator\JsonSchema\Content\ContentValidator;
-use UJM\ExoBundle\Validator\JsonSchema\Item\ItemValidator;
+use UJM\ExoBundle\Validator\JsonSchema\Question\QuestionValidator;
 
 /**
  * @DI\Service("ujm_exo.validator.step")
@@ -14,9 +14,9 @@ use UJM\ExoBundle\Validator\JsonSchema\Item\ItemValidator;
 class StepValidator extends JsonSchemaValidator
 {
     /**
-     * @var ItemValidator
+     * @var QuestionValidator
      */
-    private $itemValidator;
+    private $questionValidator;
 
     /**
      * @var ContentValidator
@@ -26,19 +26,19 @@ class StepValidator extends JsonSchemaValidator
     /**
      * StepValidator constructor.
      *
-     * @param ItemValidator    $itemValidator
-     * @param ContentValidator $contentValidator
+     * @param QuestionValidator $questionValidator
+     * @param ContentValidator  $contentValidator
      *
      * @DI\InjectParams({
-     *     "itemValidator" = @DI\Inject("ujm_exo.validator.item"),
+     *     "questionValidator" = @DI\Inject("ujm_exo.validator.question"),
      *     "contentValidator"  = @DI\Inject("ujm_exo.validator.content")
      * })
      */
     public function __construct(
-        ItemValidator $itemValidator,
+        QuestionValidator $questionValidator,
         ContentValidator $contentValidator)
     {
-        $this->itemValidator = $itemValidator;
+        $this->questionValidator = $questionValidator;
         $this->contentValidator = $contentValidator;
     }
 
@@ -67,7 +67,7 @@ class StepValidator extends JsonSchemaValidator
             array_map(function (\stdClass $item) use (&$errors, $options) {
                 if (1 === preg_match('#^application\/x\.[^/]+\+json$#', $item->type)) {
                     // Item is a Question
-                    $itemErrors = $this->itemValidator->validateAfterSchema($item, $options);
+                    $itemErrors = $this->questionValidator->validateAfterSchema($item, $options);
                 } else {
                     // Item is a Content
                     $itemErrors = $this->contentValidator->validateAfterSchema($item, $options);

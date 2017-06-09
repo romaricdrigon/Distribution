@@ -7,49 +7,37 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Innova\PathBundle\Entity\Path\Path;
 use Innova\PathBundle\Entity\Step;
 use Innova\PathBundle\Entity\UserProgression;
-use Innova\PathBundle\Repository\UserProgressionRepository;
-use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * @DI\Service("innova_path.manager.user_progression")
+ * Class UserProgressionManager.
  */
 class UserProgressionManager
 {
     /**
-     * @var ObjectManager
+     * Object manager.
+     *
+     * @var \Doctrine\Common\Persistence\ObjectManager
      */
     protected $om;
 
     /**
-     * @var UserProgressionRepository
+     * @var \Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface
      */
-    private $repository;
+    protected $securityToken;
 
     /**
-     * @var TokenStorageInterface
-     */
-    protected $tokenStorage;
-
-    /**
-     * UserProgressionManager constructor.
+     * Class constructor.
      *
-     * @DI\InjectParams({
-     *     "om"           = @DI\Inject("claroline.persistence.object_manager"),
-     *     "tokenStorage" = @DI\Inject("security.token_storage")
-     * })
-     *
-     * @param ObjectManager         $om
-     * @param TokenStorageInterface $tokenStorage
+     * @param \Doctrine\Common\Persistence\ObjectManager                                          $objectManager
+     * @param \Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface $securityToken
      */
     public function __construct(
-        ObjectManager         $om,
-        TokenStorageInterface $tokenStorage)
+        ObjectManager         $objectManager,
+        TokenStorageInterface $securityToken)
     {
-        $this->om = $om;
-        $this->repository = $this->om->getRepository('InnovaPathBundle:UserProgression');
-        $this->tokenStorage = $tokenStorage;
+        $this->om = $objectManager;
+        $this->securityToken = $securityToken;
     }
 
     /**
@@ -59,49 +47,23 @@ class UserProgressionManager
      * @param Path      $path
      * @param User|null $user
      *
-     * @return int
+     * @return int $totalProgression
      */
     public function calculateUserProgressionInPath(Path $path, User $user = null)
     {
         if (empty($user)) {
             // Load current logged User
-            $user = $this->tokenStorage->getToken()->getUser();
+            $user = $this->securityToken->getToken()->getUser();
         }
 
         if (!$user instanceof User) {
             return 0;
         }
 
-        return $this->repository->countProgressionForUserInPath($path, $user);
-    }
-
-    public function calculateUserProgression(User $user, array $paths)
-    {
-        return $this->repository->findUserProgression($user, $paths);
-    }
-
-    /**
-     * Get progression of a User into a Path.
-     *
-     * @param \Innova\PathBundle\Entity\Path\Path $path
-     * @param \Claroline\CoreBundle\Entity\User   $user
-     *
-     * @return array
-     */
-    public function getUserProgression(Path $path, User $user = null)
-    {
-        if (empty($user)) {
-            // Get current authenticated User
-            $user = $this->tokenStorage->getToken()->getUser();
-        }
-
-        $results = [];
-        if ($user instanceof UserInterface) {
-            // We have a logged User => get its progression
-            $results = $this->repository->findByPathAndUser($path, $user);
-        }
-
-        return $results;
+        return $this
+            ->om
+            ->getRepository('InnovaPathBundle:UserProgression')
+            ->countProgressionForUserInPath($path, $user);
     }
 
     /**
@@ -119,7 +81,6 @@ class UserProgressionManager
     {
         // Check if progression already exists, if so return retrieved progression
         if ($checkDuplicate && $user instanceof User) {
-            /** @var UserProgression $progression */
             $progression = $this->om->getRepository('InnovaPathBundle:UserProgression')->findOneBy([
                 'step' => $step,
                 'user' => $user,
@@ -183,7 +144,7 @@ class UserProgressionManager
      * @param bool|null $lock
      * @param bool|null $authorized
      *
-     * @return UserProgression
+     * @return object UserProgression
      */
     public function updateLockedState(User $user, Step $step, $lockedcall = null, $lock = null, $authorized = null, $status = '')
     {

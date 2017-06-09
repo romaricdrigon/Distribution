@@ -18,9 +18,7 @@
         'lastName': null,
         'email': null,
         'code': null,
-        'locale': null,
-        'groupName': null,
-        'groupCode': null
+        'locale': null
     };
 
     var routing = window.Routing;
@@ -56,13 +54,12 @@
      */
     ldap.fillSelect = function ()
     {
-        var idx = ldap.getEntryIndex();
-        if (idx !== null) {
+        if (ldap.entries.hasOwnProperty(1) && ldap.entries[1].hasOwnProperty('count')) {
             var select = $(document.createElement('select'));
             select.append($(document.createElement('option')));
 
-            for (var i = 0; i < ldap.entries[idx].count; i++) {
-                select.append($(document.createElement('option')).html(ldap.entries[idx][i]));
+            for (var i = 0; i < ldap.entries[1].count; i++) {
+                select.append($(document.createElement('option')).html(ldap.entries[1][i]));
             }
 
             $('#ldapAttributes').removeClass('hide');
@@ -94,18 +91,17 @@
     {
         var type = $('#ldapObjectClass').data('type');
         var attributes = ldap.getAttributes(type);
-        var idx = ldap.getEntryIndex();
 
         $('#ldapPreview, #ldapFooter').removeClass('hide');
 
-        if (idx !== null) {
-            for (var i = 0; i < 5; i++) {
+        if (ldap.entries.hasOwnProperty(1) && ldap.entries[1].hasOwnProperty('count')) {
+            for (var i = 1; i < 6; i++) {
                 for (var name in attributes) {
-                    if (attributes.hasOwnProperty(name) && ldap.entries.hasOwnProperty(idx + i) &&
-                        ldap.entries[idx + i].hasOwnProperty(ldap[attributes[name]])
+                    if (attributes.hasOwnProperty(name) && ldap.entries.hasOwnProperty(i) &&
+                        ldap.entries[i].hasOwnProperty(ldap[attributes[name]])
                     ) {
                         $('#ldapPreview #' + type + i + ' .' + attributes[name]).html(
-                            ldap.entries[idx + i][ldap[attributes[name]]][0]
+                            ldap.entries[i][ldap[attributes[name]]][0]
                         );
                     } else if (ldap[attributes[name]] === '') {
                         $('#ldapPreview #' + type + i + ' .' + attributes[name]).html('');
@@ -221,17 +217,6 @@
         return tmp;
     };
 
-    ldap.getEntryIndex = function()
-    {
-        if (ldap.entries !== null) {
-            return (ldap.entries.hasOwnProperty(0) && ldap.entries[0].hasOwnProperty('count')) ? 0 :
-              ((ldap.entries.hasOwnProperty(1) && ldap.entries[1].hasOwnProperty('count')) ? 1 : null);
-        }
-
-        return null;
-    }
-
-
     /** events **/
 
     $('body').on('change', '#ldapObjectClass', function () {
@@ -259,7 +244,7 @@
         var form = $('#ldapForm').serializeArray();
         var type = $('#ldapObjectClass').data('type');
 
-        if (ldap.canSave(form, 2, type === 'users' ? 5 : 3)) {
+        if (ldap.canSave(form, 2, type === 'users' ? 6 : 3)) {
             ldap.saveSettings(form);
         } else {
             modal.simpleContainer(

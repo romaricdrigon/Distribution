@@ -1,0 +1,42 @@
+ {% extends 'ClarolineCoreBundle:Workspace:layout.html.twig' %}
+
+
+ {% block stylesheets %}
+     {# Claroline CSS #}
+     {{ parent() }}
+
+     {# Dashboard styles #}
+     {% stylesheets debug = false filter = 'less, cssmin' output = 'vendor/claroline/claro-lexicon.css'
+     '@ClarolineLexiconBundle/Resources/less/main.less'
+     %}
+     <link rel="stylesheet" media="screen" href="{{ asset_url }}"/>
+     {% endstylesheets %}
+ {% endblock %}
+
+ {% block breadcrumb %}
+     {{
+         macros.desktopBreadcrumbs([
+                     {
+                         'name': 'claroline_lexicon'|trans({}, 'tools'),
+                         'href': ''
+                     }
+                 ])
+     }}
+ {% endblock %}
+
+ {% block title %}
+     {{ parent() ~ ' - ' ~ "claroline_lexicon" | trans({}, "tools") | striptags | raw }}
+ {% endblock %}
+
+ {% block section_content %}
+       <div id="lexicon" data-lexicon="{{ exercise | json_encode | raw | escape }}"></div>
+ {% endblock %}
+
+ {% block javascripts %}
+     {{ parent() }}
+     {# Translations #}
+     <script src="{{ url('bazinga_jstranslation_js', { 'domain': 'lexicon' }) }}"></script>
+     <script src="{{ url('bazinga_jstranslation_js', { 'domain': 'tools' }) }}"></script>
+     <script src="{{ url('bazinga_jstranslation_js', { 'domain': 'platform' }) }}"></script>
+     <script src="{{ hotAsset('dist/claroline-distribution-plugin-lexicon-lexicon.js') }}"></script>
+ {% endblock %}

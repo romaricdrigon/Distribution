@@ -27,7 +27,6 @@ export default class CategoryEditionModalCtrl {
       notifyAddition: true,
       notifyEdition: true,
       notifyRemoval: true,
-      notifyPendingComment: true,
       managers: []
     }
     this.categoryErrors = {
@@ -49,9 +48,6 @@ export default class CategoryEditionModalCtrl {
     this.category['notifyEdition'] = this.source['details']['notify_edition']
     this.category['notifyRemoval'] = this.source['details']['notify_removal']
 
-    if (this.source['details']['notify_pending_comment']) {
-      this.category['notifyPendingComment'] = this.source['details']['notify_pending_comment']
-    }
     if (this.source['details']['color']) {
       this.category['color'] = this.source['details']['color']
     }

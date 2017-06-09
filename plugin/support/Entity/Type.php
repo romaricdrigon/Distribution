@@ -26,16 +26,6 @@ class Type
      */
     protected $name;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
-    protected $description;
-
-    /**
-     * @ORM\Column(type="boolean", options={"default" = 0})
-     */
-    protected $locked = false;
-
     public function getId()
     {
         return $this->id;
@@ -56,23 +46,8 @@ class Type
         $this->name = $name;
     }
 
-    public function getDescription()
+    public function getFormName()
     {
-        return $this->description;
-    }
-
-    public function setDescription($description)
-    {
-        $this->description = $description;
-    }
-
-    public function isLocked()
-    {
-        return $this->locked;
-    }
-
-    public function setLocked($locked)
-    {
-        $this->locked = $locked;
+        return $this->name.'_form_msg';
     }
 }

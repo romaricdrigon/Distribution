@@ -5,10 +5,9 @@ namespace UJM\ExoBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
-use UJM\ExoBundle\Entity\Item\Item;
+use UJM\ExoBundle\Entity\Question\Question;
 use UJM\ExoBundle\Library\Model\AttemptParametersTrait;
 use UJM\ExoBundle\Library\Model\OrderTrait;
-use UJM\ExoBundle\Library\Model\UuidTrait;
 
 /**
  * A step represents a group of items (questions or content) inside an exercise.
@@ -28,7 +27,12 @@ class Step
      */
     private $id;
 
-    use UuidTrait;
+    /**
+     * @var string
+     *
+     * @ORM\Column("uuid", type="string", length=36, unique=true)
+     */
+    private $uuid;
 
     use OrderTrait;
 
@@ -57,7 +61,7 @@ class Step
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="StepItem", mappedBy="step", cascade={"all"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="StepQuestion", mappedBy="step", cascade={"all"}, orphanRemoval=true)
      * @ORM\OrderBy({"order" = "ASC"})
      */
     private $stepQuestions;
@@ -77,6 +81,26 @@ class Step
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Gets UUID.
+     *
+     * @return string
+     */
+    public function getUuid()
+    {
+        return $this->uuid;
+    }
+
+    /**
+     * Sets UUID.
+     *
+     * @param $uuid
+     */
+    public function setUuid($uuid)
+    {
+        $this->uuid = $uuid;
     }
 
     /**
@@ -144,9 +168,9 @@ class Step
     }
 
     /**
-     * @param StepItem $stepQuestion
+     * @param StepQuestion $stepQuestion
      */
-    public function addStepQuestion(StepItem $stepQuestion)
+    public function addStepQuestion(StepQuestion $stepQuestion)
     {
         if (!$this->stepQuestions->contains($stepQuestion)) {
             $this->stepQuestions->add($stepQuestion);
@@ -154,9 +178,9 @@ class Step
     }
 
     /**
-     * @param StepItem $stepQuestion
+     * @param StepQuestion $stepQuestion
      */
-    public function removeStepQuestion(StepItem $stepQuestion)
+    public function removeStepQuestion(StepQuestion $stepQuestion)
     {
         if ($this->stepQuestions->contains($stepQuestion)) {
             $this->stepQuestions->removeElement($stepQuestion);
@@ -168,7 +192,7 @@ class Step
      *
      * @param string $uuid
      *
-     * @return Item|null
+     * @return Question|null
      */
     public function getQuestion($uuid)
     {
@@ -186,33 +210,33 @@ class Step
     /**
      * Shortcut to get the list of questions of the step.
      *
-     * @return Item[]
+     * @return Question[]
      */
     public function getQuestions()
     {
-        return array_map(function (StepItem $stepQuestion) {
+        return array_map(function (StepQuestion $stepQuestion) {
             return $stepQuestion->getQuestion();
         }, $this->stepQuestions->toArray());
     }
 
     /**
-     * Shortcut to add Items to Step.
-     * Avoids the need to manually initialize a StepItem object to hold the relation.
+     * Shortcut to add Questions to Step.
+     * Avoids the need to manually initialize a StepQuestion object to hold the relation.
      *
-     * @param Item $question - the question to add to the step
+     * @param Question $question - the question to add to the step
      */
-    public function addQuestion(Item $question)
+    public function addQuestion(Question $question)
     {
         $stepQuestions = $this->stepQuestions->toArray();
         foreach ($stepQuestions as $stepQuestion) {
-            /** @var StepItem $stepQuestion */
+            /** @var StepQuestion $stepQuestion */
             if ($stepQuestion->getQuestion() === $question) {
                 return; // The question is already linked to the Step
             }
         }
 
-        // Create a new StepItem to attach the question to the step
-        $stepQuestion = new StepItem();
+        // Create a new StepQuestion to attach the question to the step
+        $stepQuestion = new StepQuestion();
         $stepQuestion->setOrder($this->stepQuestions->count());
         $stepQuestion->setStep($this);
         $stepQuestion->setQuestion($question);

@@ -38,7 +38,6 @@
         "hwi/oauth-bundle": "0.5.2",
         "icap/html-diff": "1.1.0",
         "idci/exporter-bundle": "1.0.0",
-        "jangobrick/php-svg": "dev-master",
         "jdorn/sql-formatter": "1.2.17",
         "jms/di-extra-bundle": "1.5.0",
         "jms/security-extra-bundle": "1.5.1",
@@ -74,7 +73,8 @@
         "innova/angular-ui-tinymce-bundle": "5.1.1",
         "claroline/front-end-bundle": "dev-7.x-test",
         "ocramius/proxy-manager": "1.0.2",
-        "ramsey/uuid": "~3.5"
+        "ramsey/uuid": "~3.5",
+        "guzzlehttp/guzzle": "~6.0"
     },
     "replace": {
         "claroline/distribution-bundle": "*",
@@ -92,6 +92,7 @@
         "claroline/image-player-bundle": "*",
         "claroline/ldap-bundle": "*",
         "claroline/message-bundle": "*",
+        "claroline/lexicon-bundle": "*",
         "icap/notification-bundle": "*",
         "claroline/pdf-player-bundle": "*",
         "formalibre/presence-bundle": "*",
@@ -171,6 +172,7 @@
             "Innova\\PathBundle\\": "plugin/path",
             "Claroline\\PdfGeneratorBundle\\": "plugin/pdf-generator",
             "Claroline\\DevBundle\\": "main/dev",
+            "Claroline\\LexiconBundle\\": "plugin/lexicon",
             "Claroline\\ChatBundle\\": "plugin/chat",
             "Claroline\\WebInstaller\\": "main/web-installer/",
             "Icap\\WebsiteBundle\\": "plugin/website",
@@ -182,9 +184,7 @@
             "Innova\\MediaResourceBundle\\": "plugin/media-resource",
             "Claroline\\DashboardBundle\\": "plugin/dashboard",
             "Claroline\\ClacoFormBundle\\": "plugin/claco-form",
-            "Claroline\\RemoteUserSynchronizationBundle\\": "plugin/remote-user-synchronization",
-            "Claroline\\CasBundle\\": "plugin/cas",
-            "Claroline\\LexiconBundle\\": "plugin/lexicon"
+            "Claroline\\RemoteUserSynchronizationBundle\\": "plugin/remote-user-synchronization"
         }
     },
     "extra": {
@@ -230,6 +230,7 @@
             "Claroline\\ResultBundle\\ClarolineResultBundle",
             "Innova\\PathBundle\\InnovaPathBundle",
             "Claroline\\DevBundle\\ClarolineDevBundle",
+            "Claroline\\LexiconBundle\\ClarolineLexiconBundle",
             "Icap\\WebsiteBundle\\IcapWebsiteBundle",
             "Innova\\VideoRecorderBundle\\InnovaVideoRecorderBundle",
             "Innova\\AudioRecorderBundle\\InnovaAudioRecorderBundle",
@@ -240,9 +241,7 @@
             "Claroline\\ChatBundle\\ClarolineChatBundle",
             "Claroline\\DashboardBundle\\ClarolineDashboardBundle",
             "Claroline\\ClacoFormBundle\\ClarolineClacoFormBundle",
-            "Claroline\\RemoteUserSynchronizationBundle\\ClarolineRemoteUserSynchronizationBundle",
-            "Claroline\\CasBundle\\ClarolineCasBundle",
-            "Claroline\\LexiconBundle\\ClarolineLexiconBundle"
+            "Claroline\\RemoteUserSynchronizationBundle\\ClarolineRemoteUserSynchronizationBundle"
         ]
     }
 }

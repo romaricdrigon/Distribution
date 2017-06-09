@@ -258,8 +258,7 @@ class CursusManager
         $blocking = false,
         $icon = null,
         $color = null,
-        Workspace $workspace = null,
-        array $organizations = []
+        Workspace $workspace = null
     ) {
         $cursus = new Cursus();
         $cursus->setTitle($title);
@@ -271,14 +270,11 @@ class CursusManager
         $cursus->setIcon($icon);
         $cursus->setWorkspace($workspace);
         $cursus->setDetails(['color' => $color]);
-        $orderMax = is_null($parent) ? $this->getLastRootCursusOrder() : $this->getLastCursusOrderByParent($parent);
+        $orderMax = is_null($parent) ?
+            $this->getLastRootCursusOrder() :
+            $this->getLastCursusOrderByParent($parent);
         $order = is_null($orderMax) ? 1 : intval($orderMax) + 1;
         $cursus->setCursusOrder($order);
-        $cursusOrganizations = empty($parent) ? $organizations : $parent->getOrganizations();
-
-        foreach ($cursusOrganizations as $organization) {
-            $cursus->addOrganization($organization);
-        }
         $this->persistCursus($cursus);
         $event = new LogCursusCreateEvent($cursus);
         $this->eventDispatcher->dispatch('log', $event);
@@ -350,8 +346,7 @@ class CursusManager
         $defaultSessionDuration = 1,
         $withSessionEvent = true,
         array $validators = [],
-        $displayOrder = 500,
-        array $organizations = []
+        $displayOrder = 500
     ) {
         $course = new Course();
         $course->setTitle($title);
@@ -382,9 +377,6 @@ class CursusManager
         }
         foreach ($validators as $validator) {
             $course->addValidator($validator);
-        }
-        foreach ($organizations as $organization) {
-            $course->addOrganization($organization);
         }
         $this->persistCourse($course);
         $event = new LogCourseCreateEvent($course);
@@ -492,11 +484,6 @@ class CursusManager
             $newCursus->setBlocking(false);
             ++$lastOrder;
             $newCursus->setCursusOrder($lastOrder);
-            $organizations = $parent->getOrganizations();
-
-            foreach ($organizations as $organization) {
-                $newCursus->addOrganization($organization);
-            }
             $this->om->persist($newCursus);
             $createdCursus[] = $newCursus;
         }
@@ -511,6 +498,22 @@ class CursusManager
         $this->om->endFlushSuite();
 
         return $createdCursus;
+    }
+
+    public function removeCoursesFromCursus(Cursus $parent, array $courses)
+    {
+        if (count($courses) > 0) {
+            $toRemove = $this->cursusRepo->findCursusByParentAndCourses(
+                $parent,
+                $courses
+            );
+            $this->om->startFlushSuite();
+
+            foreach ($toRemove as $cursus) {
+                $this->om->remove($cursus);
+            }
+            $this->om->endFlushSuite();
+        }
     }
 
     public function registerUserToCursus(Cursus $cursus, User $user, $withWorkspace = true)
@@ -625,6 +628,7 @@ class CursusManager
     public function unregisterUsersFromCursus(Cursus $cursus, array $users)
     {
         $this->checkCursusToolRegistrationAccess();
+        $toDelete = [];
         $coursesToUnregister = [];
         $root = $cursus->getRoot();
         $cursusRoot = $this->getOneCursusById($root);
@@ -725,6 +729,8 @@ class CursusManager
     {
         $this->checkCursusToolRegistrationAccess();
         $users = $group->getUsers()->toArray();
+        $cursusGroupsToDelete = [];
+        $cursusUsersToDelete = [];
         $coursesToUnregister = [];
         $root = $cursus->getRoot();
         $cursusRoot = $this->getOneCursusById($root);
@@ -822,6 +828,66 @@ class CursusManager
             );
         }
         $this->om->endFlushSuite();
+    }
+
+    public function updateCursusParentAndOrder(Cursus $cursus, Cursus $parent = null, $cursusOrder = -1)
+    {
+        if ($cursus->getParent() !== $parent || $cursus->getCursusOrder() !== $cursusOrder) {
+            $cursusList = is_null($parent) ?
+                $this->getAllRootCursus('', 'cursusOrder', 'ASC') :
+                $this->getCursusByParent($parent);
+            $cursus->setParent($parent);
+            $i = 1;
+            $updated = false;
+
+            $this->om->startFlushSuite();
+
+            foreach ($cursusList as $oneCursus) {
+                if ($oneCursus->getId() === $cursus->getId()) {
+                    continue;
+                } else {
+                    $currentOrder = $oneCursus->getCursusOrder();
+
+                    if ($currentOrder === $cursusOrder) {
+                        $cursus->setCursusOrder($i);
+                        $this->om->persist($cursus);
+                        $updated = true;
+                        ++$i;
+                    }
+                    $oneCursus->setCursusOrder($i);
+                    $this->om->persist($oneCursus);
+                    ++$i;
+                }
+            }
+
+            if (!$updated) {
+                $cursus->setCursusOrder($i);
+                $this->om->persist($cursus);
+            }
+            $this->om->endFlushSuite();
+        }
+    }
+
+    public function updateCursusOrder(Cursus $cursus, $cursusOrder)
+    {
+        $this->updateCursusOrderByParent($cursusOrder, $cursus->getParent());
+        $cursus->setCursusOrder($cursusOrder);
+        $this->om->persist($cursus);
+        $this->om->flush();
+    }
+
+    public function updateCursusOrderByParent($cursusOrder, Cursus $parent = null, $executeQuery = true)
+    {
+        return is_null($parent) ?
+            $this->cursusRepo->updateCursusOrderWithoutParent(
+                $cursusOrder,
+                $executeQuery
+            ) :
+            $this->cursusRepo->updateCursusOrderByParent(
+                $parent,
+                $cursusOrder,
+                $executeQuery
+            );
     }
 
     private function getUnlockedDescendants(Cursus $cursus)
@@ -984,18 +1050,18 @@ class CursusManager
                     $this->om->persist($sessionUser);
                     $sessionUsers[] = $sessionUser;
 
-                    if (intval($type) === CourseSessionUser::LEARNER) {
+                    if ($type === CourseSessionUser::LEARNER) {
                         $this->sendSessionRegistrationConfirmationMessage($user, $session, 'registered');
-
-                        if ($cascadeEvent) {
-                            $this->registerPendingSessionEventUsers($user, $session);
-                        }
-                        $this->registerUserToAllAutomaticSessionEvent($user, $session);
-                    } elseif (intval($type) === CourseSessionUser::PENDING_LEARNER) {
+                    } elseif ($type === CourseSessionUser::PENDING_LEARNER) {
                         $this->sendSessionRegistrationConfirmationMessage($user, $session, 'pending');
                     }
                     $event = new LogCourseSessionUserRegistrationEvent($session, $user);
                     $this->eventDispatcher->dispatch('log', $event);
+
+                    if ($cascadeEvent) {
+                        $this->registerPendingSessionEventUsers($user, $session);
+                    }
+                    $this->registerUserToAllAutomaticSessionEvent($user, $session);
                 }
             }
             $role = null;
@@ -1134,11 +1200,8 @@ class CursusManager
             $event = new LogCourseSessionUserUnregistrationEvent($sessionUser);
             $this->eventDispatcher->dispatch('log', $event);
             $this->om->remove($sessionUser);
-
-            if ($userType === CourseSessionUser::LEARNER) {
-                $sessionEventUsers = $this->getSessionEventUsersByUserAndSession($user, $session);
-                $this->unregisterUsersFromSessionEvent($sessionEventUsers);
-            }
+            $sessionEventUsers = $this->getSessionEventUsersByUserAndSession($user, $session);
+            $this->unregisterUsersFromSessionEvent($sessionEventUsers);
         }
         $this->om->endFlushSuite();
     }
@@ -2230,7 +2293,7 @@ class CursusManager
         $this->zipCourses($courses, $archive);
     }
 
-    public function importCourses(array $datas, array $organizations, $withIndex = true)
+    public function importCourses(array $datas, $withIndex = true)
     {
         $courses = [];
         $i = 0;
@@ -2250,9 +2313,6 @@ class CursusManager
             if (isset($data['icon'])) {
                 $course->setIcon($data['icon']);
             }
-            foreach ($organizations as $organization) {
-                $course->addOrganization($organization);
-            }
             $this->om->persist($course);
 
             if ($withIndex) {
@@ -2271,7 +2331,7 @@ class CursusManager
         return $courses;
     }
 
-    public function importCursus(array $datas, array $organizations, array $courses = [])
+    public function importCursus(array $datas, array $courses = [])
     {
         $roots = [];
         $cursusChildren = [];
@@ -2327,7 +2387,7 @@ class CursusManager
             }
         }
 
-        return $this->importRootCursus($roots, $cursusChildren, $courses, $organizations);
+        return $this->importRootCursus($roots, $cursusChildren, $courses);
     }
 
     private function getAllCoursesCodes()
@@ -2374,7 +2434,7 @@ class CursusManager
         return $result;
     }
 
-    private function importRootCursus(array $roots, array $children, array $courses, array $organizations)
+    private function importRootCursus(array $roots, array $children, array $courses)
     {
         $this->om->startFlushSuite();
         $codes = $this->getAllCursusCodes();
@@ -2399,9 +2459,6 @@ class CursusManager
                 $code = $this->generateValidCode($root['code'], $codes);
                 $cursus->setCode($code);
             }
-            foreach ($organizations as $organization) {
-                $cursus->addOrganization($organization);
-            }
             $this->om->persist($cursus);
             $createdCursus[$root['id']] = $cursus;
             ++$index;
@@ -2416,7 +2473,6 @@ class CursusManager
                     $children,
                     $courses,
                     $codes,
-                    $organizations,
                     $createdCursus,
                     $index
                 );
@@ -2433,7 +2489,6 @@ class CursusManager
         array $children,
         array $courses,
         array $codes,
-        array $organizations,
         array &$createdCursus,
         &$index
     ) {
@@ -2459,9 +2514,6 @@ class CursusManager
                     $code = $this->generateValidCode($child['code'], $codes);
                     $cursus->setCode($code);
                 }
-                foreach ($organizations as $organization) {
-                    $cursus->addOrganization($organization);
-                }
                 $this->om->persist($cursus);
                 $createdCursus[$child['id']] = $cursus;
                 ++$index;
@@ -2476,7 +2528,6 @@ class CursusManager
                         $children,
                         $courses,
                         $codes,
-                        $organizations,
                         $createdCursus,
                         $index
                     );
@@ -2969,7 +3020,8 @@ class CursusManager
     public function getValidatorsRoles()
     {
         $roles = [];
-        $registrationTool = $this->toolManager->getAdminToolByName('claroline_cursus_tool_registration');
+        $registrationTool = $this->toolManager
+            ->getAdminToolByName('claroline_cursus_tool_registration');
 
         if (!is_null($registrationTool)) {
             $roles = $registrationTool->getRoles()->toArray();
@@ -2987,61 +3039,59 @@ class CursusManager
         $authenticatedUser = $this->tokenStorage->getToken()->getUser();
         $isAdmin = $this->authorization->isGranted('ROLE_ADMIN');
 
-        if ($authenticatedUser !== 'anon.') {
-            if ($isAdmin) {
-                $coursesQueues = empty($search) ?
-                    $this->getAllUnvalidatedCourseQueues() :
-                    $this->getAllSearchedUnvalidatedCourseQueues($search);
-                $sessionsQueues = empty($search) ?
-                    $this->getAllUnvalidatedSessionQueues() :
-                    $this->getAllSearchedUnvalidatedSessionQueues($search);
+        if ($isAdmin) {
+            $coursesQueues = empty($search) ?
+                $this->getAllUnvalidatedCourseQueues() :
+                $this->getAllSearchedUnvalidatedCourseQueues($search);
+            $sessionsQueues = empty($search) ?
+                $this->getAllUnvalidatedSessionQueues() :
+                $this->getAllSearchedUnvalidatedSessionQueues($search);
 
-                $datas['coursesQueues'] = $this->getCoursesQueuesDatasFromQueues($coursesQueues);
-                $datas['sessionsQueues'] = $this->getSessionsQueuesDatasFromQueues($sessionsQueues);
-            } else {
-                $validatorCoursesQueues = empty($search) ?
-                    $this->getUnvalidatedCourseQueuesByValidator($authenticatedUser) :
-                    $this->getUnvalidatedSearchedCourseQueuesByValidator($authenticatedUser, $search);
-                $orgaCoursesQueues = empty($search) ?
-                    $this->getUnvalidatedCourseQueuesByOrganization($authenticatedUser) :
-                    $this->getUnvalidatedSearchedCourseQueuesByOrganization($authenticatedUser, $search);
-                $simpleCoursesQueues = empty($search) ?
-                    $this->getUnvalidatedCourseQueues($authenticatedUser) :
-                    $this->getUnvalidatedSearchedCourseQueues($authenticatedUser, $search);
+            $datas['coursesQueues'] = $this->getCoursesQueuesDatasFromQueues($coursesQueues);
+            $datas['sessionsQueues'] = $this->getSessionsQueuesDatasFromQueues($sessionsQueues);
+        } else {
+            $validatorCoursesQueues = empty($search) ?
+                $this->getUnvalidatedCourseQueuesByValidator($authenticatedUser) :
+                $this->getUnvalidatedSearchedCourseQueuesByValidator($authenticatedUser, $search);
+            $orgaCoursesQueues = empty($search) ?
+                $this->getUnvalidatedCourseQueuesByOrganization($authenticatedUser) :
+                $this->getUnvalidatedSearchedCourseQueuesByOrganization($authenticatedUser, $search);
+            $simpleCoursesQueues = empty($search) ?
+                $this->getUnvalidatedCourseQueues() :
+                $this->getUnvalidatedSearchedCourseQueues($search);
 
-                $validatorSessionsQueues = empty($search) ?
-                    $this->getUnvalidatedSessionQueuesByValidator($authenticatedUser) :
-                    $this->getUnvalidatedSearchedSessionQueuesByValidator($authenticatedUser, $search);
-                $orgaSessionsQueues = empty($search) ?
-                    $this->getUnvalidatedSessionQueuesByOrganization($authenticatedUser) :
-                    $this->getUnvalidatedSearchedSessionQueuesByOrganization($authenticatedUser, $search);
-                $simpleSessionsQueues = empty($search) ?
-                    $this->getUnvalidatedSessionQueues($authenticatedUser) :
-                    $this->getUnvalidatedSearchedSessionQueues($authenticatedUser, $search);
+            $validatorSessionsQueues = empty($search) ?
+                $this->getUnvalidatedSessionQueuesByValidator($authenticatedUser) :
+                $this->getUnvalidatedSearchedSessionQueuesByValidator($authenticatedUser, $search);
+            $orgaSessionsQueues = empty($search) ?
+                $this->getUnvalidatedSessionQueuesByOrganization($authenticatedUser) :
+                $this->getUnvalidatedSearchedSessionQueuesByOrganization($authenticatedUser, $search);
+            $simpleSessionsQueues = empty($search) ?
+                $this->getUnvalidatedSessionQueues() :
+                $this->getUnvalidatedSearchedSessionQueues($search);
 
-                $coursesQueues = $this->mergeCourseQueues(
-                    $validatorCoursesQueues,
-                    $orgaCoursesQueues,
-                    $simpleCoursesQueues
-                );
-                $sessionsQueues = $this->mergeSessionQueues(
-                    $validatorSessionsQueues,
-                    $orgaSessionsQueues,
-                    $simpleSessionsQueues
-                );
-                $datas['coursesQueues'] = $this->computeCoursesQueuesDatas(
-                    $validatorCoursesQueues,
-                    $orgaCoursesQueues,
-                    $simpleCoursesQueues
-                );
-                $datas['sessionsQueues'] = $this->computeSessionsQueuesDatas(
-                    $validatorSessionsQueues,
-                    $orgaSessionsQueues,
-                    $simpleSessionsQueues
-                );
-            }
-            $datas['courses'] = $this->getCoursesDatasFromQueues($coursesQueues, $sessionsQueues);
+            $coursesQueues = $this->mergeCourseQueues(
+                $validatorCoursesQueues,
+                $orgaCoursesQueues,
+                $simpleCoursesQueues
+            );
+            $sessionsQueues = $this->mergeSessionQueues(
+                $validatorSessionsQueues,
+                $orgaSessionsQueues,
+                $simpleSessionsQueues
+            );
+            $datas['coursesQueues'] = $this->computeCoursesQueuesDatas(
+                $validatorCoursesQueues,
+                $orgaCoursesQueues,
+                $simpleCoursesQueues
+            );
+            $datas['sessionsQueues'] = $this->computeSessionsQueuesDatas(
+                $validatorSessionsQueues,
+                $orgaSessionsQueues,
+                $simpleSessionsQueues
+            );
         }
+        $datas['courses'] = $this->getCoursesDatasFromQueues($coursesQueues, $sessionsQueues);
 
         return $datas;
     }
@@ -4650,51 +4700,6 @@ class CursusManager
         $this->messageManager->send($message, true, false);
     }
 
-    public function getOrganizationsByCourse(Course $course)
-    {
-        $organizations = [];
-        $courseOrgas = $course->getOrganizations();
-        $courseCursus = $this->cursusRepo->findBy(['course' => $course]);
-
-        foreach ($courseOrgas as $orga) {
-            $organizations[$orga->getId()] = $orga;
-        }
-        foreach ($courseCursus as $cursus) {
-            $cursusOrgas = $cursus->getOrganizations();
-
-            foreach ($cursusOrgas as $orga) {
-                $organizations[$orga->getId()] = $orga;
-            }
-        }
-
-        return $organizations;
-    }
-
-    public function updateCursusOrganizations(Cursus $cursus, array $organizations)
-    {
-        if (empty($cursus->getParent())) {
-            $cursusOrgasIds = $this->extractOrganizationsIds($cursus->getOrganizations());
-            $orgasIds = $this->extractOrganizationsIds($organizations);
-            $nbCursusOrgas = count($cursusOrgasIds);
-            $nbOrgas = count($orgasIds);
-
-            if ($nbCursusOrgas !== $nbOrgas || count(array_intersect($cursusOrgasIds, $orgasIds)) !== $nbOrgas) {
-                $this->om->startFlushSuite();
-                $allCursusRoot = $this->cursusRepo->findByRoot($cursus->getRoot());
-
-                foreach ($allCursusRoot as $cursusRoot) {
-                    $cursusRoot->emptyOrganizations();
-
-                    foreach ($organizations as $organization) {
-                        $cursusRoot->addOrganization($organization);
-                    }
-                    $this->om->persist($cursusRoot);
-                }
-                $this->om->endFlushSuite();
-            }
-        }
-    }
-
     /***************************************************
      * Access to CursusDisplayedWordRepository methods *
      ***************************************************/
@@ -4717,14 +4722,13 @@ class CursusManager
         return $withPager ? $this->pagerFactory->createPagerFromArray($cursus, $page, $max) : $cursus;
     }
 
-    public function getAllRootCursus($orderedBy = 'cursusOrder', $order = 'ASC')
+    public function getAllRootCursus($search = '', $orderedBy = 'id', $order = 'ASC', $withPager = false, $page = 1, $max = 50)
     {
-        return $this->cursusRepo->findAllRootCursus($orderedBy, $order);
-    }
+        $cursus = empty($search) ?
+            $this->cursusRepo->findAllRootCursus($orderedBy, $order) :
+            $this->cursusRepo->findSearchedRootCursus($search, $orderedBy, $order);
 
-    public function getAllRootCursusByOrganizations(array $organizations, $orderedBy = 'id', $order = 'ASC')
-    {
-        return $this->cursusRepo->findAllRootCursusByOrganizations($organizations, $orderedBy, $order);
+        return $withPager ? $this->pagerFactory->createPagerFromArray($cursus, $page, $max) : $cursus;
     }
 
     public function getLastRootCursusOrder($executeQuery = true)
@@ -4737,9 +4741,24 @@ class CursusManager
         return $this->cursusRepo->findLastCursusOrderByParent($cursus, $executeQuery);
     }
 
+    public function getHierarchyByCursus(Cursus $cursus, $orderedBy = 'cursusOrder', $order = 'ASC', $executeQuery = true)
+    {
+        return $this->cursusRepo->findHierarchyByCursus($cursus, $orderedBy, $order, $executeQuery);
+    }
+
     public function getRelatedHierarchyByCursus(Cursus $cursus, $orderedBy = 'cursusOrder', $order = 'ASC', $executeQuery = true)
     {
         return $this->cursusRepo->findRelatedHierarchyByCursus($cursus, $orderedBy, $order, $executeQuery);
+    }
+
+    public function getDescendantHierarchyByCursus(Cursus $cursus, $orderedBy = 'cursusOrder', $order = 'ASC', $executeQuery = true)
+    {
+        return $this->cursusRepo->findDescendantHierarchyByCursus($cursus, $orderedBy, $order, $executeQuery);
+    }
+
+    public function getCursusByParentAndCourses(Cursus $parent, array $courses, $executeQuery = true)
+    {
+        return $this->cursusRepo->findCursusByParentAndCourses($parent, $courses, $executeQuery);
     }
 
     public function getCursusByIds(array $ids, $executeQuery = true)
@@ -4747,14 +4766,30 @@ class CursusManager
         return count($ids) > 0 ? $this->cursusRepo->findCursusByIds($ids, $executeQuery) : [];
     }
 
-    public function getOneCursusById($cursusId)
+    public function getOneCursusById($cursusId, $executeQuery = true)
     {
-        return $this->cursusRepo->findOneById($cursusId);
+        return $this->cursusRepo->findOneCursusById($cursusId, $executeQuery);
     }
 
     public function getCursusByGroup(Group $group, $executeQuery = true)
     {
         return $this->cursusRepo->findCursusByGroup($group, $executeQuery);
+    }
+
+    public function getCursusByParent(
+        Cursus $parent,
+        $search = '',
+        $orderedBy = 'cursusOrder',
+        $order = 'ASC',
+        $withPager = false,
+        $page = 1,
+        $max = 50
+    ) {
+        $cursus = empty($search) ?
+            $this->cursusRepo->findCursusByParent($parent, $orderedBy, $order) :
+            $this->cursusRepo->findSearchedCursusByParent($parent, $search, $orderedBy, $order);
+
+        return $withPager ? $this->pagerFactory->createPagerFromArray($cursus, $page, $max) : $cursus;
     }
 
     public function getCursusByCodeWithoutId($code, $id)
@@ -4775,34 +4810,20 @@ class CursusManager
         return $withPager ? $this->pagerFactory->createPagerFromArray($courses, $page, $max) : $courses;
     }
 
-    public function getAllCoursesByOrganizations(
-        array $organizations,
+    public function getUnmappedCoursesByCursus(
+        Cursus $cursus,
         $search = '',
         $orderedBy = 'title',
         $order = 'ASC',
-        $withPager = false,
+        $withPager = true,
         $page = 1,
         $max = 50
     ) {
         $courses = empty($search) ?
-            $this->courseRepo->findAllCoursesByOrganizations($organizations, $orderedBy, $order) :
-            $this->courseRepo->findSearchedCoursesByOrganizations($organizations, $search, $orderedBy, $order);
+            $this->courseRepo->findUnmappedCoursesByCursus($cursus, $orderedBy, $order) :
+            $this->courseRepo->findUnmappedSearchedCoursesByCursus($cursus, $search, $orderedBy, $order);
 
         return $withPager ? $this->pagerFactory->createPagerFromArray($courses, $page, $max) : $courses;
-    }
-
-    public function getUnmappedCoursesByCursus(Cursus $cursus, $orderedBy = 'title', $order = 'ASC')
-    {
-        return $this->courseRepo->findUnmappedCoursesByCursus($cursus, $orderedBy, $order);
-    }
-
-    public function getUnmappedCoursesByCursusAndOrganizations(
-        Cursus $cursus,
-        array $organizations,
-        $orderedBy = 'title',
-        $order = 'ASC'
-    ) {
-        return $this->courseRepo->findUnmappedCoursesByCursusAndOrganizations($cursus, $organizations, $orderedBy, $order);
     }
 
     public function getDescendantCoursesByCursus(
@@ -4878,6 +4899,11 @@ class CursusManager
         return $this->cursusUserRepo->findCursusUsersByCursus($cursus, $executeQuery);
     }
 
+    public function getOneCursusUserByCursusAndUser(Cursus $cursus, User $user, $executeQuery = true)
+    {
+        return $this->cursusUserRepo->findOneCursusUserByCursusAndUser($cursus, $user, $executeQuery);
+    }
+
     public function getCursusUsersFromCursusAndUsers(array $cursus, array $users)
     {
         if (count($cursus) > 0 && count($users) > 0) {
@@ -4885,6 +4911,11 @@ class CursusManager
         } else {
             return [];
         }
+    }
+
+    public function getCursusUsersOfCursusChildren(Cursus $cursus, User $user, $executeQuery = true)
+    {
+        return $this->cursusUserRepo->findCursusUsersOfCursusChildren($cursus, $user, $executeQuery);
     }
 
     public function getUnregisteredUsersByCursus(
@@ -4904,6 +4935,22 @@ class CursusManager
         return $withPager ? $this->pagerFactory->createPagerFromArray($users, $page, $max) : $users;
     }
 
+    public function getUsersByCursus(
+        Cursus $cursus,
+        $search = '',
+        $orderedBy = 'firstName',
+        $order = 'ASC',
+        $withPager = false,
+        $page = 1,
+        $max = 50
+    ) {
+        $users = empty($search) ?
+            $this->cursusUserRepo->findUsersByCursus($cursus, $orderedBy, $order) :
+            $this->cursusUserRepo->findSearchedUsersByCursus($cursus, $search, $orderedBy, $order);
+
+        return $withPager ? $this->pagerFactory->createPagerFromArray($users, $page, $max) : $users;
+    }
+
     /*******************************************
      * Access to CursusGroupRepository methods *
      *******************************************/
@@ -4911,6 +4958,11 @@ class CursusManager
     public function getCursusGroupsByCursus(Cursus $cursus, $executeQuery = true)
     {
         return $this->cursusGroupRepo->findCursusGroupsByCursus($cursus, $executeQuery);
+    }
+
+    public function getOneCursusGroupByCursusAndGroup(Cursus $cursus, Group $group, $executeQuery = true)
+    {
+        return $this->cursusGroupRepo->findOneCursusGroupByCursusAndGroup($cursus, $group, $executeQuery);
     }
 
     public function getCursusGroupsFromCursusAndGroups(array $cursus, array $groups)
@@ -4922,39 +4974,51 @@ class CursusManager
         }
     }
 
-    public function getUnregisteredGroupsByCursus(Cursus $cursus, $search = '', $orderedBy = 'name', $order = 'ASC')
+    public function getCursusGroupsOfCursusChildren(Cursus $cursus, Group $group, $executeQuery = true)
     {
+        return $this->cursusGroupRepo->findCursusGroupsOfCursusChildren($cursus, $group, $executeQuery);
+    }
+
+    public function getUnregisteredGroupsByCursus(
+        Cursus $cursus,
+        $search = '',
+        $orderedBy = 'name',
+        $order = 'ASC',
+        $withPager = true,
+        $page = 1,
+        $max = 50
+    ) {
         $this->checkCursusToolRegistrationAccess();
-        $groups = [];
-        $user = $this->tokenStorage->getToken()->getUser();
+        $groups = empty($search) ?
+            $this->cursusGroupRepo->findUnregisteredGroupsByCursus($cursus, $orderedBy, $order) :
+            $this->cursusGroupRepo->findSearchedUnregisteredGroupsByCursus($cursus, $search, $orderedBy, $order);
 
-        if ($user !== 'anon.') {
-            $this->checkCursusAccess($user, $cursus);
+        return $withPager ? $this->pagerFactory->createPagerFromArray($groups, $page, $max) : $groups;
+    }
 
-            if ($this->authorization->isGranted('ROLE_ADMIN')) {
-                $groups = empty($search) ?
-                    $this->cursusGroupRepo->findUnregisteredGroupsByCursus($cursus, $orderedBy, $order) :
-                    $this->cursusGroupRepo->findSearchedUnregisteredGroupsByCursus($cursus, $search, $orderedBy, $order);
-            } else {
-                $organizations = $user->getAdministratedOrganizations()->toArray();
-                $groups = empty($search) ?
-                    $this->cursusGroupRepo->findUnregisteredGroupsByCursusAndOrganizations(
-                        $cursus,
-                        $organizations,
-                        $orderedBy,
-                        $order
-                    ) :
-                    $this->cursusGroupRepo->findSearchedUnregisteredGroupsByCursusAndOrganizations(
-                        $cursus,
-                        $organizations,
-                        $search,
-                        $orderedBy,
-                        $order
-                    );
-            }
-        }
+    public function getGroupsByCursus(
+        Cursus $cursus,
+        $search = '',
+        $orderedBy = 'name',
+        $order = 'ASC',
+        $withPager = false,
+        $page = 1,
+        $max = 50
+    ) {
+        $groups = empty($search) ?
+            $this->cursusGroupRepo->findGroupsByCursus(
+                $cursus,
+                $orderedBy,
+                $order
+            ) :
+            $this->cursusGroupRepo->findSearchedGroupsByCursus(
+                $cursus,
+                $search,
+                $orderedBy,
+                $order
+            );
 
-        return $groups;
+        return $withPager ? $this->pagerFactory->createPagerFromArray($groups, $page, $max) : $groups;
     }
 
     public function getCursusGroupsByIds(array $ids, $executeQuery = true)
@@ -4971,9 +5035,14 @@ class CursusManager
         return $this->courseSessionRepo->findAllSessions($orderedBy, $order, $executeQuery);
     }
 
-    public function getAllSessionsByOrganizations(array $organizations, $orderedBy = 'startDate', $order = 'ASC')
+    public function getUnclosedSessions()
     {
-        return $this->courseSessionRepo->findAllSessionsByOrganizations($organizations, $orderedBy, $order);
+        return $this->courseSessionRepo->findUnclosedSessions();
+    }
+
+    public function getUnclosedSessionsByCourse(Course $course)
+    {
+        return $this->courseSessionRepo->findUnclosedSessionsByCourse($course);
     }
 
     public function getSessionsByCourse(Course $course, $orderedBy = 'creationDate', $order = 'ASC', $executeQuery = true)
@@ -5165,26 +5234,31 @@ class CursusManager
     }
 
     public function getUnregisteredUsersBySession(
-        User $user,
         CourseSession $session,
         $userType,
+        $search = '',
         $orderedBy = 'firstName',
-        $order = 'ASC'
+        $order = 'ASC',
+        $withPager = true,
+        $page = 1,
+        $max = 50
     ) {
-        if ($user->hasRole('ROLE_ADMIN')) {
-            $users = $this->sessionUserRepo->findUnregisteredUsersBySession($session, $userType, $orderedBy, $order);
-        } else {
-            $organizations = $user->getAdministratedOrganizations()->toArray();
-            $users = $this->sessionUserRepo->findUnregisteredUsersBySessionAndOrganizations(
+        $users = empty($search) ?
+            $this->sessionUserRepo->findUnregisteredUsersBySession(
                 $session,
-                $organizations,
                 $userType,
                 $orderedBy,
                 $order
+            ) :
+            $this->sessionUserRepo->findSearchedUnregisteredUsersBySession(
+                $session,
+                $userType,
+                $search,
+                $orderedBy,
+                $order
             );
-        }
 
-        return $users;
+        return $withPager ? $this->pagerFactory->createPagerFromArray($users, $page, $max) : $users;
     }
 
     public function getSessionUsersByUserAndSessionStatus(User $user, $status, $currentDate = null, $search = '', $coursesList = null)
@@ -5219,26 +5293,31 @@ class CursusManager
     }
 
     public function getUnregisteredGroupsBySession(
-        User $user,
         CourseSession $session,
         $groupType,
+        $search = '',
         $orderedBy = 'name',
-        $order = 'ASC'
+        $order = 'ASC',
+        $withPager = true,
+        $page = 1,
+        $max = 50
     ) {
-        if ($this->authorization->isGranted('ROLE_ADMIN')) {
-            $groups = $this->sessionGroupRepo->findUnregisteredGroupsBySession($session, $groupType, $orderedBy, $order);
-        } else {
-            $organizations = $user->getAdministratedOrganizations()->toArray();
-            $groups = $this->sessionGroupRepo->findUnregisteredGroupsBySessionAndOrganizations(
+        $groups = empty($search) ?
+            $this->sessionGroupRepo->findUnregisteredGroupsBySession(
                 $session,
-                $organizations,
                 $groupType,
                 $orderedBy,
                 $order
+            ) :
+            $this->sessionGroupRepo->findSearchedUnregisteredGroupsBySession(
+                $session,
+                $groupType,
+                $search,
+                $orderedBy,
+                $order
             );
-        }
 
-        return $groups;
+        return $withPager ? $this->pagerFactory->createPagerFromArray($groups, $page, $max) : $groups;
     }
 
     /**************************************************************
@@ -5258,6 +5337,16 @@ class CursusManager
     public function getOneSessionQueueBySessionAndUser(CourseSession $session, User $user, $executeQuery = true)
     {
         return $this->sessionQueueRepo->findOneSessionQueueBySessionAndUser($session, $user, $executeQuery);
+    }
+
+    public function getSessionQueuesByCourse(Course $course, $executeQuery = true)
+    {
+        return $this->sessionQueueRepo->findSessionQueuesByCourse($course, $executeQuery);
+    }
+
+    public function getSessionQueuesByCourses(array $courses)
+    {
+        return count($courses) > 0 ? $this->sessionQueueRepo->findSessionQueuesByCourses($courses) : [];
     }
 
     public function getAllUnvalidatedSessionQueues()
@@ -5290,19 +5379,24 @@ class CursusManager
         return $this->sessionQueueRepo->findUnvalidatedSearchedSessionQueuesByOrganization($user, $search);
     }
 
-    public function getUnvalidatedSessionQueues(User $user)
+    public function getUnvalidatedSessionQueues()
     {
-        return $this->sessionQueueRepo->findUnvalidatedSessionQueues($user);
+        return $this->sessionQueueRepo->findUnvalidatedSessionQueues();
     }
 
-    public function getUnvalidatedSearchedSessionQueues(User $user, $search)
+    public function getUnvalidatedSearchedSessionQueues($search)
     {
-        return $this->sessionQueueRepo->findUnvalidatedSearchedSessionQueues($user, $search);
+        return $this->sessionQueueRepo->findUnvalidatedSearchedSessionQueues($search);
     }
 
     /*******************************************************
      * Access to CourseRegistrationQueueRepository methods *
      *******************************************************/
+
+    public function getCourseQueuesByCourse(Course $course, $executeQuery = true)
+    {
+        return $this->courseQueueRepo->findCourseQueuesByCourse($course, $executeQuery);
+    }
 
     public function getCourseQueuesByUser(User $user, $executeQuery = true)
     {
@@ -5344,14 +5438,14 @@ class CursusManager
         return $this->courseQueueRepo->findUnvalidatedSearchedCourseQueuesByOrganization($user, $search);
     }
 
-    public function getUnvalidatedCourseQueues(User $user)
+    public function getUnvalidatedCourseQueues()
     {
-        return $this->courseQueueRepo->findUnvalidatedCourseQueues($user);
+        return $this->courseQueueRepo->findUnvalidatedCourseQueues();
     }
 
-    public function getUnvalidatedSearchedCourseQueues(User $user, $search)
+    public function getUnvalidatedSearchedCourseQueues($search)
     {
-        return $this->courseQueueRepo->findUnvalidatedSearchedCourseQueues($user, $search);
+        return $this->courseQueueRepo->findUnvalidatedSearchedCourseQueues($search);
     }
 
     /*********************************************
@@ -5483,17 +5577,6 @@ class CursusManager
      * Rights checking *
      *******************/
 
-    public function extractOrganizationsIds(array $organizations)
-    {
-        $ids = [];
-
-        foreach ($organizations as $organization) {
-            $ids[] = $organization->getId();
-        }
-
-        return $ids;
-    }
-
     private function checkCursusToolRegistrationAccess()
     {
         $cursusTool = $this->toolManager->getAdminToolByName('claroline_cursus_tool_registration');
@@ -5508,32 +5591,5 @@ class CursusManager
         $cursusTool = $this->toolManager->getAdminToolByName('claroline_cursus_tool_registration');
 
         return $this->authorization->isGranted('OPEN', $cursusTool);
-    }
-
-    public function checkAccess(User $user)
-    {
-        if (!$this->authorization->isGranted('ROLE_ADMIN') && count($user->getAdministratedOrganizations()->toArray()) === 0) {
-            throw new AccessDeniedException();
-        }
-    }
-
-    public function checkCursusAccess(User $user, Cursus $cursus)
-    {
-        $userOrgas = $this->extractOrganizationsIds($user->getAdministratedOrganizations()->toArray());
-        $cursusOrgas = $this->extractOrganizationsIds($cursus->getOrganizations());
-
-        if (!$this->authorization->isGranted('ROLE_ADMIN') && count(array_intersect($userOrgas, $cursusOrgas)) === 0) {
-            throw new AccessDeniedException();
-        }
-    }
-
-    public function checkCourseAccess(User $user, Course $course)
-    {
-        $userOrgas = $this->extractOrganizationsIds($user->getAdministratedOrganizations()->toArray());
-        $courseOrgas = $this->extractOrganizationsIds($this->getOrganizationsByCourse($course));
-
-        if (!$this->authorization->isGranted('ROLE_ADMIN') && count(array_intersect($userOrgas, $courseOrgas)) === 0) {
-            throw new AccessDeniedException();
-        }
     }
 }

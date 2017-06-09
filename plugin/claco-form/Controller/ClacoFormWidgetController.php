@@ -69,7 +69,6 @@ class ClacoFormWidgetController extends Controller
         $config = $this->clacoFormManager->getClacoFormWidgetConfiguration($widgetInstance);
         $nbEntries = $config->getNbEntries();
         $showFieldLabel = $config->getShowFieldLabel();
-        $showCreatorPicture = $config->getShowCreatorPicture();
         $resourceNode = $config->getResourceNode();
         $clacoForm = is_null($resourceNode) ? null : $this->clacoFormManager->getClacoFormByResourceNode($resourceNode);
         $fields = $config->getFields();
@@ -111,12 +110,7 @@ class ClacoFormWidgetController extends Controller
             }
         }
 
-        return [
-            'clacoForm' => $clacoForm,
-            'data' => $data,
-            'showFieldLabel' => $showFieldLabel,
-            'showCreatorPicture' => $showCreatorPicture,
-        ];
+        return ['clacoForm' => $clacoForm, 'data' => $data, 'showFieldLabel' => $showFieldLabel];
     }
 
     /**
@@ -151,10 +145,8 @@ class ClacoFormWidgetController extends Controller
         if ($form->isValid()) {
             $nbEntries = $form->get('nbEntries')->getData();
             $showFieldLabel = $form->get('showFieldLabel')->getData();
-            $showCreatorPicture = $form->get('showCreatorPicture')->getData();
             $config->setNbEntries($nbEntries);
             $config->setShowFieldLabel($showFieldLabel);
-            $config->setShowCreatorPicture($showCreatorPicture);
             $this->clacoFormManager->persistClacoFormWidgetConfiguration($config);
 
             return new JsonResponse('success', 204);

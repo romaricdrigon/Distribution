@@ -5,7 +5,7 @@ namespace UJM\ExoBundle\Controller\Tool;
 use Claroline\CoreBundle\Entity\User;
 use JMS\DiExtraBundle\Annotation as DI;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
-use UJM\ExoBundle\Manager\Item\ItemManager;
+use UJM\ExoBundle\Manager\Question\QuestionManager;
 use UJM\ExoBundle\Serializer\UserSerializer;
 
 /**
@@ -17,9 +17,9 @@ use UJM\ExoBundle\Serializer\UserSerializer;
 class QuestionBankController
 {
     /**
-     * @var ItemManager
+     * @var QuestionManager
      */
-    private $itemManager;
+    private $questionManager;
 
     /**
      * @var UserSerializer
@@ -30,16 +30,18 @@ class QuestionBankController
      * QuestionBankController constructor.
      *
      * @DI\InjectParams({
-     *     "itemManager" = @DI\Inject("ujm_exo.manager.item"),
+     *     "questionManager" = @DI\Inject("ujm_exo.manager.question"),
      *     "userSerializer"  = @DI\Inject("ujm_exo.serializer.user")
      * })
      *
-     * @param ItemManager    $itemManager
-     * @param UserSerializer $userSerializer
+     * @param QuestionManager $questionManager
+     * @param UserSerializer  $userSerializer
      */
-    public function __construct(ItemManager $itemManager, UserSerializer $userSerializer)
+    public function __construct(
+        QuestionManager $questionManager,
+        UserSerializer $userSerializer)
     {
-        $this->itemManager = $itemManager;
+        $this->questionManager = $questionManager;
         $this->userSerializer = $userSerializer;
     }
 
@@ -58,7 +60,7 @@ class QuestionBankController
     public function openAction(User $user)
     {
         return [
-            'initialSearch' => $this->itemManager->search($user),
+            'initialSearch' => $this->questionManager->search($user),
             'currentUser' => $this->userSerializer->serialize($user),
         ];
     }

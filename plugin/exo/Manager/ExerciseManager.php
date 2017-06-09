@@ -9,10 +9,8 @@ use UJM\ExoBundle\Library\Options\Transfer;
 use UJM\ExoBundle\Library\Options\Validation;
 use UJM\ExoBundle\Library\Validator\ValidationException;
 use UJM\ExoBundle\Manager\Attempt\PaperManager;
-use UJM\ExoBundle\Manager\Item\ItemManager;
 use UJM\ExoBundle\Repository\ExerciseRepository;
 use UJM\ExoBundle\Serializer\ExerciseSerializer;
-use UJM\ExoBundle\Transfer\Parser\ContentParserInterface;
 use UJM\ExoBundle\Validator\JsonSchema\ExerciseValidator;
 
 /**
@@ -41,11 +39,6 @@ class ExerciseManager
     private $serializer;
 
     /**
-     * @var ItemManager
-     */
-    private $itemManager;
-
-    /**
      * @var PaperManager
      */
     private $paperManager;
@@ -57,28 +50,24 @@ class ExerciseManager
      *     "om"           = @DI\Inject("claroline.persistence.object_manager"),
      *     "validator"    = @DI\Inject("ujm_exo.validator.exercise"),
      *     "serializer"   = @DI\Inject("ujm_exo.serializer.exercise"),
-     *     "itemManager" = @DI\Inject("ujm_exo.manager.item"),
      *     "paperManager" = @DI\Inject("ujm_exo.manager.paper")
      * })
      *
      * @param ObjectManager      $om
      * @param ExerciseValidator  $validator
      * @param ExerciseSerializer $serializer
-     * @param ItemManager        $itemManager
      * @param PaperManager       $paperManager
      */
     public function __construct(
         ObjectManager $om,
         ExerciseValidator $validator,
         ExerciseSerializer $serializer,
-        ItemManager $itemManager,
         PaperManager $paperManager)
     {
         $this->om = $om;
         $this->repository = $this->om->getRepository('UJMExoBundle:Exercise');
         $this->validator = $validator;
         $this->serializer = $serializer;
-        $this->itemManager = $itemManager;
         $this->paperManager = $paperManager;
     }
 
@@ -128,20 +117,20 @@ class ExerciseManager
     }
 
     /**
-     * Serializes an Exercise.
+     * Exports an Exercise.
      *
      * @param Exercise $exercise
      * @param array    $options
      *
      * @return \stdClass
      */
-    public function serialize(Exercise $exercise, array $options = [])
+    public function export(Exercise $exercise, array $options = [])
     {
         return $this->serializer->serialize($exercise, $options);
     }
 
     /**
-     * Copies an Exercise resource.
+     * Creates a copy of an Exercise.
      *
      * @param Exercise $exercise
      *
@@ -152,10 +141,14 @@ class ExerciseManager
         // Serialize quiz entities
         $exerciseData = $this->serializer->serialize($exercise, [Transfer::INCLUDE_SOLUTIONS]);
 
+        // NB 1. We don't validate data because it comes from the DB and it's always valid
         // Populate new entities with original data
-        $newExercise = $this->createCopy($exerciseData, null);
+        // NB 2. We use server generated ids for entity creation because the client ones are already in the DB
+        // and we need some fresh ones to avoid duplicates
+        $newExercise = $this->serializer->deserialize($exerciseData, null, [Transfer::USE_SERVER_IDS]);
 
         // Save copy to db
+        $this->om->persist($newExercise);
         $this->om->flush();
 
         return $newExercise;
@@ -202,65 +195,5 @@ class ExerciseManager
     {
         $exercise->getResourceNode()->setPublished(false);
         $this->om->flush();
-    }
-
-    /**
-     * Generates new ids for quiz entities.
-     *
-     * @param Exercise $exercise
-     */
-    private function refreshIdentifiers(Exercise $exercise)
-    {
-        $exercise->refreshUuid();
-
-        foreach ($exercise->getSteps() as $step) {
-            $step->refreshUuid();
-            foreach ($step->getQuestions() as $item) {
-                $this->itemManager->refreshIdentifiers($item);
-            }
-        }
-    }
-
-    /**
-     * Applies an arbitrary parser on all HTML contents in the quiz definition.
-     *
-     * @param ContentParserInterface $contentParser
-     * @param \stdClass              $quizData
-     */
-    public function parseContents(ContentParserInterface $contentParser, \stdClass $quizData)
-    {
-        if (isset($quizData->description)) {
-            $quizData->description = $contentParser->parse($quizData->description);
-        }
-
-        array_walk($quizData->steps, function (\stdClass $step) use ($contentParser) {
-            if (isset($step->description)) {
-                $step->description = $contentParser->parse($step->description);
-            }
-
-            array_walk($step->items, function (\stdClass $item) use ($contentParser) {
-                $this->itemManager->parseContents($contentParser, $item);
-            });
-        });
-    }
-
-    /**
-     * Creates a copy of a quiz definition.
-     * (aka it creates a new entity if needed and generate new IDs for quiz data).
-     *
-     * @param \stdClass     $srcData
-     * @param Exercise|null $copyDestination - an existing Exercise entity to store the copy
-     *
-     * @return Exercise
-     */
-    public function createCopy(\stdClass $srcData, Exercise $copyDestination = null)
-    {
-        $copyDestination = $this->serializer->deserialize($srcData, $copyDestination, [Transfer::NO_FETCH]);
-        $this->refreshIdentifiers($copyDestination);
-
-        // Persist copy
-        $this->om->persist($copyDestination);
-
-        return $copyDestination;
     }
 }

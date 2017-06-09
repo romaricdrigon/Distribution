@@ -13,7 +13,8 @@ import simpleModalTemplate from '../../Cursus/Partial/simple_modal.html'
 import sessionsChoicesTransferTemplate from '../Partial/sessions_choices_transfer_modal.html'
 
 export default class CursusQueueManagementCtrl {
-  constructor($http, $uibModal) {
+        
+  constructor ($http, $uibModal) {
     this.$http = $http
     this.$uibModal = $uibModal
     this.connectedUser = {id: 0}
@@ -391,7 +392,7 @@ export default class CursusQueueManagementCtrl {
     this.initialize()
   }
 
-  searchDatas() {
+  searchDatas () {
     this.search = this.tempSearch
 
     if (this.search === '') {
@@ -401,7 +402,7 @@ export default class CursusQueueManagementCtrl {
     }
   }
 
-  declineCourseQueue(queueId) {
+  declineCourseQueue (queueId) {
     const route = Routing.generate('api_delete_course_queue', {queue: queueId})
     this.$http.delete(route).then(
       datas => {
@@ -431,7 +432,7 @@ export default class CursusQueueManagementCtrl {
     )
   }
 
-  declineSessionQueue(queueId) {
+  declineSessionQueue (queueId) {
     const route = Routing.generate('api_delete_session_queue', {queue: queueId})
     this.$http.delete(route).then(
       datas => {
@@ -461,7 +462,7 @@ export default class CursusQueueManagementCtrl {
     )
   }
 
-  validateCourseQueue(queueId) {
+  validateCourseQueue (queueId) {
     const route = Routing.generate('api_put_course_queue_validate', {queue: queueId})
     this.$http.put(route).then(
       datas => {
@@ -512,7 +513,7 @@ export default class CursusQueueManagementCtrl {
     )
   }
 
-  validateSessionQueue(queueId) {
+  validateSessionQueue (queueId) {
     const route = Routing.generate('api_put_session_queue_validate', {queue: queueId})
     this.$http.put(route).then(
       datas => {
@@ -579,7 +580,7 @@ export default class CursusQueueManagementCtrl {
     )
   }
 
-  transferCourseQueue(queueId, courseId) {
+  transferCourseQueue (queueId, courseId) {
     this.$uibModal.open({
       template: sessionsChoicesTransferTemplate,
       controller: 'SessionsChoicesTransferModalCtrl',
@@ -592,7 +593,7 @@ export default class CursusQueueManagementCtrl {
     })
   }
 
-  getAllDatas() {
+  getAllDatas () {
     const route = Routing.generate('api_get_registration_queues_datas')
     this.$http.get(route).then(datas => {
       if (datas['status'] === 200) {
@@ -603,7 +604,7 @@ export default class CursusQueueManagementCtrl {
     })
   }
 
-  getSearchedDatas(search) {
+  getSearchedDatas (search) {
     const route = Routing.generate('api_get_registration_queues_datas_by_search', {search: search})
     this.$http.get(route).then(datas => {
       if (datas['status'] === 200) {
@@ -614,7 +615,7 @@ export default class CursusQueueManagementCtrl {
     })
   }
 
-  checkAdminRole() {
+  checkAdminRole () {
     if (this.connectedUser['roles']) {
       const roles = this.connectedUser['roles']
 
@@ -627,7 +628,7 @@ export default class CursusQueueManagementCtrl {
     }
   }
 
-  removeCourseQueue(courseId, queueId) {
+  removeCourseQueue (courseId, queueId) {
     if (this.coursesQueues[courseId]) {
       for (let i = 0; i < this.coursesQueues[courseId].length; i++) {
         const queueDatas = this.coursesQueues[courseId][i]
@@ -640,7 +641,7 @@ export default class CursusQueueManagementCtrl {
     }
   }
 
-  removeSessionQueue(courseId, queueId) {
+  removeSessionQueue (courseId, queueId) {
     if (this.sessionsQueues[courseId]) {
       for (let i = 0; i < this.sessionsQueues[courseId].length; i++) {
         const queueDatas = this.sessionsQueues[courseId][i]
@@ -653,7 +654,7 @@ export default class CursusQueueManagementCtrl {
     }
   }
 
-  updateCourseQueue(courseId, queueId, status, mask) {
+  updateCourseQueue (courseId, queueId, status, mask) {
     if (this.coursesQueues[courseId]) {
       for (let i = 0; i < this.coursesQueues[courseId].length; i++) {
         const queueDatas = this.coursesQueues[courseId][i]
@@ -676,7 +677,7 @@ export default class CursusQueueManagementCtrl {
     }
   }
 
-  updateSessionQueue(courseId, queueId, status, mask) {
+  updateSessionQueue (courseId, queueId, status, mask) {
     if (this.sessionsQueues[courseId]) {
       for (let i = 0; i < this.sessionsQueues[courseId].length; i++) {
         const queueDatas = this.sessionsQueues[courseId][i]
@@ -699,7 +700,7 @@ export default class CursusQueueManagementCtrl {
     }
   }
 
-  initialize() {
+  initialize () {
     const userRoute = Routing.generate('api_get_connected_user')
     this.$http.get(userRoute).then(userDatas => {
       if (userDatas['status'] === 200) {

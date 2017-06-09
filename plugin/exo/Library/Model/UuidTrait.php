@@ -2,8 +2,6 @@
 
 namespace UJM\ExoBundle\Library\Model;
 
-use Ramsey\Uuid\Uuid;
-
 /**
  * Gives an entity the ability to have an UUID.
  */
@@ -34,10 +32,5 @@ trait UuidTrait
     public function setUuid($uuid)
     {
         $this->uuid = $uuid;
-    }
-
-    public function refreshUuid()
-    {
-        $this->uuid = Uuid::uuid4()->toString();
     }
 }

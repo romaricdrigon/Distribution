@@ -1,4 +1,4 @@
-const paths = require('./main/core/Resources/server/paths')
+const paths = require('./main/core/Resources/server/webpack/paths')
 const webpackConfig = require('./webpack.test')
 
 module.exports = config => {

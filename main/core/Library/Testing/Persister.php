@@ -223,7 +223,7 @@ class Persister
     {
         $toolManager = $this->container->get('claroline.manager.tool_manager');
         $tool = $toolManager->getAdminToolByName($toolName);
-        $role = $this->container->get('claroline.manager.role_manager')->getUserRole($user->getUsername());
+        $role = $this->container->get('claroline.manager.role_manager')->getUserRole($user);
         $toolManager->addRoleToAdminTool($tool, $role);
     }
 

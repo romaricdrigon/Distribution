@@ -11,15 +11,14 @@
 
 namespace Claroline\CoreBundle\Repository;
 
-use Claroline\CoreBundle\Entity\Group;
-use Claroline\CoreBundle\Entity\Resource\ResourceNode;
-use Claroline\CoreBundle\Entity\Role;
-use Claroline\CoreBundle\Entity\Tool\AdminTool;
-use Claroline\CoreBundle\Entity\Tool\ToolMaskDecoder;
-use Claroline\CoreBundle\Entity\User;
-use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Doctrine\ORM\EntityRepository;
-use Doctrine\ORM\Query;
+use Claroline\CoreBundle\Entity\Role;
+use Claroline\CoreBundle\Entity\Workspace\Workspace;
+use Claroline\CoreBundle\Entity\User;
+use Claroline\CoreBundle\Entity\Group;
+use Claroline\CoreBundle\Entity\Tool\ToolMaskDecoder;
+use Claroline\CoreBundle\Entity\Tool\AdminTool;
+use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 
 class RoleRepository extends EntityRepository
 {
@@ -326,7 +325,7 @@ class RoleRepository extends EntityRepository
     public function findAllWhereWorkspaceIsDisplayableAndInList(array $workspaces)
     {
         if (count($workspaces) === 0) {
-            return [];
+            return array();
         } else {
             $dql = "
                 SELECT r, w
@@ -467,24 +466,28 @@ class RoleRepository extends EntityRepository
     /**
      * Returns user-type role of an user.
      *
-     * @param string $username
-     * @param bool   $executeQuery
+     * @param User $user
+     * @param bool $executeQuery
      *
-     * @return Role[]|Query
+     * @return array[Role]|query
      */
-    public function findUserRoleByUsername($username, $executeQuery = true)
+    public function findUserRoleByUser(User $user, $executeQuery = true)
     {
-        $query = $this->_em
-            ->createQuery('
-                SELECT r
-                FROM Claroline\CoreBundle\Entity\Role r
-                WHERE r.type = :type
-                AND r.name = :name
-                AND r.translationKey = :key
-            ')
-            ->setParameter('type', Role::USER_ROLE)
-            ->setParameter('name', 'ROLE_USER_'.strtoupper($username))
-            ->setParameter('key', $username);
+        $username = $user->getUsername();
+        $roleName = 'ROLE_USER_'.strtoupper($username);
+
+        $dql = '
+            SELECT r
+            FROM Claroline\CoreBundle\Entity\Role r
+            WHERE r.type = :type
+            AND r.name = :name
+            AND r.translationKey = :key
+        ';
+
+        $query = $this->_em->createQuery($dql);
+        $query->setParameter('type', Role::USER_ROLE);
+        $query->setParameter('name', $roleName);
+        $query->setParameter('key', $username);
 
         return $executeQuery ? $query->getOneOrNullResult() : $query;
     }

@@ -15,10 +15,6 @@
                 'href': path('claro_admin_index')
             },
             {
-                'name': 'third_party_authentication'|trans({}, 'platform'),
-                'href': path('claro_admin_parameters_third_party_authentication_index')
-            },
-            {
                 'name': 'LDAP'|trans({}, 'ldap'),
                 'href': path('claro_admin_ldap')
             },
@@ -100,7 +96,7 @@
                             <th>{{ 'name' | trans({}, 'platform') }}</th>
                             <th>{{ 'code' | trans({}, 'platform') }}</th>
                         </tr>
-                        {% for i in 0..4 %}
+                        {% for i in 1..5 %}
                             <tr id="groups{{ i }}">
                                 <td class="groupName"></td>
                                 <td class="groupCode"></td>
@@ -119,7 +115,7 @@
 
 {% block javascripts %}
     {{ parent() }}
-    <script type="text/javascript" src="{{ url('bazinga_jstranslation_js', { 'domain': 'ldap' }) }}"></script>
+    <script type="text/javascript" src="{{ url('bazinga_jstranslation_js', { 'domain_name': 'ldap' }) }}"></script>
     <script type="text/javascript" src="{{ asset('bundles/clarolineldap/js/ldap.js') }}"></script>
     {% if groups is defined and not groups is empty %}
         <script>

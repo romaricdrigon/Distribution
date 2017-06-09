@@ -12,7 +12,6 @@ use Claroline\ScormBundle\Event\ExportScormResourceEvent;
 use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Form\FormInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use UJM\ExoBundle\Entity\Exercise;
 use UJM\ExoBundle\Form\Type\ExerciseType;
@@ -115,11 +114,8 @@ class ExerciseListener
         /** @var Exercise $exercise */
         $exercise = $event->getResource();
 
-        /** @var Request $currentRequest */
-        $currentRequest = $this->container->get('request_stack')->getCurrentRequest();
-
         // Forward request to the Resource controller
-        $subRequest = $currentRequest->duplicate($currentRequest->query->all(), null, [
+        $subRequest = $this->container->get('request_stack')->getCurrentRequest()->duplicate([], null, [
             '_controller' => 'UJMExoBundle:Resource\Exercise:open',
             'id' => $exercise->getUuid(),
         ]);
@@ -194,7 +190,7 @@ class ExerciseListener
         /** @var Exercise $exercise */
         $exercise = $event->getResource();
 
-        $exerciseExport = $this->container->get('ujm_exo.manager.exercise')->serialize($exercise, [Transfer::INCLUDE_SOLUTIONS]);
+        $exerciseExport = $this->container->get('ujm_exo.manager.exercise')->export($exercise, [Transfer::INCLUDE_SOLUTIONS]);
 
         if (!empty($exerciseExport->description)) {
             $exerciseExport->description = $this->exportHtmlContent($event, $exerciseExport->description);

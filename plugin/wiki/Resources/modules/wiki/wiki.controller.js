@@ -10,11 +10,10 @@ let _transFilter = new WeakMap()
 let _modalInstance = new WeakMap()
 let _modalFactory = new WeakMap()
 let _$scope = new WeakMap()
-let _url = new WeakMap()
 
 export default class WikiController {
 
-  constructor($resource, wikiService, $location, $anchorScroll, $routeParams, Messages, transFilter, modal, $scope, tinyMceConfig, url) {
+  constructor($resource, wikiService, $location, $anchorScroll, $routeParams, Messages, transFilter, modal, $scope, tinyMceConfig) {
     _$resource.set(this, $resource)
     _$location.set(this, $location)
     _$anchorScroll.set(this, $anchorScroll)
@@ -23,7 +22,6 @@ export default class WikiController {
     _modalInstance.set(this, null)
     _modalFactory.set(this, modal)
     _$scope.set(this, $scope)
-    _url.set(this, url)
 
     this.wiki = wikiService
     this.$routeParams = $routeParams
@@ -54,13 +52,6 @@ export default class WikiController {
 
   displayUrl(url) {
     _$location.get(this).url(url)
-  }
-
-  get pdfExportUrl() {
-    return _url.get(this)('icap_wiki_view', {
-      'wikiId': this.wiki.id,
-      '_format': 'pdf'
-    })
   }
 
   displayOptions() {
@@ -326,6 +317,5 @@ WikiController.$inject = [
   'transFilter',
   'wikiModal',
   '$scope',
-  'tinyMceConfig',
-  'url'
+  'tinyMceConfig'
 ]

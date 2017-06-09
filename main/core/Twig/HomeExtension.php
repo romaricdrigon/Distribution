@@ -12,8 +12,8 @@
 namespace Claroline\CoreBundle\Twig;
 
 use JMS\DiExtraBundle\Annotation as DI;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Router;
 
 /**
@@ -43,28 +43,28 @@ class HomeExtension extends \Twig_Extension
      */
     public function getFilters()
     {
-        return [
+        return array(
             'timeAgo' => new \Twig_Filter_Method($this, 'timeAgo'),
             'homeLink' => new \Twig_Filter_Method($this, 'homeLink'),
             'activeLink' => new \Twig_Filter_Method($this, 'activeLink'),
             'activeRoute' => new \Twig_Filter_Method($this, 'activeRoute'),
             'compareRoute' => new \Twig_Filter_Method($this, 'compareRoute'),
             'autoLink' => new \Twig_Filter_Method($this, 'autoLink'),
-        ];
+        );
     }
 
     public function getFunctions()
     {
-        return [
+        return array(
             'isDesktop' => new \Twig_Function_Method($this, 'isDesktop'),
             'asset_exists' => new \Twig_Function_Method($this, 'assetExists'),
-        ];
+        );
     }
 
     /**
      * Get the elapsed time since $start to right now, with a transChoice() for translation in plural or singular.
      *
-     * @param \DateTime $start The initial time
+     * @param \DateTime $start The initial time.
      *
      * @return \String
      *
@@ -75,30 +75,30 @@ class HomeExtension extends \Twig_Extension
         $end = new \DateTime('now');
         $translator = $this->container->get('translator');
         $interval = $start->diff($end);
-        $formats = ['%Y', '%m', '%W', '%d', '%H', '%i', '%s'];
+        $formats = array('%Y', '%m', '%W', '%d', '%H', '%i', '%s');
 
-        $translation['singular'] = [
-            '%Y' => $translator->trans('year', [], 'platform'),
-            '%m' => $translator->trans('month', [], 'platform'),
-            '%W' => $translator->trans('week', [], 'platform'),
-            '%d' => $translator->trans('day', [], 'platform'),
-            '%H' => $translator->trans('hour', [], 'platform'),
-            '%i' => $translator->trans('minute', [], 'platform'),
-            '%s' => $translator->trans('second', [], 'platform'),
-        ];
+        $translation['singular'] = array(
+            '%Y' => $translator->trans('year', array(), 'platform'),
+            '%m' => $translator->trans('month', array(), 'platform'),
+            '%W' => $translator->trans('week', array(), 'platform'),
+            '%d' => $translator->trans('day', array(), 'platform'),
+            '%H' => $translator->trans('hour', array(), 'platform'),
+            '%i' => $translator->trans('minute', array(), 'platform'),
+            '%s' => $translator->trans('second', array(), 'platform'),
+        );
 
-        $translation['plural'] = [
-            '%Y' => $translator->trans('years', [], 'platform'),
-            '%m' => $translator->trans('months', [], 'platform'),
-            '%W' => $translator->trans('weeks', [], 'platform'),
-            '%d' => $translator->trans('days', [], 'platform'),
-            '%H' => $translator->trans('hours', [], 'platform'),
-            '%i' => $translator->trans('minutes', [], 'platform'),
-            '%s' => $translator->trans('seconds', [], 'platform'),
-        ];
+        $translation['plural'] = array(
+            '%Y' => $translator->trans('years', array(), 'platform'),
+            '%m' => $translator->trans('months', array(), 'platform'),
+            '%W' => $translator->trans('weeks', array(), 'platform'),
+            '%d' => $translator->trans('days', array(), 'platform'),
+            '%H' => $translator->trans('hours', array(), 'platform'),
+            '%i' => $translator->trans('minutes', array(), 'platform'),
+            '%s' => $translator->trans('seconds', array(), 'platform'),
+        );
 
         foreach ($formats as $format) {
-            if ($format === '%W') {
+            if ($format == '%W') {
                 $i = round($interval->format('%d') / 8); //fix for week that does not exist in DataInterval obj
             } else {
                 $i = ltrim($interval->format($format), '0');
@@ -110,7 +110,7 @@ class HomeExtension extends \Twig_Extension
                 return $this->container->get('translator')->transChoice(
                     'time_ago',
                     $i,
-                    ['%count%' => $i, '%unit%' => $unit],
+                    array('%count%' => $i, '%unit%' => $unit),
                     'platform'
                 );
             }
@@ -120,7 +120,7 @@ class HomeExtension extends \Twig_Extension
         return $this->container->get('translator')->transChoice(
             'seconds_ago',
             1,
-            ['%count%' => 1],
+            array('%count%' => 1),
             'home'
         );
     }
@@ -164,8 +164,8 @@ class HomeExtension extends \Twig_Extension
      *
      * Example: {% if "claro_get_content_by_type" | activeRoute({'type': 'home'}) %}true{% endif %}
      *
-     * @param $route The name of the route
-     * @param $params One or more params of the route
+     * @param $route The name of the route.
+     * @param $params One or more params of the route.
      *
      * @return true if the routes match
      */
@@ -247,14 +247,9 @@ class HomeExtension extends \Twig_Extension
     public function assetExists($path)
     {
         $webRoot = realpath($this->kernel->getRootDir().'/../web/');
-        $toCheck = realpath($webRoot.$path);
+        $toCheck = realpath($webRoot.'/'.$path);
 
         if (!is_file($toCheck)) {
-            return false;
-        }
-
-        // check if file is well contained in web/ directory (prevents ../ in paths)
-        if (strncmp($webRoot, $toCheck, strlen($webRoot)) !== 0) {
             return false;
         }
 

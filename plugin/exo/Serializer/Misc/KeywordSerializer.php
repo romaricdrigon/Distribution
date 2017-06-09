@@ -50,8 +50,7 @@ class KeywordSerializer implements SerializerInterface
             $keyword = new Keyword();
         }
 
-        $cleanedText = trim(strip_tags(html_entity_decode($data->text)));
-        $keyword->setText($cleanedText);
+        $keyword->setText($data->text);
         $keyword->setCaseSensitive($data->caseSensitive);
         $keyword->setScore($data->score);
 

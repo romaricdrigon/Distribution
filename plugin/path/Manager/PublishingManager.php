@@ -2,41 +2,49 @@
 
 namespace Innova\PathBundle\Manager;
 
-use Claroline\CoreBundle\Entity\Resource\Activity;
-use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Claroline\CoreBundle\Manager\RightsManager;
 use Doctrine\Common\Persistence\ObjectManager;
 use Innova\PathBundle\Entity\InheritedResource;
 use Innova\PathBundle\Entity\Path\Path;
 use Innova\PathBundle\Entity\Step;
-use JMS\DiExtraBundle\Annotation as DI;
 
 /**
  * Manage Publishing of the paths.
- *
- * @DI\Service("innova_path.manager.publishing")
  */
 class PublishingManager
 {
     /**
-     * @var ObjectManager
+     * Current entity manage for data persist.
+     *
+     * @var \Doctrine\Common\Persistence\ObjectManager
      */
     protected $om;
 
     /**
-     * @var StepManager
+     * Resource Manager.
+     *
+     * @var \Claroline\CoreBundle\Manager\ResourceManager
+     */
+    protected $resourceManager;
+
+    /**
+     * innova step manager.
+     *
+     * @var \Innova\PathBundle\Manager\StepManager
      */
     protected $stepManager;
 
     /**
-     * @var RightsManager
+     * Rights Manager.
+     *
+     * @var \Claroline\CoreBundle\Manager\RightsManager
      */
     protected $rightsManager;
 
     /**
      * Path to publish.
      *
-     * @var Path
+     * @var \Innova\PathBundle\Entity\Path\Path
      */
     protected $path;
 
@@ -48,36 +56,30 @@ class PublishingManager
     protected $pathStructure;
 
     /**
-     * PublishingManager constructor.
+     * Class constructor.
      *
-     * @DI\InjectParams({
-     *     "om"            = @DI\Inject("claroline.persistence.object_manager"),
-     *     "rightsManager" = @DI\Inject("claroline.manager.rights_manager"),
-     *     "stepManager"   = @DI\Inject("innova_path.manager.step")
-     * })
-     *
-     * @param ObjectManager $om
-     * @param RightsManager $rightsManager
-     * @param StepManager   $stepManager
+     * @param \Doctrine\Common\Persistence\ObjectManager  $objectManager
+     * @param \Innova\PathBundle\Manager\StepManager      $stepManager
+     * @param \Claroline\CoreBundle\Manager\RightsManager $rightsManager
      */
     public function __construct(
-        ObjectManager $om,
-        RightsManager $rightsManager,
-        StepManager   $stepManager)
+        ObjectManager        $objectManager,
+        StepManager          $stepManager,
+        RightsManager        $rightsManager)
     {
-        $this->om = $om;
-        $this->rightsManager = $rightsManager;
+        $this->om = $objectManager;
         $this->stepManager = $stepManager;
+        $this->rightsManager = $rightsManager;
     }
 
     /**
      * Initialize a new Publishing.
      *
-     * @param Path $path
+     * @param \Innova\PathBundle\Entity\Path\Path $path
      *
      * @throws \Exception
      *
-     * @return PublishingManager
+     * @return \Innova\PathBundle\Manager\PublishingManager
      */
     protected function start(Path $path)
     {
@@ -98,7 +100,7 @@ class PublishingManager
      * End of the Publishing
      * Remove temp data from current service.
      *
-     * @return PublishingManager
+     * @return \Innova\PathBundle\Manager\PublishingManager
      */
     protected function end()
     {
@@ -112,7 +114,7 @@ class PublishingManager
      * Publish path
      * Create all needed Entities from JSON structure created by the Editor.
      *
-     * @param Path $path
+     * @param \Innova\PathBundle\Entity\Path\Path $path
      *
      * @throws \Exception
      *
@@ -166,10 +168,10 @@ class PublishingManager
     /**
      * Publish steps for the path.
      *
-     * @param int   $level
-     * @param Step  $parent
-     * @param array $steps
-     * @param array $propagatedResources
+     * @param int                            $level
+     * @param \Innova\PathBundle\Entity\Step $parent
+     * @param array                          $steps
+     * @param array                          $propagatedResources
      *
      * @return array
      */
@@ -233,11 +235,11 @@ class PublishingManager
     /**
      * Manage resource inheritance.
      *
-     * @param Step  $step
-     * @param array $propagatedResources
-     * @param array $excludedResources
+     * @param \Innova\PathBundle\Entity\Step $step
+     * @param array                          $propagatedResources
+     * @param array                          $excludedResources
      *
-     * @return PublishingManager
+     * @return \Innova\PathBundle\Manager\PublishingManager
      */
     protected function publishPropagatedResources(Step $step, array $propagatedResources = [], array $excludedResources = [])
     {
@@ -249,8 +251,8 @@ class PublishingManager
                 if (!in_array($resource['id'], $excludedResources)) {
                     // Resource is not excluded => link it to step
 
-                    /** @var ResourceNode $resourceNode */
-                    $resourceNode = $this->om->getRepository('ClarolineCoreBundle:Resource\ResourceNode')->find($resource['resourceId']);
+                    // Retrieve resource node
+                    $resourceNode = $this->om->getRepository('ClarolineCoreBundle:Resource\ResourceNode')->findOneById($resource['resourceId']);
                     if ($resourceNode) {
                         if (!$inherited = $step->hasInheritedResource($resourceNode->getId())) {
                             // Inherited resource doesn't exist => Create inherited resource
@@ -291,7 +293,7 @@ class PublishingManager
      * @param array $neededSteps
      * @param array $existingSteps
      *
-     * @return PublishingManager
+     * @return \Innova\PathBundle\Manager\PublishingManager
      */
     protected function cleanSteps(array $neededSteps = [], array $existingSteps = [])
     {
@@ -318,7 +320,7 @@ class PublishingManager
     /**
      * Check that all Activities and Resources as at least same rights than the Path.
      *
-     * @return PublishingManager
+     * @return \Innova\PathBundle\Manager\PublishingManager
      */
     protected function manageRights()
     {
@@ -343,7 +345,7 @@ class PublishingManager
     /**
      * Retrieve all ResourceNodes of a Path.
      *
-     * @param Step[] $steps
+     * @param array $steps
      *
      * @return array
      */
@@ -352,7 +354,6 @@ class PublishingManager
         $nodes = [];
 
         foreach ($steps as $step) {
-            /** @var Activity $activity */
             $activity = $step->getActivity();
             if (!empty($activity)) {
                 // Get Activity Node

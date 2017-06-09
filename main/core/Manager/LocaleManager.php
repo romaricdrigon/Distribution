@@ -59,7 +59,7 @@ class LocaleManager
      */
     public function retrieveAvailableLocales($path = '/../Resources/translations/')
     {
-        $locales = [];
+        $locales = array();
         $data = $this->configHandler->getParameter('locales');
 
         foreach ($data as $locale) {
@@ -78,11 +78,11 @@ class LocaleManager
      */
     public function getImplementedLocales($path = '/../Resources/translations/')
     {
-        $locales = [];
-        $finder = $this->finder->files()->in(__DIR__.$path)->name('/platform\.[^.]*\.json/');
+        $locales = array();
+        $finder = $this->finder->files()->in(__DIR__.$path)->name('/platform\.[^.]*\.yml/');
 
         foreach ($finder as $file) {
-            $locale = str_replace(['platform.', '.json'], '', $file->getRelativePathname());
+            $locale = str_replace(array('platform.', '.yml'), '', $file->getRelativePathname());
             $locales[$locale] = $locale;
         }
 
@@ -106,10 +106,11 @@ class LocaleManager
     /**
      * Set locale setting for current user if this locale is present in the platform.
      *
-     * @param string $locale The locale string as en, fr, es, etc
+     * @param string $locale The locale string as en, fr, es, etc.
      */
     public function setUserLocale($locale)
     {
+        $locales = $this->getAvailableLocales();
         $this->userManager->setLocale($this->getCurrentUser(), $locale);
     }
 
@@ -119,7 +120,7 @@ class LocaleManager
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
      *
-     * @return string The locale string as en, fr, es, etc
+     * @return string The locale string as en, fr, es, etc.
      */
     public function getUserLocale(Request $request)
     {
@@ -168,7 +169,6 @@ class LocaleManager
             'en' => 'English',
             'nl' => 'Nederlands',
             'es' => 'Español',
-            'it' => 'Italiano',
         ];
     }
 

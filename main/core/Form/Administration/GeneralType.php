@@ -31,7 +31,6 @@ class GeneralType extends AbstractType
     private $dateFormat;
     private $language;
     private $lockedParams;
-    private $targetLoginUrls;
 
     public function __construct(
         array $langs,
@@ -39,8 +38,7 @@ class GeneralType extends AbstractType
         $description,
         $dateFormat,
         $language,
-        array $lockedParams = [],
-        array $targetLoginUrls = []
+        array $lockedParams = []
     ) {
         $this->role = $role;
         $this->description = $description;
@@ -53,7 +51,6 @@ class GeneralType extends AbstractType
             $this->langs = ['en' => 'en', 'fr' => 'fr'];
         }
         $this->lockedParams = $lockedParams;
-        $this->targetLoginUrls = $targetLoginUrls;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options)
@@ -169,17 +166,6 @@ class GeneralType extends AbstractType
                     'label' => 'use_honeypot',
                     'required' => false,
                     'disabled' => isset($this->lockedParams['form_honeypot']),
-                ]
-            )
-            ->add(
-                'loginTargetRoute',
-                'choice',
-                [
-                    'choices' => $this->targetLoginUrls,
-                    'choices_as_values' => true,
-                    'expanded' => false,
-                    'multiple' => false,
-                    'label' => 'login_target_route_option',
                 ]
             )
             ->add(

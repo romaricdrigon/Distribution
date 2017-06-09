@@ -7,7 +7,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 use UJM\ExoBundle\Entity\Exercise;
-use UJM\ExoBundle\Library\Model\UuidTrait;
 
 /**
  * A paper represents a user attempt to a quiz.
@@ -26,7 +25,12 @@ class Paper
      */
     private $id;
 
-    use UuidTrait;
+    /**
+     * @var string
+     *
+     * @ORM\Column("uuid", type="string", length=36, unique=true)
+     */
+    private $uuid;
 
     /**
      * @ORM\Column(name="num_paper", type="integer")
@@ -130,6 +134,26 @@ class Paper
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Gets UUID.
+     *
+     * @return string
+     */
+    public function getUuid()
+    {
+        return $this->uuid;
+    }
+
+    /**
+     * Sets UUID.
+     *
+     * @param $uuid
+     */
+    public function setUuid($uuid)
+    {
+        $this->uuid = $uuid;
     }
 
     /**

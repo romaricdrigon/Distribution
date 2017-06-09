@@ -18,8 +18,6 @@ use Claroline\ClacoFormBundle\Entity\Entry;
 use Claroline\ClacoFormBundle\Entity\Field;
 use Claroline\ClacoFormBundle\Entity\Keyword;
 use Claroline\ClacoFormBundle\Manager\ClacoFormManager;
-use Claroline\CoreBundle\Entity\User;
-use Claroline\CoreBundle\Library\Configuration\PlatformConfigurationHandler;
 use Claroline\CoreBundle\Manager\UserManager;
 use JMS\DiExtraBundle\Annotation as DI;
 use JMS\Serializer\SerializationContext;
@@ -28,14 +26,11 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class ClacoFormController extends Controller
 {
     private $clacoFormManager;
-    private $filesDir;
-    private $platformConfigHandler;
     private $request;
     private $serializer;
     private $tokenStorage;
@@ -43,27 +38,21 @@ class ClacoFormController extends Controller
 
     /**
      * @DI\InjectParams({
-     *     "clacoFormManager"      = @DI\Inject("claroline.manager.claco_form_manager"),
-     *     "filesDir"              = @DI\Inject("%claroline.param.files_directory%"),
-     *     "platformConfigHandler" = @DI\Inject("claroline.config.platform_config_handler"),
-     *     "request"               = @DI\Inject("request"),
-     *     "serializer"            = @DI\Inject("jms_serializer"),
-     *     "tokenStorage"          = @DI\Inject("security.token_storage"),
-     *     "userManager"           = @DI\Inject("claroline.manager.user_manager")
+     *     "clacoFormManager" = @DI\Inject("claroline.manager.claco_form_manager"),
+     *     "request"          = @DI\Inject("request"),
+     *     "serializer"       = @DI\Inject("jms_serializer"),
+     *     "tokenStorage"     = @DI\Inject("security.token_storage"),
+     *     "userManager"      = @DI\Inject("claroline.manager.user_manager")
      * })
      */
     public function __construct(
         ClacoFormManager $clacoFormManager,
-        $filesDir,
-        PlatformConfigurationHandler $platformConfigHandler,
         Request $request,
         Serializer $serializer,
         TokenStorageInterface $tokenStorage,
         UserManager $userManager
     ) {
         $this->clacoFormManager = $clacoFormManager;
-        $this->filesDir = $filesDir;
-        $this->platformConfigHandler = $platformConfigHandler;
         $this->request = $request;
         $this->serializer = $serializer;
         $this->tokenStorage = $tokenStorage;
@@ -91,7 +80,7 @@ class ClacoFormController extends Controller
         $publishedEntries = $this->clacoFormManager->getPublishedEntries($clacoForm);
         $nbEntries = count($allEntries);
         $nbPublishedEntries = count($publishedEntries);
-        $myEntries = $isAnon ? [] : $this->clacoFormManager->getUserEntries($clacoForm, $user);
+        $myEntries = $isAnon ? [] : $this->clacoFormManager->getEntriesByUser($clacoForm, $user);
         $myCategories = $isAnon ? [] : $this->clacoFormManager->getCategoriesByManager($clacoForm, $user);
         $isCategoryManager = count($myCategories) > 0;
         $managerEntries = $isAnon ? [] : $this->clacoFormManager->getEntriesByCategories($clacoForm, $myCategories);
@@ -120,10 +109,6 @@ class ClacoFormController extends Controller
             'json',
             SerializationContext::create()->setGroups(['api_user_min'])
         );
-        $canGeneratePdf = !$isAnon &&
-            $this->platformConfigHandler->hasParameter('knp_pdf_binary_path') &&
-            file_exists($this->platformConfigHandler->getParameter('knp_pdf_binary_path'));
-        $sharedEntries = $this->clacoFormManager->generateSharedEntriesData($clacoForm);
 
         return [
             'isAnon' => $isAnon,
@@ -138,8 +123,6 @@ class ClacoFormController extends Controller
             'managerEntries' => $serializedManagerEntries,
             'nbEntries' => $nbEntries,
             'nbPublishedEntries' => $nbPublishedEntries,
-            'canGeneratePdf' => $canGeneratePdf,
-            'sharedEntries' => $sharedEntries,
         ];
     }
 
@@ -181,6 +164,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_field_create",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Creates a field
      *
@@ -201,18 +185,12 @@ class ClacoFormController extends Controller
         }
         $required = is_bool($fieldData['required']) ? $fieldData['required'] : $fieldData['required'] === 'true';
         $isMetadata = is_bool($fieldData['isMetadata']) ? $fieldData['isMetadata'] : $fieldData['isMetadata'] === 'true';
-        $locked = is_bool($fieldData['locked']) ? $fieldData['locked'] : $fieldData['locked'] === 'true';
-        $lockedEditionOnly = is_bool($fieldData['lockedEditionOnly']) ?
-            $fieldData['lockedEditionOnly'] :
-            $fieldData['lockedEditionOnly'] === 'true';
         $field = $this->clacoFormManager->createField(
             $clacoForm,
             $fieldData['name'],
             $fieldData['type'],
             $required,
             $isMetadata,
-            $locked,
-            $lockedEditionOnly,
             $choices
         );
         $serializedField = $this->serializer->serialize(
@@ -230,6 +208,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_field_edit",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Edits a field
      *
@@ -257,18 +236,12 @@ class ClacoFormController extends Controller
         }
         $required = is_bool($fieldData['required']) ? $fieldData['required'] : $fieldData['required'] === 'true';
         $isMetadata = is_bool($fieldData['isMetadata']) ? $fieldData['isMetadata'] : $fieldData['isMetadata'] === 'true';
-        $locked = is_bool($fieldData['locked']) ? $fieldData['locked'] : $fieldData['locked'] === 'true';
-        $lockedEditionOnly = is_bool($fieldData['lockedEditionOnly']) ?
-            $fieldData['lockedEditionOnly'] :
-            $fieldData['lockedEditionOnly'] === 'true';
         $this->clacoFormManager->editField(
             $field,
             $fieldData['name'],
             $fieldData['type'],
             $required,
             $isMetadata,
-            $locked,
-            $lockedEditionOnly,
             $oldChoices,
             $newChoices
         );
@@ -287,6 +260,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_field_delete",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Deletes a field
      *
@@ -312,6 +286,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_get_field_by_name_excluding_id",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Returns the field
      *
@@ -336,6 +311,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_field_choices_categories_retrieve",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Retrieves categories associated to choices from a field
      *
@@ -361,6 +337,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_category_create",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Creates a category
      *
@@ -379,9 +356,6 @@ class ClacoFormController extends Controller
         $notifyRemoval = is_bool($categoryData['notifyRemoval']) ?
             $categoryData['notifyRemoval'] :
             $categoryData['notifyRemoval'] === 'true';
-        $notifyPendingComment = is_bool($categoryData['notifyPendingComment']) ?
-            $categoryData['notifyPendingComment'] :
-            $categoryData['notifyPendingComment'] === 'true';
         $managers = isset($categoryData['managers']) && count($categoryData['managers']) > 0 ?
             $this->userManager->getUsersByIds($categoryData['managers']) :
             [];
@@ -392,8 +366,7 @@ class ClacoFormController extends Controller
             $categoryData['color'],
             $notifyAddition,
             $notifyEdition,
-            $notifyRemoval,
-            $notifyPendingComment
+            $notifyRemoval
         );
         $serializedCategory = $this->serializer->serialize(
             $category,
@@ -410,6 +383,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_category_edit",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Edits a category
      *
@@ -429,9 +403,6 @@ class ClacoFormController extends Controller
         $notifyRemoval = is_bool($categoryData['notifyRemoval']) ?
             $categoryData['notifyRemoval'] :
             $categoryData['notifyRemoval'] === 'true';
-        $notifyPendingComment = is_bool($categoryData['notifyPendingComment']) ?
-            $categoryData['notifyPendingComment'] :
-            $categoryData['notifyPendingComment'] === 'true';
         $managers = isset($categoryData['managers']) && count($categoryData['managers']) > 0 ?
             $this->userManager->getUsersByIds($categoryData['managers']) :
             [];
@@ -442,8 +413,7 @@ class ClacoFormController extends Controller
             $categoryData['color'],
             $notifyAddition,
             $notifyEdition,
-            $notifyRemoval,
-            $notifyPendingComment
+            $notifyRemoval
         );
         $serializedCategory = $this->serializer->serialize(
             $category,
@@ -460,6 +430,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_category_delete",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Deletes a category
      *
@@ -485,6 +456,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_keyword_create",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Creates a keyword
      *
@@ -510,6 +482,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_keyword_edit",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Edits a keyword
      *
@@ -536,6 +509,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_keyword_delete",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Deletes a keyword
      *
@@ -561,6 +535,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_get_keyword_by_name_excluding_id",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Returns the keyword
      *
@@ -692,6 +667,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_entry_delete",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Deletes an entry
      *
@@ -739,6 +715,7 @@ class ClacoFormController extends Controller
      *     name="claro_claco_form_entry_status_change",
      *     options = {"expose"=true}
      * )
+     * @EXT\ParamConverter("user", converter="current_user")
      *
      * Changes status of an entry
      *
@@ -915,205 +892,5 @@ class ClacoFormController extends Controller
         );
 
         return new JsonResponse($serializedComment, 200);
-    }
-
-    /**
-     * @EXT\Route(
-     *     "/claco/form/entry/{entry}/user/retrieve",
-     *     name="claro_claco_form_entry_user_retrieve",
-     *     options = {"expose"=true}
-     * )
-     * @EXT\ParamConverter("user", converter="current_user")
-     *
-     * Retrieves an entry options for current user
-     *
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
-    public function entryUserRetrieveAction(User $user, Entry $entry)
-    {
-        $this->clacoFormManager->checkEntryAccess($entry);
-        $entryUser = $this->clacoFormManager->getEntryUser($entry, $user);
-        $serializedEntryUser = $this->serializer->serialize(
-            $entryUser,
-            'json',
-            SerializationContext::create()->setGroups(['api_claco_form'])
-        );
-
-        return new JsonResponse($serializedEntryUser, 200);
-    }
-
-    /**
-     * @EXT\Route(
-     *     "/claco/form/entry/{entry}/user/save",
-     *     name="claro_claco_form_entry_user_save",
-     *     options = {"expose"=true}
-     * )
-     * @EXT\ParamConverter("user", converter="current_user")
-     *
-     * Saves entry options for current user
-     *
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
-    public function entryUserSaveAction(User $user, Entry $entry)
-    {
-        $this->clacoFormManager->checkEntryAccess($entry);
-        $entryUser = $this->clacoFormManager->getEntryUser($entry, $user);
-        $entryUserData = $this->request->request->get('entryUserData', false);
-
-        if (isset($entryUserData['shared'])) {
-            $entryUser->setShared($entryUserData['shared']);
-        }
-        if (isset($entryUserData['notifyEdition'])) {
-            $entryUser->setNotifyEdition($entryUserData['notifyEdition']);
-        }
-        if (isset($entryUserData['notifyComment'])) {
-            $entryUser->setNotifyComment($entryUserData['notifyComment']);
-        }
-        if (isset($entryUserData['notifyVote'])) {
-            $entryUser->setNotifyVote($entryUserData['notifyVote']);
-        }
-        $this->clacoFormManager->persistEntryUser($entryUser);
-
-        return new JsonResponse('success', 200);
-    }
-
-    /**
-     * @EXT\Route(
-     *     "/claco/form/entry/{entry}/pdf/download",
-     *     name="claro_claco_form_entry_pdf_download",
-     *     options = {"expose"=true}
-     * )
-     * @EXT\ParamConverter("user", converter="current_user")
-     *
-     * Downloads pdf version of entry
-     *
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    public function entryPdfDownloadAction(User $user, Entry $entry)
-    {
-        $this->clacoFormManager->checkEntryAccess($entry);
-        $pdf = $this->clacoFormManager->generatePdfForEntry($entry, $user);
-
-        $headers = [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="'.$entry->getTitle().'.pdf"',
-        ];
-
-        return new Response(
-            file_get_contents($this->filesDir.DIRECTORY_SEPARATOR.'pdf'.DIRECTORY_SEPARATOR.$pdf->getPath()),
-            200,
-            $headers
-        );
-    }
-
-    /**
-     * @EXT\Route(
-     *     "/claco/form/entry/{entry}/shared/users/list",
-     *     name="claro_claco_form_entry_shared_users_list",
-     *     options = {"expose"=true}
-     * )
-     * @EXT\ParamConverter("user", converter="current_user")
-     *
-     * Retrieves list of users the entry is shared with
-     *
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
-    public function entrySharedUsersListAction(User $user, Entry $entry)
-    {
-        $this->clacoFormManager->checkEntryShareRight($entry);
-        $users = $this->clacoFormManager->getSharedEntryUsers($entry);
-        $serializedUsers = $this->serializer->serialize(
-            $users,
-            'json',
-            SerializationContext::create()->setGroups(['api_user_min'])
-        );
-        $whitelist = $this->userManager->getAllVisibleUsersIdsForUserPicker($user);
-
-        return new JsonResponse(['users' => $serializedUsers, 'whitelist' => $whitelist], 200);
-    }
-
-    /**
-     * @EXT\Route(
-     *     "/claco/form/entry/{entry}/users/share",
-     *     name="claro_claco_form_entry_users_share",
-     *     options = {"expose"=true}
-     * )
-     *
-     * Shares entry ownership to users
-     *
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
-    public function entryUsersShareAction(Entry $entry)
-    {
-        $this->clacoFormManager->checkEntryShareRight($entry);
-        $usersIds = $this->request->request->get('usersIds', false);
-
-        if ($usersIds) {
-            $this->clacoFormManager->shareEntryWithUsers($entry, $usersIds);
-        }
-
-        return new JsonResponse('success', 200);
-    }
-
-    /**
-     * @EXT\Route(
-     *     "/claco/form/entry/{entry}/user/{user}/unshare",
-     *     name="claro_claco_form_entry_user_unshare",
-     *     options = {"expose"=true}
-     * )
-     *
-     * Shares entry ownership to users
-     *
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
-    public function entryUserUnshareAction(Entry $entry, User $user)
-    {
-        $this->clacoFormManager->checkEntryShareRight($entry);
-        $this->clacoFormManager->switchEntryUserShared($entry, $user, false);
-
-        return new JsonResponse('success', 200);
-    }
-
-    /**
-     * @EXT\Route(
-     *     "/claco/form/{clacoForm}/entries/export",
-     *     name="claro_claco_form_entries_export",
-     *     options = {"expose"=true}
-     * )
-     *
-     * Exports entries
-     *
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    public function clacoFormEntriesExportAction(ClacoForm $clacoForm)
-    {
-        $this->clacoFormManager->checkRight($clacoForm, 'EDIT');
-        $content = $this->clacoFormManager->exportEntries($clacoForm);
-        $headers = [
-            'Content-Transfer-Encoding' => 'octet-stream',
-            'Content-Type' => 'application/vnd.ms-excel; charset=utf-8',
-            'Content-Disposition' => 'attachment; filename="'.$clacoForm->getResourceNode()->getName().'.xls"',
-        ];
-
-        return new Response($content, 200, $headers);
-    }
-
-    /**
-     * @EXT\Route(
-     *     "/claco/form/{clacoForm}/all/entries/delete",
-     *     name="claro_claco_form_all_entries_delete",
-     *     options={"expose"=true}
-     * )
-     *
-     * Deletes all entries
-     *
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
-    public function clacoFormAllEntriesDeleteAction(ClacoForm $clacoForm)
-    {
-        $this->clacoFormManager->checkRight($clacoForm, 'EDIT');
-        $this->clacoFormManager->deleteAllEntries($clacoForm);
-
-        return new JsonResponse('success', 200);
     }
 }

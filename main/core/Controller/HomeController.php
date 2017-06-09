@@ -24,7 +24,6 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Form\FormFactory;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -109,10 +108,6 @@ class HomeController
     public function homeAction($type)
     {
         $typeEntity = $this->manager->getType($type);
-
-        if ($url = $this->container->get('claroline.config.platform_config_handler')->getParameter('home_redirection_url')) {
-            return new RedirectResponse($url);
-        }
 
         if (is_null($typeEntity)) {
             throw new NotFoundHttpException('Page not found');

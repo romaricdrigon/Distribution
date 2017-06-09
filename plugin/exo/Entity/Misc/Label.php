@@ -4,10 +4,9 @@ namespace UJM\ExoBundle\Entity\Misc;
 
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
-use UJM\ExoBundle\Entity\ItemType\MatchQuestion;
+use UJM\ExoBundle\Entity\QuestionType\MatchQuestion;
 use UJM\ExoBundle\Library\Model\ContentTrait;
 use UJM\ExoBundle\Library\Model\OrderTrait;
-use UJM\ExoBundle\Library\Model\UuidTrait;
 
 /**
  * Label.
@@ -26,14 +25,19 @@ class Label
      */
     private $id;
 
-    use UuidTrait;
+    /**
+     * @var string
+     *
+     * @ORM\Column("uuid", type="string", length=36, unique=true)
+     */
+    private $uuid;
 
     use OrderTrait;
 
     use ContentTrait;
 
     /**
-     * @ORM\ManyToOne(targetEntity="UJM\ExoBundle\Entity\ItemType\MatchQuestion", inversedBy="labels")
+     * @ORM\ManyToOne(targetEntity="UJM\ExoBundle\Entity\QuestionType\MatchQuestion", inversedBy="labels")
      * @ORM\JoinColumn(name="interaction_matching_id", referencedColumnName="id")
      */
     private $interactionMatching;
@@ -51,6 +55,26 @@ class Label
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Gets UUID.
+     *
+     * @return string
+     */
+    public function getUuid()
+    {
+        return $this->uuid;
+    }
+
+    /**
+     * Sets UUID.
+     *
+     * @param $uuid
+     */
+    public function setUuid($uuid)
+    {
+        $this->uuid = $uuid;
     }
 
     /**

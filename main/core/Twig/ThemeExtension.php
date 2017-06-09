@@ -11,10 +11,7 @@
 
 namespace Claroline\CoreBundle\Twig;
 
-use Claroline\CoreBundle\Entity\Theme\Theme;
-use Claroline\CoreBundle\Manager\ThemeManager;
 use JMS\DiExtraBundle\Annotation as DI;
-use Symfony\Bridge\Twig\Extension\AssetExtension;
 
 /**
  * @DI\Service
@@ -22,100 +19,76 @@ use Symfony\Bridge\Twig\Extension\AssetExtension;
  */
 class ThemeExtension extends \Twig_Extension
 {
-    /**
-     * @var
-     */
-    private $assetExtension;
+    protected $manager;
 
     /**
-     * @var ThemeManager
-     */
-    private $themeManager;
-
-    /**
-     * @var Theme
-     */
-    private $currentTheme;
-
-    private $rootDir;
-    private $assetCache;
-
-    /**
-     * ThemeExtension constructor.
-     *
      * @DI\InjectParams({
-     *     "extension"    = @DI\Inject("twig.extension.assets"),
-     *     "themeManager" = @DI\Inject("claroline.manager.theme_manager"),
-     *     "rootDir"      = @DI\Inject("%kernel.root_dir%")
+     *     "manager" = @DI\Inject("doctrine.orm.default_entity_manager")
      * })
-     *
-     * @param AssetExtension $extension
-     * @param ThemeManager   $themeManager
-     * @param string         $rootDir
      */
-    public function __construct(
-        AssetExtension $extension,
-        ThemeManager $themeManager,
-        $rootDir)
+    public function __construct($manager)
     {
-        $this->assetExtension = $extension;
-        $this->themeManager = $themeManager;
-        $this->rootDir = $rootDir;
+        $this->manager = $manager;
     }
 
-    public function getName()
+    /**
+     * Get filters of the service.
+     *
+     * @return \Twig_Filter_Method
+     */
+    public function getFilters()
     {
-        return 'theme_extension';
-    }
-
-    public function getFunctions()
-    {
-        return [
-            'themeAsset' => new \Twig_Function_Method($this, 'themeAsset'),
-        ];
-    }
-
-    public function themeAsset($path, $themeName = null)
-    {
-        if (empty($themeName)) {
-            if (!$this->currentTheme) {
-                // Retrieve current theme
-                $this->currentTheme = $this->themeManager->getCurrentTheme();
-            }
-
-            $themeName = $this->currentTheme->getNormalizedName();
-        }
-
-        $assets = $this->getThemeAssets();
-
-        if (!isset($assets[$themeName]) || !isset($assets[$themeName][$path])) {
-            $assetNames = implode("\n", array_keys($assets));
-
-            throw new \Exception(
-                "Cannot find asset '{$path}' for theme '{$themeName}' ".
-                "in theme build. Found:\n{$assetNames})"
-            );
-        }
-
-        return $this->assetExtension->getAssetUrl(
-            'themes/'.$themeName.'/'.$path.'?v='.$assets[$themeName][$path]
+        return array(
+            'getThemePath' => new \Twig_Filter_Method($this, 'getThemePath'),
+            'asset_exists' => new \Twig_Function_Method($this, 'assetExists'),
         );
     }
 
-    private function getThemeAssets()
+    /**
+     * Get the elapsed time since $start to right now, with a transChoice() for translation in plural or singular.
+     *
+     * @param \DateTime $start The initial time.
+     *
+     * @return \String
+     *
+     *                 @see Symfony\Component\Translation\Translator
+     */
+    public function getThemePath($name)
     {
-        if (!$this->assetCache) {
-            $assetFile = "{$this->rootDir}/../theme-assets.json";
+        $theme = $this->manager->getRepository("ClarolineCoreBundle:Theme\Theme")->findOneBy(array('name' => $name));
 
-            if (!file_exists($assetFile)) {
-                throw new \Exception(sprintf(
-                    'Cannot find theme generated assets file(s). Make sure you have built them.'
-                ));
-            }
-
-            $this->assetCache = json_decode(file_get_contents($assetFile), true);
+        if ($theme) {
+            return $theme->getPath();
         }
 
-        return $this->assetCache;
+        return '';
+    }
+
+    public function assetExists($path)
+    {
+        $webRoot = realpath($this->kernel->getRootDir().'/../web/');
+        $toCheck = realpath($webRoot.$path);
+
+        // check if the file exists
+        if (!is_file($toCheck)) {
+            return false;
+        }
+
+        // check if file is well contained in web/ directory (prevents ../ in paths)
+        if (strncmp($webRoot, $toCheck, strlen($webRoot)) !== 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get the name of the twig extention.
+     *
+     * @return \String
+     */
+    public function getName()
+    {
+        return 'theme_extension';
     }
 }

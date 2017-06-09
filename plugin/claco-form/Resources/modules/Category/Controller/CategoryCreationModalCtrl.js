@@ -27,7 +27,6 @@ export default class CategoryCreationModalCtrl {
       notifyAddition: true,
       notifyEdition: true,
       notifyRemoval: true,
-      notifyPendingComment: true,
       managers: []
     }
     this.categoryErrors = {

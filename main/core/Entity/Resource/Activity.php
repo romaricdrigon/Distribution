@@ -12,8 +12,8 @@
 namespace Claroline\CoreBundle\Entity\Resource;
 
 use Claroline\CoreBundle\Entity\Activity\ActivityParameters;
-use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass="Claroline\CoreBundle\Repository\Activity\ActivityRepository")
@@ -126,7 +126,7 @@ class Activity extends AbstractResource
     /**
      * Get parameters.
      *
-     * @return ActivityParameters
+     * @return string
      */
     public function getParameters()
     {

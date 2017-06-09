@@ -1,8 +1,0 @@
-{
-  "id": "123",
-  "content": "question title",
-  "type": "application/x.unknown+json",
-  "score": {
-    "type": "sum"
-  }
-}

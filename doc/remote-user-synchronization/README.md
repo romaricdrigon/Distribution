@@ -25,6 +25,8 @@ The user datas that can be modified (or simply created) by this method are :
 | Requirements |
 ----------------
 
+* "claroline/core-bundle": ">=3.2"
+
 * A security token must be created and configured in "Administration > Parameters > Security tokens management".
 
     This security token is defined by :
@@ -47,34 +49,33 @@ The user datas that can be modified (or simply created) by this method are :
 * POST datas format :
 
     {
-        "client": "<Name of the client defined in Administration>",
-        "token": "<Token defined in Administration>",
-        "username": "<Username>",
-        "firstName": "<First name>",
-        "lastName": "<Last name>",
-        "email": "<Email address>",
-        "password": "<Password>",
-        "workspaces":
+        'client': '<Name of the client defined in Administration>',
+        'token': '<Token defined in Administration>',
+        'username': '<Username>',
+        'firstName': '<First name>',
+        'lastName': '<Last name>',
+        'email': '<Email address>',
+        'password': '<Password>',
+        'workspaces':
         [
             {
-                "<Workspace code>": "<Translation key of a workspace role>"
+                '<Workspace code>': '<Translation key of a workspace role>'
             },
             {
-                "<Workspace code>": "<Translation key of a workspace role>"
+                '<Workspace code>': '<Translation key of a workspace role>'
             },
             {
-                "<Workspace code>": "<Translation key of a workspace role>"
+                '<Workspace code>': '<Translation key of a workspace role>'
             },
             ...
         ],
-        "workspacesAddOnly": [ 1 | 0 ]
-        "userId": <Id of an user>
+        'userId': <Id of a user>
     }
 
 * Fields explanation :
 
-    MANDATORY : client, token, username, firstName, lastName, email, password (for creation)
-    OPTIONAL : password (for update), workspaces, workspacesAddOnly, userId
+    MANDATORY : client, token, username, firstName, lastName, email, password
+    OPTIONAL : workspaces, userId
 
     FOR SECURITY PURPOSE :
 
@@ -113,10 +114,8 @@ The user datas that can be modified (or simply created) by this method are :
                   a role of the workspace whose code matches the key of the associative
                   array.
 
-        -workspacesAddOnly :
-            If this field is set the synchronized user will be unregistered from no workspace.
       - userId :
-            If defined the user whose id is equal to given "userId" is updated.
+            If defined the user whose id is equal to given 'userId' is updated.
             Otherwise a new user is created.
 
 
@@ -131,33 +130,28 @@ The user datas that can be modified (or simply created) by this method are :
     - The created/updated user session cookie is available in the header of the
       response
 
-* Missing "client", "token" or no match for "client", "token" and "IP address"
+* Missing 'client', 'token' or no match for 'client', 'token' and 'IP address'
   with a security token defined in administration :
 
     - An AccessDeniedException is thrown
     - Status : 403
-    - Body : "Access Denied"
+    - Body : 'Access Denied'
 
-* Missing "username", "firstName", "lastName", "email" :
-
-    - Status : 400
-    - Body : "Bad Request"
-
-* Missing "password" for creation :
+* Missing 'username', 'firstName', 'lastName', 'email' or 'password' :
 
     - Status : 400
-    - Body : "Bad Request"
+    - Body : 'Bad Request'
 
-* "userId" is defined but associated user cannot be found in the platform :
+* 'userId' is defined but associated user cannot be found in the platform :
 
     - Status : 404
-    - Body : "Not found"
+    - Body : 'Not found'
 
 * User cannot be created or updated because of invalid data format or unicity
   constraint :
 
     - Status : 400
-    - Body : "User edition error"
+    - Body : 'User edition error'
   
 
 -----------
@@ -172,24 +166,24 @@ The user datas that can be modified (or simply created) by this method are :
     - Token : xxxxxxxxxx
 
 * Then here is an example of the datas that have to be sent to create a new user
-  and register him to workspace "Course 1 (C001)" with role "collaborator" and
-  workspace "Course 2 (C002)" with custom role "custom-role-C002" :
+  and register him to workspace 'Course 1 (C001)' with role 'collaborator' and
+  workspace 'Course 2 (C002)' with custom role 'custom-role-C002' :
 
     {
-        "client": "Claroline",
-        "token": "xxxxxxxxxx",
-        "username": "JohnDoe",
-        "firstName": "John",
-        "lastName": "Doe",
-        "email": "jonh.doe@claroline.net",
-        "password": "xyz123",
-        "workspaces":
+        'client': 'Claroline',
+        'token': 'xxxxxxxxxx',
+        'username': 'JohnDoe',
+        'firstName': 'John',
+        'lastName': 'Doe',
+        'email': 'jonh.doe@claroline.net',
+        'password': 'xyz123',
+        'workspaces':
         [
             {
-                "C001": "collaborator"
+                'C001': 'collaborator'
             },
             {
-                "C002": "custom-role-C002"
+                'C002': 'custom-role-C002'
             }
         ]
     }
@@ -199,46 +193,25 @@ The user datas that can be modified (or simply created) by this method are :
   For this example, the returned value is 12.
 
 * Here is an example of the datas that have to be sent to update password of
-  an existing user and register him to workspace "Course 3 (C003)" with role
-  "manager" and unregister him from workspace "Course 2 (C002)" :
+  an existing user and register him to workspace 'Course 3 (C003)' with role
+  'manager' and unregister him from workspace 'Course 2 (C002)' :
 
     {
-        "client": "Claroline",
-        "token": "xxxxxxxxxx",
-        "username": "JohnDoe",
-        "firstName": "John",
-        "lastName": "Doe",
-        "email": "jonh.doe@claroline.net",
-        "password": "new-password-123",
-        "workspaces":
+        'client': 'Claroline',
+        'token': 'xxxxxxxxxx',
+        'username': 'JohnDoe',
+        'firstName': 'John',
+        'lastName': 'Doe',
+        'email': 'jonh.doe@claroline.net',
+        'password': 'new-password-123',
+        'workspaces':
         [
             {
-                "C001": "collaborator"
+                'C001': 'collaborator'
             },
             {
-                "C003": "manager"
+                'C003': 'manager'
             }
         ],
-        "userId": 12
-    }
-
-* Here is an example of the datas that have to be sent to update an existing user
-  and register him to workspace "Course 4 (C004)" with role "collaborator"
-  and without unregistering him from other workspaces :
-
-    {
-        "client": "Claroline",
-        "token": "xxxxxxxxxx",
-        "username": "JohnDoe",
-        "firstName": "John",
-        "lastName": "Doe",
-        "email": "jonh.doe@claroline.net",
-        "workspaces":
-        [
-            {
-                "C004": "collaborator"
-            }
-        ],
-        "workspacesAddOnly": 1,
-        "userId": 12
+        'userId': 12
     }

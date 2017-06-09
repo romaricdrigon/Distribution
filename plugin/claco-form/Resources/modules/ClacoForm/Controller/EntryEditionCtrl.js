@@ -26,6 +26,7 @@ export default class EntryEditionCtrl {
     this.config = ClacoFormService.getResourceDetails()
     this.template = ClacoFormService.getTemplate()
     this.fields = FieldService.getFields()
+    this.tinymceOptions = ClacoFormService.getTinymceConfiguration()
     this.mode = 'edition'
     this.categoriesChoices = []
     this.categories = []
@@ -87,11 +88,10 @@ export default class EntryEditionCtrl {
       this.template = this.template.replace('%clacoform_entry_title%', replacedTitleField)
       this.fields.forEach(f => {
         const id = f['id']
-        const name = f['name'].replace(/'/g, ' ')
+        const name = f['name']
 
         if (this.template) {
           let choices = JSON.stringify(f['fieldFacet']['field_facet_choices'])
-          choices = choices.replace(/'/g, '\\\'')
           choices = choices.replace(/"/g, '\'')
           const replacedField = `
             <form-field field="['${name}',
@@ -192,13 +192,6 @@ export default class EntryEditionCtrl {
     if (index > -1) {
       this.keywords.splice(index, 1)
     }
-  }
-
-  isFieldDisabled(field) {
-    return !this.canEdit() && field['locked'] && (
-      (['user', 'all'].indexOf(this.config['locked_fields_for']) > -1 && !this.EntryService.isManagerEntry(this.entryId)) ||
-      (['manager', 'all'].indexOf(this.config['locked_fields_for']) > -1 && this.EntryService.isManagerEntry(this.entryId))
-    )
   }
 
   submit() {

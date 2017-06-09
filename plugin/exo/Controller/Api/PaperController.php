@@ -72,7 +72,7 @@ class PaperController extends AbstractController
         $this->assertHasPermission('OPEN', $exercise);
 
         return new JsonResponse(
-            $this->paperManager->serializeExercisePapers($exercise, $this->isAdmin($exercise) ? null : $user)
+            $this->paperManager->exportExercisePapers($exercise, $this->isAdmin($exercise) ? null : $user)
         );
     }
 
@@ -101,7 +101,7 @@ class PaperController extends AbstractController
             throw new AccessDeniedException();
         }
 
-        return new JsonResponse($this->paperManager->serialize($paper));
+        return new JsonResponse($this->paperManager->export($paper));
     }
 
     /**
@@ -116,10 +116,7 @@ class PaperController extends AbstractController
      */
     public function deleteAllAction(Exercise $exercise)
     {
-        if (!$this->isAdmin($exercise)) {
-            // Only administrator or Paper Managers can delete Papers
-            throw new AccessDeniedException();
-        }
+        $this->assertHasPermission('ADMINISTRATE', $exercise);
 
         try {
             $this->paperManager->deleteAll($exercise);
@@ -143,10 +140,7 @@ class PaperController extends AbstractController
      */
     public function deleteAction(Paper $paper)
     {
-        if (!$this->isAdmin($paper->getExercise())) {
-            // Only administrator or Paper Managers can delete a Paper
-            throw new AccessDeniedException();
-        }
+        $this->assertHasPermission('ADMINISTRATE', $paper->getExercise());
 
         try {
             $this->paperManager->delete($paper);
@@ -169,10 +163,7 @@ class PaperController extends AbstractController
      */
     public function exportCsvAction(Exercise $exercise)
     {
-        if (!$this->isAdmin($paper->getExercise())) {
-            // Only administrator or Paper Managers can axport Papers
-            throw new AccessDeniedException();
-        }
+        $this->assertHasPermission('ADMINISTRATE', $exercise);
 
         /** @var PaperRepository $repo */
         $repo = $this->om->getRepository('UJMExoBundle:Attempt\Paper');
@@ -214,7 +205,7 @@ class PaperController extends AbstractController
     {
         $collection = new ResourceCollection([$exercise->getResourceNode()]);
 
-        return $this->authorization->isGranted('ADMINISTRATE', $collection) || $this->authorization->isGranted('MANAGE_PAPERS', $collection);
+        return $this->authorization->isGranted('ADMINISTRATE', $collection);
     }
 
     private function assertHasPermission($permission, Exercise $exercise)

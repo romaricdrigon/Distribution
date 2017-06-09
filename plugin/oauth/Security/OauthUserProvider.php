@@ -2,10 +2,9 @@
 
 namespace Icap\OAuthBundle\Security;
 
-use Claroline\CoreBundle\Library\Configuration\PlatformConfigurationHandler;
+use Claroline\CoreBundle\Entity\User;
 use HWI\Bundle\OAuthBundle\OAuth\Response\UserResponseInterface;
 use HWI\Bundle\OAuthBundle\Security\Core\User\OAuthAwareUserProviderInterface;
-use Icap\OAuthBundle\Entity\OauthUser;
 use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
@@ -19,30 +18,31 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 class OauthUserProvider implements OAuthAwareUserProviderInterface, UserProviderInterface
 {
     private $em;
-    /** @var Session */
+    private $utilities;
+    /**
+     * @var Session
+     */
     private $session;
-    /** @var PlatformConfigurationHandler */
-    private $platformConfigHandler;
 
     /**
      * @DI\InjectParams({
-     *   "em"                       = @DI\Inject("doctrine.orm.entity_manager"),
-     *   "session"                  = @DI\Inject("session"),
-     *   "platformConfigHandler"    = @DI\Inject("claroline.config.platform_config_handler")
+     *   "em"           = @DI\Inject("doctrine.orm.entity_manager"),
+     *   "session"      = @DI\Inject("session"),
+     *   "utilities"    = @DI\Inject("claroline.utilities.misc")
      * })
      *
      * @param $em
-     * @param Session                      $session
-     * @param PlatformConfigurationHandler $platformConfigHandler
+     * @param Session $session
+     * @param $utilities
      */
     public function __construct(
         $em,
         Session $session,
-        PlatformConfigurationHandler $platformConfigHandler
+        $utilities
     ) {
         $this->em = $em;
         $this->session = $session;
-        $this->platformConfigHandler = $platformConfigHandler;
+        $this->utilities = $utilities;
     }
 
     /**
@@ -53,29 +53,17 @@ class OauthUserProvider implements OAuthAwareUserProviderInterface, UserProvider
         return $this->em->getRepository('ClarolineCoreBundle:User')->loadUserByUsername($username);
     }
 
-    public function loadUserByServiceAndId($service, $id, $mail = null)
+    public function loadUserByServiceAndId($service, $id)
     {
         $oauthUser = $this->em->getRepository('IcapOAuthBundle:OauthUser')->findOneBy(
             ['service' => $service, 'oauthId' => $id]
         );
 
-        if (!empty($oauthUser)) {
-            return $oauthUser->getUser();
+        if ($oauthUser === null) {
+            throw new UsernameNotFoundException();
         }
 
-        if ($this->platformConfigHandler->getParameter('direct_third_party_authentication')) {
-            $username = !empty($mail) ? $mail : $id;
-            $user = $this->loadUserByUsername($username);
-            $oauthUser = new OauthUser($service, $id, $user);
-            $this->em->persist($oauthUser);
-            $this->em->flush();
-
-            return $user;
-        }
-
-        throw new UsernameNotFoundException(
-            sprintf('Unable to find an active user identified by "%s".', $id)
-        );
+        return $oauthUser->getUser();
     }
 
     /**
@@ -85,11 +73,7 @@ class OauthUserProvider implements OAuthAwareUserProviderInterface, UserProvider
     {
         $resourceOwner = $response->getResourceOwner();
         try {
-            $user = $this->loadUserByServiceAndId(
-                $resourceOwner->getName(),
-                $response->getUsername(),
-                $response->getEmail()
-            );
+            $user = $this->loadUserByServiceAndId($resourceOwner->getName(), $response->getUsername());
             $this->saveResourceOwnerToken($resourceOwner, $response->getAccessToken());
 
             return $user;

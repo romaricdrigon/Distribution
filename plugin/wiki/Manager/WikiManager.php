@@ -5,7 +5,7 @@
  * (c) Claroline Consortium <consortium@claroline.net>
  *
  * Author: Panagiotis TSAVDARIS
- *
+ * 
  * Date: 3/11/15
  */
 
@@ -13,10 +13,10 @@ namespace Icap\WikiBundle\Manager;
 
 use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Claroline\CoreBundle\Persistence\ObjectManager;
-use Icap\WikiBundle\Entity\Contribution;
-use Icap\WikiBundle\Entity\Section;
-use Icap\WikiBundle\Entity\Wiki;
 use JMS\DiExtraBundle\Annotation as DI;
+use Icap\WikiBundle\Entity\Wiki;
+use Icap\WikiBundle\Entity\Section;
+use Icap\WikiBundle\Entity\Contribution;
 
 /**
  * @DI\Service("icap.wiki.manager")
@@ -62,7 +62,7 @@ class WikiManager
 
         $sections = $this->sectionRepository->children($orgRoot);
         array_unshift($sections, $orgRoot);
-        $newSectionsMap = [];
+        $newSectionsMap = array();
 
         $newWiki = new Wiki();
         $newWiki->setWikiCreator($loggedUser);
@@ -112,15 +112,15 @@ class WikiManager
         $wiki = new Wiki();
         if (isset($data['data'])) {
             $wikiData = $data['data'];
+
             $wiki->setMode($wikiData['options']['mode']);
-            $wiki->setDisplaySectionNumbers($wikiData['options']['display_section_numbers']);
-            $sectionsMap = [];
+            $sectionsMap = array();
             foreach ($wikiData['sections'] as $section) {
                 $entitySection = new Section();
                 $entitySection->setWiki($wiki);
                 $entitySection->setDeleted($section['deleted']);
-                $entitySection->setDeletionDate(($section['deletion_date'] !== null) ? new \DateTime('@'.$section['deletion_date']) : null);
-                $entitySection->setCreationDate(($section['creation_date'] !== null) ? new \DateTime('@'.$section['creation_date']) : null);
+                $entitySection->setDeletionDate($section['deletion_date']);
+                $entitySection->setCreationDate($section['creation_date']);
                 $author = null;
                 if ($section['author'] !== null) {
                     $author = $this->userRepository->findOneByUsername($section['author']);
@@ -144,7 +144,7 @@ class WikiManager
                     $entityContribution = new Contribution();
                     $entityContribution->setSection($entitySection);
                     $entityContribution->setTitle($contributionData['title']);
-                    $entityContribution->setCreationDate(($contributionData['creation_date'] !== null) ? new \DateTime('@'.$contributionData['creation_date']) : null);
+                    $entityContribution->setCreationDate($contributionData['creation_date']);
                     $contributor = null;
                     if ($contributionData['contributor'] !== null) {
                         $contributor = $this->userRepository->findOneByUsername($contributionData['contributor']);
@@ -190,13 +190,13 @@ class WikiManager
         $rootSection = $object->getRoot();
         $sections = $this->sectionRepository->children($rootSection);
         array_unshift($sections, $rootSection);
-        $sectionsArray = [];
+        $sectionsArray = array();
         foreach ($sections as $section) {
 
             //Getting all contributions and building contributions array
             $activeContribution = $section->getActiveContribution();
             $contributions = $this->contributionRepository->findAllButActiveForSection($section);
-            $contributionsArray = [];
+            $contributionsArray = array();
             array_unshift($contributions, $activeContribution);
             foreach ($contributions as $contribution) {
                 $uid = uniqid().'.txt';
@@ -204,17 +204,17 @@ class WikiManager
                 file_put_contents($tmpPath, $contribution->getText());
                 $files[$uid] = $tmpPath;
 
-                $contributionArray = [
-                    'is_active' => $contribution->getId() === $activeContribution->getId(),
+                $contributionArray = array(
+                    'is_active' => $contribution->getId() == $activeContribution->getId(),
                     'title' => $contribution->getTitle(),
                     'contributor' => $contribution->getContributor()->getUsername(),
                     'creation_date' => $contribution->getCreationDate(),
                     'path' => $uid,
-                ];
+                );
 
-                $contributionsArray[] = ['contribution' => $contributionArray];
+                $contributionsArray[] = array('contribution' => $contributionArray);
             }
-            $sectionArray = [
+            $sectionArray = array(
                 'id' => $section->getId(),
                 'parent_id' => ($section->getParent() !== null) ? $section->getParent()->getId() : null,
                 'is_root' => $section->isRoot(),
@@ -224,18 +224,17 @@ class WikiManager
                 'deleted' => $section->getDeleted(),
                 'deletion_date' => $section->getDeletionDate(),
                 'contributions' => $contributionsArray,
-            ];
+            );
 
             $sectionsArray[] = $sectionArray;
         }
 
-        $data = [
-            'options' => [
+        $data = array(
+            'options' => array(
                 'mode' => $object->getMode(),
-                'display_section_numbers' => $object->getDisplaySectionNumbers(),
-            ],
+            ),
             'sections' => $sectionsArray,
-        ];
+        );
 
         return $data;
     }

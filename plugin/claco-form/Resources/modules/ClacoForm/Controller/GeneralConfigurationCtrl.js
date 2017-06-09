@@ -10,10 +10,9 @@
 /*global Translator*/
 
 export default class GeneralConfigurationCtrl {
-  constructor($state, ClacoFormService, CategoryService, EntryService) {
+  constructor($state, ClacoFormService, CategoryService) {
     this.$state = $state
     this.ClacoFormService = ClacoFormService
-    this.EntryService = EntryService
     this.resourceId = ClacoFormService.getResourceId()
     this.config = ClacoFormService.getResourceDetails()
     this.configErrors = {max_entries: null}
@@ -23,7 +22,6 @@ export default class GeneralConfigurationCtrl {
       random: true,
       find: true,
       data: true,
-      locked: true,
       categories: true,
       comments: true,
       votes: true,
@@ -124,13 +122,5 @@ export default class GeneralConfigurationCtrl {
         this.votesEndDate['open'] = true
         break
     }
-  }
-
-  exportEntries() {
-    this.ClacoFormService.exportEntries()
-  }
-
-  deleteAllEntries() {
-    this.EntryService.deleteAllEntries()
   }
 }

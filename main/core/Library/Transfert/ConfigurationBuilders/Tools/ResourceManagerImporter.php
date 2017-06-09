@@ -279,7 +279,7 @@ class ResourceManagerImporter extends Importer implements ConfigurationInterface
                         //let's order everything !
                         if (isset($item['item']['index'])) {
                             $node = $entity->getResourceNode();
-                            $node->setIndex($item['item']['index']);
+                            $node->setIndex($directory['directory']['index']);
                             $this->om->persist($node);
                             $this->om->flush();
                         }

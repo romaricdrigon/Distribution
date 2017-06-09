@@ -1,4 +1,4 @@
-const paths = require('./main/core/Resources/server/paths')
+const paths = require('./main/core/Resources/server/webpack/paths')
 const plugins = require('./main/core/Resources/server/webpack/plugins')
 const libraries = require('./main/core/Resources/server/webpack/libraries')
 

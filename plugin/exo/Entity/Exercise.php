@@ -9,7 +9,6 @@ use Ramsey\Uuid\Uuid;
 use UJM\ExoBundle\Library\Mode\CorrectionMode;
 use UJM\ExoBundle\Library\Mode\MarkMode;
 use UJM\ExoBundle\Library\Model\AttemptParametersTrait;
-use UJM\ExoBundle\Library\Model\UuidTrait;
 use UJM\ExoBundle\Library\Options\ExerciseType;
 
 /**
@@ -18,7 +17,12 @@ use UJM\ExoBundle\Library\Options\ExerciseType;
  */
 class Exercise extends AbstractResource
 {
-    use UuidTrait;
+    /**
+     * @var string
+     *
+     * @ORM\Column("uuid", type="string", length=36, unique=true)
+     */
+    private $uuid;
 
     /**
      * @var string
@@ -64,24 +68,6 @@ class Exercise extends AbstractResource
      * @ORM\Column(type="boolean")
      */
     private $interruptible = false;
-
-    /**
-     * Show overview to users or directly start the quiz.
-     *
-     * @ORM\Column(name="show_overview", type="boolean")
-     *
-     * @var bool
-     */
-    private $showOverview = true;
-
-    /**
-     * Show an end page when the user has finished the quiz.
-     *
-     * @ORM\Column(name="show_end_page", type="boolean")
-     *
-     * @var bool
-     */
-    private $showEndPage = false;
 
     /**
      * Show the Exercise meta in the overview of the Exercise.
@@ -173,6 +159,26 @@ class Exercise extends AbstractResource
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Gets UUID.
+     *
+     * @return string
+     */
+    public function getUuid()
+    {
+        return $this->uuid;
+    }
+
+    /**
+     * Sets UUID.
+     *
+     * @param $uuid
+     */
+    public function setUuid($uuid)
+    {
+        $this->uuid = $uuid;
     }
 
     public function getTitle()
@@ -285,46 +291,6 @@ class Exercise extends AbstractResource
     public function isInterruptible()
     {
         return $this->interruptible;
-    }
-
-    /**
-     * Set show end page.
-     *
-     * @param bool $showEndPage
-     */
-    public function setShowEndPage($showEndPage)
-    {
-        $this->showEndPage = $showEndPage;
-    }
-
-    /**
-     * Is end page shown ?
-     *
-     * @return bool
-     */
-    public function getShowEndPage()
-    {
-        return $this->showEndPage;
-    }
-
-    /**
-     * Set show overview.
-     *
-     * @param bool $showOverview
-     */
-    public function setShowOverview($showOverview)
-    {
-        $this->showOverview = $showOverview;
-    }
-
-    /**
-     * Is overview shown ?
-     *
-     * @return bool
-     */
-    public function getShowOverview()
-    {
-        return $this->showOverview;
     }
 
     /**

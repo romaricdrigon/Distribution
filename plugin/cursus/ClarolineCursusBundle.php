@@ -30,12 +30,4 @@ class ClarolineCursusBundle extends PluginBundle
     {
         return 'DataFixtures';
     }
-
-    public function getRequiredPlugins()
-    {
-        return [
-            'Claroline\\MessageBundle\\ClarolineMessageBundle',
-            'FormaLibre\\ReservationBundle\\FormaLibreReservationBundle',
-        ];
-    }
 }

@@ -139,9 +139,8 @@ class CursusGroupRepository extends EntityRepository
         return $executeQuery ? $query->getResult() : $query;
     }
 
-    public function findUnregisteredGroupsByCursusAndOrganizations(
+    public function findGroupsByCursus(
         Cursus $cursus,
-        array $organizations,
         $orderedBy = 'name',
         $order = 'ASC',
         $executeQuery = true
@@ -149,9 +148,7 @@ class CursusGroupRepository extends EntityRepository
         $dql = "
             SELECT DISTINCT g
             FROM Claroline\CoreBundle\Entity\Group g
-            JOIN g.organizations go
-            WHERE go IN (:organizations)
-            AND NOT EXISTS (
+            WHERE EXISTS (
                 SELECT cg
                 FROM Claroline\CursusBundle\Entity\CursusGroup cg
                 WHERE cg.cursus = :cursus
@@ -161,14 +158,12 @@ class CursusGroupRepository extends EntityRepository
         ";
         $query = $this->_em->createQuery($dql);
         $query->setParameter('cursus', $cursus);
-        $query->setParameter('organizations', $organizations);
 
         return $executeQuery ? $query->getResult() : $query;
     }
 
-    public function findSearchedUnregisteredGroupsByCursusAndOrganizations(
+    public function findSearchedGroupsByCursus(
         Cursus $cursus,
-        array $organizations,
         $search = '',
         $orderedBy = 'name',
         $order = 'ASC',
@@ -177,10 +172,8 @@ class CursusGroupRepository extends EntityRepository
         $dql = "
             SELECT DISTINCT g
             FROM Claroline\CoreBundle\Entity\Group g
-            JOIN g.organizations go
-            WHERE go IN (:organizations)
-            AND UPPER(g.name) LIKE :search
-            AND NOT EXISTS (
+            WHERE UPPER(g.name) LIKE :search
+            AND EXISTS (
                 SELECT cg
                 FROM Claroline\CursusBundle\Entity\CursusGroup cg
                 WHERE cg.cursus = :cursus
@@ -190,7 +183,6 @@ class CursusGroupRepository extends EntityRepository
         ";
         $query = $this->_em->createQuery($dql);
         $query->setParameter('cursus', $cursus);
-        $query->setParameter('organizations', $organizations);
         $upperSearch = strtoupper($search);
         $query->setParameter('search', "%{$upperSearch}%");
 

@@ -6,31 +6,24 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Innova\PathBundle\Entity\Criteriagroup;
 use Innova\PathBundle\Entity\Criterion;
 use Innova\PathBundle\Entity\StepCondition;
-use JMS\DiExtraBundle\Annotation as DI;
 
 /**
  * CriteriaManager
  * Manages CriteriaGroup and Criterion of a StepCondition.
- *
- * @DI\Service("innova_path.manager.criteria")
  */
 class CriteriaManager
 {
     /**
      * Object manager.
      *
-     * @var ObjectManager
+     * @var \Doctrine\Common\Persistence\ObjectManager
      */
     protected $om;
 
     /**
-     * CriteriaManager constructor.
+     * Class constructor.
      *
-     * @DI\InjectParams({
-     *     "om" = @DI\Inject("claroline.persistence.object_manager")
-     * })
-     *
-     * @param ObjectManager $om
+     * @param \Doctrine\Common\Persistence\ObjectManager $om
      */
     public function __construct(ObjectManager $om)
     {
@@ -48,7 +41,7 @@ class CriteriaManager
      *
      * @return Criteriagroup
      */
-    public function createGroup(StepCondition $condition, $level, Criteriagroup $parent = null, $order, \stdClass $groupStructure)
+    public function createGroup(StepCondition $condition, $level = 0, Criteriagroup $parent = null, $order = 0, \stdClass $groupStructure)
     {
         $group = new Criteriagroup();
 
@@ -67,7 +60,7 @@ class CriteriaManager
      *
      * @return Criteriagroup
      */
-    public function editGroup(StepCondition $condition, $level, Criteriagroup $parent = null, $order, \stdClass $groupStructure, Criteriagroup $group)
+    public function editGroup(StepCondition $condition, $level = 0, Criteriagroup $parent = null, $order = 0, \stdClass $groupStructure, Criteriagroup $group)
     {
         // Update group properties
         $group->setCondition($condition);
@@ -111,7 +104,7 @@ class CriteriaManager
                 $criterion = $this->createCriterion($group, $criterionStructure);
             } else {
                 // CriteriaGroup already exists => update it
-                $criterion = $existingCriteria->get($group->cgid);
+                $criterion = $existingGroups->get($group->cgid);
                 $criterion = $this->editCriterion($group, $criterionStructure, $criterion);
             }
 
@@ -125,18 +118,18 @@ class CriteriaManager
     /**
      * Clean Criteria which no longer exist in the current Group.
      *
-     * @param Criteriagroup $group
-     * @param array         $neededCriteria
-     * @param array         $existingCriteria
+     * @param \Innova\PathBundle\Entity\Criteriagroup $group
+     * @param array                                   $neededCriteria
+     * @param array                                   $existingCriteria
      *
-     * @return CriteriaManager
+     * @return \Innova\PathBundle\Manager\Condition\CriteriaManager
      */
     public function cleanCriteria(Criteriagroup $group, array $neededCriteria = [], array $existingCriteria = [])
     {
         $toRemove = array_filter($existingCriteria, function (Criterion $current) use ($neededCriteria) {
             $removeCriterion = true;
             foreach ($neededCriteria as $criterion) {
-                if ($current->getId() === $criterion->getId()) {
+                if ($current->getId() == $criterion->getId()) {
                     $removeCriterion = false;
                     break;
                 }

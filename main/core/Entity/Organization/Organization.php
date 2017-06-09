@@ -14,7 +14,6 @@ namespace Claroline\CoreBundle\Entity\Organization;
 use Claroline\CoreBundle\Entity\Calendar\TimeSlot;
 use Claroline\CoreBundle\Entity\Calendar\Year;
 use Claroline\CoreBundle\Entity\User;
-use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
@@ -23,7 +22,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints as DoctrineAssert;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ORM\Entity(repositoryClass="Claroline\CoreBundle\Repository\Organization\OrganizationRepository")
+ * @ORM\Entity()
  * @ORM\Table(name="claro__organization")
  * @DoctrineAssert\UniqueEntity("name")
  * @Gedmo\Tree(type="nested")
@@ -34,7 +33,7 @@ class Organization
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
-     * @Groups({"api_user", "api_user_min", "api_workspace_min", "api_organization_tree", "api_organization_list"})
+     * @Groups({"api_user", "api_organization_tree", "api_organization_list"})
      */
     protected $id;
 
@@ -47,7 +46,7 @@ class Organization
     /**
      * @ORM\Column()
      * @Assert\NotBlank()
-     * @Groups({"api_user", "api_user_min", "api_workspace_min", "api_organization_tree", "api_organization_list"})
+     * @Groups({"api_user", "api_organization_tree", "api_organization_list"})
      */
     protected $name;
 
@@ -120,17 +119,6 @@ class Organization
     protected $users;
 
     /**
-     * @var Workspace[]|ArrayCollection
-     *
-     * @ORM\ManyToMany(
-     *     targetEntity="Claroline\CoreBundle\Entity\Workspace\Workspace",
-     *     mappedBy="organizations"
-     * )
-     * @ORM\JoinTable(name="claro_user_workspace")
-     */
-    protected $workspaces;
-
-    /**
      * @var User[]|ArrayCollection
      *
      * @ORM\ManyToMany(
@@ -168,7 +156,7 @@ class Organization
 
     /**
      * @ORM\Column(name="is_default", type="boolean")
-     * @Groups({"api_user", "api_user_min", "api_workspace_min", "api_organization_tree", "api_organization_list"})
+     * @Groups({"api_user", "api_organization_tree", "api_organization_list"})
      */
     protected $default = false;
 
@@ -177,7 +165,6 @@ class Organization
         $this->locations = new ArrayCollection();
         $this->departments = new ArrayCollection();
         $this->users = new ArrayCollection();
-        $this->workspaces = new ArrayCollection();
         $this->groups = new ArrayCollection();
         $this->administrators = new ArrayCollection();
         $this->timeSlots = new ArrayCollection();

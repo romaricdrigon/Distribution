@@ -92,7 +92,7 @@ class PlatformDefaults implements ParameterProviderInterface
             'help_url' => 'http://doc.claroline.com',
             'register_button_at_login' => false,
             'send_mail_at_workspace_registration' => true,
-            'locales' => ['fr', 'en'],
+            'locales' => ['fr', 'en', 'es'],
             'domain_name' => null,
             'platform_url' => null,
             'mailer_from' => null,
@@ -107,8 +107,6 @@ class PlatformDefaults implements ParameterProviderInterface
             'login_target_route' => 'claro_security_login',
             'enable_opengraph' => true,
             'tmp_dir' => sys_get_temp_dir(),
-            'resource_icon_set' => 'claroline',
-            'direct_third_party_authentication' => false,
         ];
     }
 }

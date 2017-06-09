@@ -11,63 +11,52 @@
 
 namespace Claroline\CoreBundle\Controller\Administration;
 
-use Claroline\CoreBundle\Form\Administration\InternationalizationType;
 use JMS\DiExtraBundle\Annotation as DI;
 use JMS\SecurityExtraBundle\Annotation as SEC;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Claroline\CoreBundle\Form\Administration\InternationalizationType;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
- * @EXT\Route("/internationalization")
- *
  * @DI\Tag("security.secure_service")
- * @SEC\PreAuthorize("canOpenAdminTool('platform_parameters')")
+ * @SEC\PreAuthorize("canOpenAdminTool('user_management')")
  */
 class InternationalizationController extends Controller
 {
     /**
-     * Displays i18n form.
-     *
-     * @EXT\Route("", name="claro_admin_i18n_form")
-     * @EXT\Method("GET")
+     * @EXT\Route("/internationalization/form", name="claro_admin_i18n_form")
      * @EXT\Template
      *
-     * @return array
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
      */
     public function formAction()
     {
         $localeManager = $this->container->get('claroline.manager.locale_manager');
-
         $availableLocales = $localeManager->getImplementedLocales();
         $activatedLocales = $localeManager->retrieveAvailableLocales();
-
         $form = $this->createForm(new InternationalizationType($activatedLocales, $availableLocales));
 
-        return [
-            'form' => $form->createView(),
-        ];
+        return array('form' => $form->createView());
     }
 
     /**
-     * Submits i18n form.
+     * @EXT\Route("/internationalization/submit", name="claro_admin_i18n_submit")
      *
-     * @EXT\Route("", name="claro_admin_i18n_submit")
-     * @EXT\Method("POST")
-     * @EXT\Template("ClarolineCoreBundle:Administration:Internationalization\form.html.twig")
+     * @param Request $request
      *
-     * @return array|RedirectResponse
+     * @return \Symfony\Component\HttpFoundation\Response
      */
     public function submitAction()
     {
         $localeManager = $this->container->get('claroline.manager.locale_manager');
-
         $availableLocales = $localeManager->getImplementedLocales();
         $activatedLocales = $localeManager->retrieveAvailableLocales();
-
         $form = $this->createForm(new InternationalizationType($activatedLocales, $availableLocales));
-
         $form->handleRequest($this->get('request'));
+
         if ($form->isValid()) {
             $data = $form->get('locales')->getData();
             $this->container->get('claroline.config.platform_config_handler')->setParameter('locales', $data);
@@ -75,8 +64,9 @@ class InternationalizationController extends Controller
             return new RedirectResponse($this->get('router')->generate('claro_admin_parameters_index'));
         }
 
-        return [
-            'form' => $form->createView(),
-        ];
+        return $this->render(
+           'ClarolineCoreBundle:Administration:Internationalization\form.html.twig',
+           array('form' => $form->createView(), 'product' => $product)
+       );
     }
 }

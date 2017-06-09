@@ -10,74 +10,57 @@
     {% endif %}
 {% endif %}
 
-{# Checks if we need to hide the breadcrumb #}
-{% if workspace is defined and
-    workspace.getOptions() is not empty and
-    workspace.getOptions().getDetails() is not empty and
-    workspace.getOptions().getDetails()['hide_breadcrumb'] is defined and
-    workspace.getOptions().getDetails()['hide_breadcrumb']
-%}
-    {% set hideBreadcrumb = true %}
-{% endif %}
-
 {% block claroline_danger %}
-    {{ parent() }}
-
+    {# same as leftbar #}
     {% if workspace is defined and is_date_access_valid(workspace) == false %}
-        <div class="label label-danger">
+        <h4 class="label label-danger">
             {{ 'workspace_access_date_invalid'|trans({}, 'platform') }}
-        </div>
+        </h4>
     {% endif %}
 {% endblock %}
 
 {% block title %}
     {% spaceless %}
-        {% if _resource is defined %}
-            {% if _resource.getWorkspace() is defined %}
-                {{ _resource.getWorkspace.getName() }} -
-            {% endif %}
-
-            {{ _resource.getResourceNode().getName() | striptags | raw }}
-        {% elseif workspace is defined %}
+        {% if workspace is defined %}
             {{ workspace.getName() }}
+        {% else %}
+            {% if _resource is defined %}
+                {% if _resource.getWorkspace() is defined %}
+                    {{ _resource.getWorkspace.getName() }} -
+                {% endif %}
+                {{ _resource.getResourceNode().getName() | striptags | raw }}
+            {% endif %}
         {% endif %}
     {% endspaceless %}
 {% endblock %}
 
 {% block breadcrumb %}
-    {# Create resource breadcrumb #}
-    {% if _resource is defined and not has_role('ROLE_ANONYMOUS') %}
-        <ul class="breadcrumb">
-            {% if workspace is defined and workspace != null %}
-                <li>
-                    {# we're finding wich is the workspace we want to display here #}
-                    <a href="{{ path('claro_workspace_open_tool', {'toolName': 'home', 'workspaceId': workspace.getId() }) }}">
-                        {{ workspace.getName() ~ ' (' ~ workspace.getCode() ~ ') ' }}
-                    </a>
-                </li>
+    <div id="resource-breadcrumb">
+        {% if _resource is defined %}
+            <div id="twig-resource-attributes"
+                 data-resource-id="{{ _resource.getId() }}"
+                 data-resource-name="{{ _resource.getName() }}"
+            >
+            </div>
+            <ul class="breadcrumb">
+                {% if not has_role('ROLE_ANONYMOUS') and workspace is defined and workspace != null %}
+                    <li>
+                        {# we're finding wich is the workspace we want to display here #}
+                        <a href="{{ path('claro_workspace_open_tool', {'toolName': 'home', 'workspaceId': workspace.getId() }) }}">
+                            {{ workspace.getName() ~ ' (' ~ workspace.getCode() ~ ') ' }}
+                        </a>
+                    </li>
+                    {% render(controller("ClarolineCoreBundle:Resource:renderBreadcrumbs",
+                        {'node': _resource.getResourceNode(), '_breadcrumbs': app.request.query.get('_breadcrumbs', {})}))
+                    %}
+                {% endif %}
 
-                {% render(controller("ClarolineCoreBundle:Resource:renderBreadcrumbs", {
-                    'node': _resource.getResourceNode(),
-                    '_breadcrumbs': app.request.query.get('_breadcrumbs', {})
-                })) %}
-            {% endif %}
-
-            {% block resourceBreadcrumb %}
-                <li class="active">{{ _resource.getResourceNode().getName() }}</li>
-            {% endblock %}
-        </ul>
-    {% endif %}
-{% endblock %}
-
-{# I don't know if it's still used. Can not find any reference to the anchor in the project... #}
-{% block server_vars %}
-    {% if _resource is defined %}
-        <div id="twig-resource-attributes"
-             data-resource-id="{{ _resource.getId() }}"
-             data-resource-name="{{ _resource.getName() }}"
-        >
-        </div>
-    {% endif %}
+                {% block resourceBreadcrumb %}
+                    <li class="active">{{ _resource.getResourceNode().getName() }}</li>
+                {% endblock %}
+            </ul>
+        {% endif %}
+    </div>
 {% endblock %}
 
 {% block leftbar %}
@@ -89,18 +72,23 @@
 {% endblock %}
 
 {% block content %}
-    {# @deprecated block : will be removed ASAP #}
-    {% block section_panel %}
+    <div class="visible-xs">
+        {{ block("leftbar") }}
+    </div>
+    {{ block("section_panel") }}
+{% endblock %}
+
+{% block section_panel %}
+    <div class="section-content">
         <div class="panel panel-default">
-            {# @deprecated block : will be removed ASAP #}
             {% block section_content %}{% endblock %}
         </div>
-    {% endblock %}
+        {% block section_after_content %}{% endblock %}
+    </div>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
-
     <script type="text/javascript">
         window.Workspace = {};
         {% if _resource is defined %}
@@ -111,51 +99,51 @@
     </script>
 
     <script>
-        $(document).ready(function () {
-            if (window.self !== window.top) {
-              // I'm an IFrame
-              var currentHeight = 0;
-              var element = document.getElementById('wrap');
+        var intervalFunction;
+        var postHeight = function postHeight(height) {
+            if (parent) {
+                var screenHeight = screen.height;
+                var newHeight = height || document.body.scrollHeight;
 
-              function getHeight() {
-                return Math.max(
-                  document.body.scrollHeight,
-                  document.body.offsetHeight
-                );
-              }
-
-              function postHeight(height) {
-                if (parent && height !== currentHeight) {
-                  currentHeight = height;
-                  parent.postMessage('documentHeight:'+height, "*");
+                if (newHeight > screenHeight) {
+                    return;
                 }
-              }
-
-              // post height
-              postHeight(getHeight());
-
-              // attach mutation observer
-              new MutationObserver(function () {
-                postHeight(getHeight());
-              }).observe(element, {
-                attributes: true,
-                childList: true,
-                characterData: true,
-                subtree: true
-              })
+                var message = 'documentHeight:' + newHeight;
+                parent.postMessage(message, "*");
             }
+        };
+
+        $(document).ready(function () {
+            postHeight();
+            /* Hack for constantly polling iframe inner height and react when angular router loads another page */
+            var getIframeWindowHeight = function() {
+                return $("iframe#embeddedActivity").contents().find('body').first().height();
+            }
+            var oldHeight= getIframeWindowHeight();
+            intervalFunction = setInterval(function() {
+                var newHeight = getIframeWindowHeight();
+
+                if (newHeight === null) {
+                    clearInterval(intervalFunction);
+                } else if (newHeight !== oldHeight) {
+                    postHeight(newHeight);
+                    oldHeight = newHeight;
+                }
+
+            }, 2000);
+            /* End of Hack */
+
         });
     </script>
 {% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
-
-    {% if workspace is defined and workspace.backgroundColor is not null %}
     <style type="text/css">
-        body {
-            background-color: {{ workspace.getOptions().getDetails()['background_color'] }};
-        }
+        {% if workspace is defined and workspace.backgroundColor is not null %}
+            body {
+                background-color: {{ workspace.getOptions().getDetails()['background_color'] }};
+            }
+        {% endif %}
     </style>
-    {% endif %}
 {% endblock %}

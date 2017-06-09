@@ -286,28 +286,22 @@ class UserManager
 
     /**
      * Rename a user.
-     * It renames the user role and its personal WS if needed.
      *
-     * @param User   $user
-     * @param string $previousUsername
+     * @param User $user
+     * @param $username
      */
-    public function rename(User $user, $previousUsername)
+    public function rename(User $user, $username)
     {
-        if ($user->getUsername() !== $previousUsername) {
-            // Rename user role
-            $userRole = $this->roleManager->getUserRole($previousUsername);
-            if ($userRole) {
-                $this->roleManager->renameUserRole($userRole, $user->getUsername());
-            }
-
-            // Rename personal WS
-            $pws = $user->getPersonalWorkspace();
-            if ($pws) {
-                $personalWorkspaceName = $this->translator->trans('personal_workspace', [], 'platform').' '.$user->getUsername();
-                $this->workspaceManager->rename($pws, trim($personalWorkspaceName));
-            }
+        $userRole = $this->roleManager->getUserRoleByUser($user);
+        if ($userRole) {
+            $this->roleManager->renameUserRole($userRole, $user->getUsername());
         }
-
+        $user->setUsername($username);
+        $personalWorkspaceName = $this->translator->trans('personal_workspace', [], 'platform').$user->getUsername();
+        $pws = $user->getPersonalWorkspace();
+        if ($pws) {
+            $this->workspaceManager->rename($pws, $personalWorkspaceName);
+        }
         $this->objectManager->persist($user);
         $this->objectManager->flush();
     }
@@ -331,7 +325,7 @@ class UserManager
         if ($this->container->get('security.token_storage')->getToken()->getUser()->getId() === $user->getId()) {
             throw new \Exception('A user cannot delete himself');
         }*/
-        $userRole = $this->roleManager->getUserRole($user->getUsername());
+        $userRole = $this->roleManager->getUserRoleByUser($user);
 
         //soft delete~
         $user->setIsRemoved(true);
@@ -1468,8 +1462,7 @@ class UserManager
         array $forcedUsers = [],
         array $forcedGroups = [],
         array $forcedRoles = [],
-        array $forcedWorkspaces = [],
-        $withAdminOrgas = false
+        array $forcedWorkspaces = []
     ) {
         if (count($searchedRoles) > 0 ||
             count($searchedGroups) > 0 ||
@@ -1488,9 +1481,6 @@ class UserManager
                 [] :
                 $this->generateWorkspaceRestrictions($user);
         }
-        $withOrgas = !$user->hasRole('ROLE_ADMIN') && !$withAllUsers && $withAdminOrgas;
-        $forcedOrganizations = $withOrgas ? $user->getAdministratedOrganizations()->toArray() : [];
-
         $users = $this->userRepo->findUsersForUserPicker(
             $search,
             $withUsername,
@@ -1505,37 +1495,10 @@ class UserManager
             $forcedUsers,
             $forcedGroups,
             $forcedRoles,
-            $forcedWorkspaces,
-            $withOrgas,
-            $forcedOrganizations
+            $forcedWorkspaces
         );
 
         return $this->pagerFactory->createPagerFromArray($users, $page, $max);
-    }
-
-    public function getAllVisibleUsersIdsForUserPicker(User $user)
-    {
-        $usersIds = [];
-        $roles = $this->generateRoleRestrictions($user);
-        $groups = $this->generateGroupRestrictions($user);
-        $workspaces = $this->generateWorkspaceRestrictions($user);
-        $users = $this->userRepo->findUsersForUserPicker(
-            '',
-            false,
-            false,
-            false,
-            'lastName',
-            'ASC',
-            $roles,
-            $groups,
-            $workspaces
-        );
-
-        foreach ($users as $user) {
-            $usersIds[] = $user->getId();
-        }
-
-        return $usersIds;
     }
 
     private function generateRoleRestrictions(User $user)

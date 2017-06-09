@@ -33,7 +33,6 @@ class ClacoFormWidgetConfigurationType extends AbstractType
     {
         $nbEntries = $this->config->getNbEntries();
         $showFieldLabel = $this->config->getShowFieldLabel();
-        $showCreatorPicture = $this->config->getShowCreatorPicture();
 
         $builder->add(
             'nbEntries',
@@ -45,15 +44,6 @@ class ClacoFormWidgetConfigurationType extends AbstractType
                 'constraints' => [new Range(['min' => 0])],
                 'attr' => ['min' => 0],
                 'label' => 'nb_entries',
-            ]
-        );
-        $builder->add(
-            'showCreatorPicture',
-            'checkbox',
-            [
-                'mapped' => false,
-                'data' => $showCreatorPicture,
-                'label' => 'show_creator_picture',
             ]
         );
         $builder->add(

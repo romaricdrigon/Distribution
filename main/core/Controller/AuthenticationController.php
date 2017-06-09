@@ -390,23 +390,12 @@ class AuthenticationController
     //not routed...
     public function renderExternalAuthenticatonButtonAction()
     {
-        return $this->renderExternalAuthencticationButton('external_authentication');
-    }
-
-    //not routed...
-    public function renderPrimaryExternalAuthenticatonButtonAction()
-    {
-        return $this->renderExternalAuthencticationButton('primary_external_authentication');
-    }
-
-    private function renderExternalAuthencticationButton($action)
-    {
-        $event = $this->dispatcher->dispatch('render_'.$action.'_button', 'RenderAuthenticationButton');
+        $event = $this->dispatcher->dispatch('render_external_authentication_button', 'RenderAuthenticationButton');
 
         $eventContent = $event->getContent();
         $strippedContent = trim(strip_tags(preg_replace('/(<(script|style)\b[^>]*>).*?(<\/\2>)/is', '', $eventContent)));
         if (!empty($strippedContent)) {
-            $eventContent = '<div class="'.$action.'">'.$eventContent.'</div>';
+            $eventContent = '<div class="external_authentication">'.$eventContent.'</div>';
         } else {
             $eventContent = '';
         }

@@ -23,6 +23,7 @@ export default class EntryCreationCtrl {
     this.config = ClacoFormService.getResourceDetails()
     this.template = ClacoFormService.getTemplate()
     this.fields = FieldService.getFields()
+    this.tinymceOptions = ClacoFormService.getTinymceConfiguration()
     this.mode = 'creation'
     this.keywordssChoices = []
     this.keywords = []
@@ -47,7 +48,7 @@ export default class EntryCreationCtrl {
     }
     this.fields.forEach(f => {
       const id = f['id']
-      const name = f['name'].replace(/'/g, ' ')
+      const name = f['name']
       this.entry[id] = null
 
       if (f['required']) {
@@ -55,7 +56,6 @@ export default class EntryCreationCtrl {
       }
       if (this.template) {
         let choices = JSON.stringify(f['fieldFacet']['field_facet_choices'])
-        choices = choices.replace(/'/g, '\\\'')
         choices = choices.replace(/"/g, '\'')
         const replacedField = `
           <form-field field="['${name}',
@@ -85,7 +85,7 @@ export default class EntryCreationCtrl {
   }
 
   isAllowed() {
-    return this.canEdit() || this.ClacoFormService.getCanCreateEntry()
+    return this.ClacoFormService.getCanCreateEntry()
   }
 
   canManageKeywords() {
@@ -127,10 +127,6 @@ export default class EntryCreationCtrl {
     if (index > -1) {
       this.keywords.splice(index, 1)
     }
-  }
-
-  isFieldDisabled(field) {
-    return !this.canEdit() && field['locked'] && !field['lockedEditionOnly']
   }
 
   submit() {

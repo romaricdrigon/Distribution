@@ -42,46 +42,35 @@ class AdminLogFilterType extends AbstractType
 
         $builder
             ->add(
-                'action', 'twolevelselect', [
+                'action', 'twolevelselect', array(
                     'label' => 'Show actions for',
                     'translation_domain' => 'log',
-                    'attr' => ['class' => 'input-sm'],
+                    'attr' => array('class' => 'input-sm'),
                     'choices' => $actionChoices,
                     'choices_as_values' => true,
-                    'theme_options' => ['label_width' => 'col-md-3'],
-                ]
+                    'theme_options' => array('label_width' => 'col-md-3'),
+                )
             )
             ->add(
                 'range',
                 'daterange',
-                [
+                array(
                     'label' => 'for_period',
                     'required' => false,
-                    'attr' => ['class' => 'input-sm'],
-                    'theme_options' => ['label_width' => 'col-md-3', 'control_width' => 'col-md-3'],
-                ]
+                    'attr' => array('class' => 'input-sm'),
+                    'theme_options' => array('label_width' => 'col-md-3', 'control_width' => 'col-md-3'),
+                )
             )
             ->add(
                 'user',
                 'simpleautocomplete',
-                [
+                array(
                     'label' => 'for user',
                     'entity_reference' => 'user',
                     'required' => false,
-                    'attr' => ['class' => 'input-sm'],
-                    'theme_options' => ['label_width' => 'col-md-3', 'control_width' => 'col-md-3'],
-                ]
-            )
-            ->add(
-                'group',
-                'simpleautocomplete',
-                [
-                    'label' => 'for group',
-                    'entity_reference' => 'group',
-                    'required' => false,
-                    'attr' => ['class' => 'input-sm'],
-                    'theme_options' => ['label_width' => 'col-md-3', 'control_width' => 'col-md-3'],
-                ]
+                    'attr' => array('class' => 'input-sm'),
+                    'theme_options' => array('label_width' => 'col-md-3', 'control_width' => 'col-md-3'),
+                )
             );
     }
 
@@ -94,9 +83,9 @@ class AdminLogFilterType extends AbstractType
     {
         $resolver
         ->setDefaults(
-            [
+            array(
                 'translation_domain' => 'log',
-            ]
+            )
         );
     }
 }

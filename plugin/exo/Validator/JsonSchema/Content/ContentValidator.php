@@ -25,6 +25,5 @@ class ContentValidator extends JsonSchemaValidator
      */
     public function validateAfterSchema($content, array $options = [])
     {
-        return [];
     }
 }

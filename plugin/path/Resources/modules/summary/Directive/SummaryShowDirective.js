@@ -7,7 +7,9 @@ export default class SummaryShowDirective {
     this.controller = 'SummaryShowCtrl'
     this.controllerAs = 'summaryShowCtrl'
     this.template = template
-    this.scope = {}
+    this.scope = {
+      title: '='
+    }
     this.bindToController = true
   }
 }

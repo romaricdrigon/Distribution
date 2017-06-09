@@ -150,4 +150,8 @@ export default class PathEditCtrl extends PathBaseCtrl {
       }
     }
   }
+
+  unlockManager() {
+    this.window.location.href = this.UrlGenerator('innova_path_manage_results', {id: this.path.id})
+  }
 }

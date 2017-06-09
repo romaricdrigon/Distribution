@@ -8,42 +8,37 @@ use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 
 class StatusType extends AbstractType
 {
-    private $isLocked;
-
-    public function __construct($isLocked = false)
-    {
-        $this->isLocked = $isLocked;
-    }
-
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder->add(
             'name',
             'text',
-            [
+            array(
                 'required' => true,
                 'label' => 'name',
                 'translation_domain' => 'platform',
-            ]
+            )
         );
         $builder->add(
             'code',
             'text',
-            [
+            array(
                 'required' => true,
                 'label' => 'code',
                 'translation_domain' => 'platform',
-                'read_only' => $this->isLocked,
-            ]
+            )
         );
         $builder->add(
-            'description',
-            'tinymce',
-            [
+            'type',
+            'choice',
+            array(
+                'label' => 'type',
+                'choices' => array(0, 1, 2, 3, 4),
+                'expanded' => false,
+                'multiple' => false,
                 'required' => true,
-                'label' => 'description',
                 'translation_domain' => 'platform',
-            ]
+            )
         );
     }
 
@@ -54,6 +49,6 @@ class StatusType extends AbstractType
 
     public function setDefaultOptions(OptionsResolverInterface $resolver)
     {
-        $resolver->setDefaults(['translation_domain' => 'support']);
+        $resolver->setDefaults(array('translation_domain' => 'support'));
     }
 }

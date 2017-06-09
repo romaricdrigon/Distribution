@@ -1,15 +1,10 @@
-{% extends 'ClarolineCoreBundle:Workspace:layout.html.twig' %}
-
+{% extends 'IcapWebsiteBundle::view_layout.html.twig' %}
 {% import 'IcapWebsiteBundle:Website:Macros/common_macros.html.twig' as commonMacros %}
 {% import 'IcapWebsiteBundle:Website:Macros/view_macros.html.twig' as viewMacros %}
 
 {% set options = _resource.options %}
-{% set hideTopBar = true %}
-{% set hideSidebars = true %}
-{% set hideFooter = true %}
-{% set hideBreadcrumb = true %}
 
-{% block section_panel %}
+{% block content %}
     <div class="website-container" data-ng-cloak ng-controller="MainController as vm">
         <div class="loading text-center" ng-if="!pageLoaded" >
             {{ 'loading'|trans({},'icap_website') }}
@@ -44,8 +39,7 @@
                             {% elseif currentPage.type == pageTypes.resource %}
                                 <iframe width="100%" iframe-height-on-load="vm.contentHeight" src="{{ path('claro_resource_open', {
                                 'resourceType': currentPage.resourceNodeType,
-                                'node': currentPage.resourceNode.id,
-                                'iframe': 1
+                                'node': currentPage.resourceNode.id
                                 }) }}"></iframe>
                             {% endif %}
                         {% endif %}
@@ -90,7 +84,16 @@
 {% endblock %}
 
 {% block javascripts %}
-    {{ parent() }}
+    <script src="{{ hotAsset('dist/es6_dll.js') }}"></script>
+    <script src="{{ hotAsset('dist/angular_dll.js') }}"></script>
+    <script>
+        if (window.sessionStorage.getItem('hide_brower_warning')) {
+            $('.outdated-browser-warning').hide();
+        }
+    </script>
+    {% if app.environment == 'prod' %}
+        <script src="{{ hotAsset('dist/commons.js') }}"></script>
+    {% endif %}
     {% if options.menuOrientation == 'horizontal' %}
         <script src="{{ hotAsset('dist/claroline-distribution-plugin-website-view-app-horizontal.js') }}"></script>
     {% else %}

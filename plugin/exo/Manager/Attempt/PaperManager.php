@@ -13,7 +13,7 @@ use UJM\ExoBundle\Library\Mode\CorrectionMode;
 use UJM\ExoBundle\Library\Mode\MarkMode;
 use UJM\ExoBundle\Library\Options\Transfer;
 use UJM\ExoBundle\Library\Validator\ValidationException;
-use UJM\ExoBundle\Manager\Item\ItemManager;
+use UJM\ExoBundle\Manager\Question\QuestionManager;
 use UJM\ExoBundle\Repository\PaperRepository;
 use UJM\ExoBundle\Serializer\Attempt\PaperSerializer;
 
@@ -46,39 +46,39 @@ class PaperManager
      * PaperManager constructor.
      *
      * @DI\InjectParams({
-     *     "om"              = @DI\Inject("claroline.persistence.object_manager"),
-     *     "eventDispatcher" = @DI\Inject("event_dispatcher"),
-     *     "serializer"      = @DI\Inject("ujm_exo.serializer.paper"),
-     *     "itemManager"     = @DI\Inject("ujm_exo.manager.item")
+     *     "om"                 = @DI\Inject("claroline.persistence.object_manager"),
+     *     "eventDispatcher"    = @DI\Inject("event_dispatcher"),
+     *     "serializer"         = @DI\Inject("ujm_exo.serializer.paper"),
+     *     "questionManager"    = @DI\Inject("ujm_exo.manager.question")
      * })
      *
      * @param ObjectManager            $om
      * @param EventDispatcherInterface $eventDispatcher
      * @param PaperSerializer          $serializer
-     * @param ItemManager              $itemManager
+     * @param QuestionManager          $questionManager
      */
     public function __construct(
         ObjectManager $om,
         EventDispatcherInterface $eventDispatcher,
         PaperSerializer $serializer,
-        ItemManager $itemManager)
+        QuestionManager $questionManager)
     {
         $this->om = $om;
         $this->repository = $om->getRepository('UJMExoBundle:Attempt\Paper');
         $this->eventDispatcher = $eventDispatcher;
         $this->serializer = $serializer;
-        $this->itemManager = $itemManager;
+        $this->questionManager = $questionManager;
     }
 
     /**
-     * Serializes a user paper.
+     * Exports a user paper.
      *
      * @param Paper $paper
      * @param array $options
      *
      * @return \stdClass
      */
-    public function serialize(Paper $paper, array $options = [])
+    public function export(Paper $paper, array $options = [])
     {
         // Adds user score if available and the method options do not already request it
         if (!in_array(Transfer::INCLUDE_USER_SCORE, $options)
@@ -146,9 +146,7 @@ class PaperManager
         $structure = json_decode($paper->getStructure());
         foreach ($structure->steps as $step) {
             foreach ($step->items as $item) {
-                if (1 === preg_match('#^application\/x\.[^/]+\+json$#', $item->type)) {
-                    $total += $this->itemManager->calculateTotal($item);
-                }
+                $total += $this->questionManager->calculateTotal($item);
             }
         }
 
@@ -163,7 +161,7 @@ class PaperManager
      *
      * @return array
      */
-    public function serializeExercisePapers(Exercise $exercise, User $user = null)
+    public function exportExercisePapers(Exercise $exercise, User $user = null)
     {
         if (!empty($user)) {
             // Load papers for of a singe user
@@ -179,7 +177,7 @@ class PaperManager
         }
 
         return array_map(function (Paper $paper) {
-            return $this->serialize($paper);
+            return $this->export($paper);
         }, $papers);
     }
 

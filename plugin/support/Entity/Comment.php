@@ -12,9 +12,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class Comment
 {
-    const PUBLIC_COMMENT = 0;
-    const PRIVATE_COMMENT = 1;
-
     /**
      * @ORM\Id
      * @ORM\Column(type="integer")
@@ -59,11 +56,6 @@ class Comment
      * @ORM\Column(name="is_admin", type="boolean")
      */
     protected $isAdmin = false;
-
-    /**
-     * @ORM\Column(name="comment_type", type="integer", options={"default" = 0})
-     */
-    protected $type = self::PUBLIC_COMMENT;
 
     public function getId()
     {
@@ -133,15 +125,5 @@ class Comment
     public function setIsAdmin($isAdmin)
     {
         $this->isAdmin = $isAdmin;
-    }
-
-    public function getType()
-    {
-        return $this->type;
-    }
-
-    public function setType($type)
-    {
-        $this->type = $type;
     }
 }

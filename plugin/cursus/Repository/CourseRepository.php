@@ -17,8 +17,11 @@ use Doctrine\ORM\EntityRepository;
 
 class CourseRepository extends EntityRepository
 {
-    public function findAllCourses($orderedBy = 'title', $order = 'ASC', $executeQuery = true)
-    {
+    public function findAllCourses(
+        $orderedBy = 'title',
+        $order = 'ASC',
+        $executeQuery = true
+    ) {
         $dql = "
             SELECT c
             FROM Claroline\CursusBundle\Entity\Course c
@@ -29,8 +32,12 @@ class CourseRepository extends EntityRepository
         return $executeQuery ? $query->getResult() : $query;
     }
 
-    public function findSearchedCourses($search = '', $orderedBy = 'title', $order = 'ASC', $executeQuery = true)
-    {
+    public function findSearchedCourses(
+        $search = '',
+        $orderedBy = 'title',
+        $order = 'ASC',
+        $executeQuery = true
+    ) {
         $dql = "
             SELECT c
             FROM Claroline\CursusBundle\Entity\Course c
@@ -46,63 +53,12 @@ class CourseRepository extends EntityRepository
         return $executeQuery ? $query->getResult() : $query;
     }
 
-    public function findAllCoursesByOrganizations(array $organizations, $orderedBy = 'title', $order = 'ASC')
-    {
-        $dql = "
-            SELECT c
-            FROM Claroline\CursusBundle\Entity\Course c
-            LEFT JOIN c.organizations o
-            WHERE o IN (:organizations)
-            OR EXISTS (
-                SELECT cu
-                FROM Claroline\CursusBundle\Entity\Cursus cu
-                JOIN cu.course cuc
-                JOIN cu.organizations cuo
-                WHERE cuc = c
-                AND cuo IN (:organizations)
-            )
-            ORDER BY c.{$orderedBy} {$order}
-        ";
-        $query = $this->_em->createQuery($dql);
-        $query->setParameter('organizations', $organizations);
-
-        return $query->getResult();
-    }
-
-    public function findSearchedCoursesByOrganizations(array $organizations, $search = '', $orderedBy = 'title', $order = 'ASC')
-    {
-        $dql = "
-            SELECT c
-            FROM Claroline\CursusBundle\Entity\Course c
-            LEFT JOIN c.organizations o
-            WHERE (
-                o IN (:organizations)
-                OR EXISTS (
-                    SELECT cu
-                    FROM Claroline\CursusBundle\Entity\Cursus cu
-                    JOIN cu.course cuc
-                    JOIN cu.organizations cuo
-                    WHERE cuc = c
-                    AND cuo IN (:organizations)
-                )
-            )
-            AND (
-                UPPER(c.title) LIKE :search
-                OR UPPER(c.code) LIKE :search
-                OR UPPER(c.description) LIKE :search
-            )
-            ORDER BY c.{$orderedBy} {$order}
-        ";
-        $query = $this->_em->createQuery($dql);
-        $query->setParameter('organizations', $organizations);
-        $upperSearch = strtoupper($search);
-        $query->setParameter('search', "%{$upperSearch}%");
-
-        return $query->getResult();
-    }
-
-    public function findUnmappedCoursesByCursus(Cursus $cursus, $orderedBy = 'title', $order = 'ASC', $executeQuery = true)
-    {
+    public function findUnmappedCoursesByCursus(
+        Cursus $cursus,
+        $orderedBy = 'title',
+        $order = 'ASC',
+        $executeQuery = true
+    ) {
         $dql = "
             SELECT c
             FROM Claroline\CursusBundle\Entity\Course c
@@ -120,9 +76,9 @@ class CourseRepository extends EntityRepository
         return $executeQuery ? $query->getResult() : $query;
     }
 
-    public function findUnmappedCoursesByCursusAndOrganizations(
+    public function findUnmappedSearchedCoursesByCursus(
         Cursus $cursus,
-        array $organizations,
+        $search = '',
         $orderedBy = 'title',
         $order = 'ASC',
         $executeQuery = true
@@ -130,17 +86,9 @@ class CourseRepository extends EntityRepository
         $dql = "
             SELECT c
             FROM Claroline\CursusBundle\Entity\Course c
-            LEFT JOIN c.organizations o
             WHERE (
-                o IN (:organizations)
-                OR EXISTS (
-                    SELECT cu
-                    FROM Claroline\CursusBundle\Entity\Cursus cu
-                    JOIN cu.course cuc
-                    JOIN cu.organizations cuo
-                    WHERE cuc = c
-                    AND cuo IN (:organizations)
-                )
+                UPPER(c.title) LIKE :search
+                OR UPPER(c.code) LIKE :search
             )
             AND NOT EXISTS (
                 SELECT cc
@@ -152,7 +100,8 @@ class CourseRepository extends EntityRepository
         ";
         $query = $this->_em->createQuery($dql);
         $query->setParameter('cursus', $cursus);
-        $query->setParameter('organizations', $organizations);
+        $upperSearch = strtoupper($search);
+        $query->setParameter('search', "%{$upperSearch}%");
 
         return $executeQuery ? $query->getResult() : $query;
     }

@@ -63,11 +63,11 @@ class CorrectionController extends AbstractController
      */
     public function listQuestionsToCorrectAction(Exercise $exercise)
     {
-        if ($this->isAdmin($exercise)) {
-            return new JsonResponse(
-                $this->correctionManager->getToCorrect($exercise)
-            );
-        }
+        $this->assertHasPermission('ADMINISTRATE', $exercise);
+
+        return new JsonResponse(
+            $this->correctionManager->getToCorrect($exercise)
+        );
     }
 
     /**
@@ -83,41 +83,39 @@ class CorrectionController extends AbstractController
      */
     public function saveAction(Exercise $exercise, Request $request)
     {
-        if ($this->isAdmin($exercise)) {
-            $data = $this->decodeRequestData($request);
+        $this->assertHasPermission('ADMINISTRATE', $exercise);
 
-            if (null === $data) {
-                $errors[] = [
-                    'path' => '',
-                    'message' => 'Invalid JSON data',
-                ];
-            } else {
-                // Try to save submitted correction
-                try {
-                    $this->correctionManager->save($data);
-                } catch (ValidationException $e) {
-                    $errors = $e->getErrors();
-                }
-            }
+        $data = $this->decodeRequestData($request);
 
-            if (empty($errors)) {
-                // Correction saved
-                return new JsonResponse(null, 204);
-            } else {
-                // Invalid data received
-                return new JsonResponse($errors, 422);
+        if (null === $data) {
+            $errors[] = [
+                'path' => '',
+                'message' => 'Invalid JSON data',
+            ];
+        } else {
+            // Try to save submitted correction
+            try {
+                $this->correctionManager->save($data);
+            } catch (ValidationException $e) {
+                $errors = $e->getErrors();
             }
+        }
+
+        if (empty($errors)) {
+            // Correction saved
+            return new JsonResponse(null, 204);
+        } else {
+            // Invalid data received
+            return new JsonResponse($errors, 422);
         }
     }
 
-    private function isAdmin(Exercise $exercise)
+    private function assertHasPermission($permission, Exercise $exercise)
     {
         $collection = new ResourceCollection([$exercise->getResourceNode()]);
 
-        if (!$this->authorization->isGranted('ADMINISTRATE', $collection) && !$this->authorization->isGranted('MANAGE_PAPERS', $collection)) {
+        if (!$this->authorization->isGranted($permission, $collection)) {
             throw new AccessDeniedException($collection->getErrorsForDisplay());
         }
-
-        return true;
     }
 }

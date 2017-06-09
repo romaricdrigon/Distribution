@@ -24,8 +24,6 @@ export default class FieldEditionModalCtrl {
       type: null,
       required: true,
       isMetadata: false,
-      locked: false,
-      lockedEditionOnly: false,
       choices: []
     }
     this.fieldErrors = {
@@ -48,8 +46,6 @@ export default class FieldEditionModalCtrl {
     this.field['type'] = this.source['type']
     this.field['required'] = this.source['required']
     this.field['isMetadata'] = this.source['isMetadata']
-    this.field['locked'] = this.source['locked']
-    this.field['lockedEditionOnly'] = this.source['lockedEditionOnly']
     const selectedType = this.types.find(t => t['value'] === this.source['type'])
     this.type = selectedType
   }
@@ -84,12 +80,6 @@ export default class FieldEditionModalCtrl {
       this.choices = [{index: this.index, value: ''}]
       this.choicesErrors[this.index] = null
       ++this.index
-    }
-  }
-
-  checkValues() {
-    if (this.field['locked'] && !this.field['lockedEditionOnly']) {
-      this.field['required'] = false
     }
   }
 

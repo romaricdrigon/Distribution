@@ -6,12 +6,10 @@ use Claroline\CoreBundle\Persistence\ObjectManager;
 use JMS\DiExtraBundle\Annotation as DI;
 use UJM\ExoBundle\Entity\Attempt\Answer;
 use UJM\ExoBundle\Entity\Exercise;
-use UJM\ExoBundle\Entity\Item\Item;
 use UJM\ExoBundle\Library\Validator\ValidationException;
 use UJM\ExoBundle\Manager\Attempt\AnswerManager;
 use UJM\ExoBundle\Manager\Attempt\PaperManager;
 use UJM\ExoBundle\Repository\PaperRepository;
-use UJM\ExoBundle\Serializer\Item\ItemSerializer;
 
 /**
  * @DI\Service("ujm_exo.manager.correction")
@@ -39,36 +37,27 @@ class CorrectionManager
     private $paperManager;
 
     /**
-     * @var ItemSerializer
-     */
-    private $itemSerializer;
-
-    /**
      * ExerciseManager constructor.
      *
      * @DI\InjectParams({
-     *     "om"             = @DI\Inject("claroline.persistence.object_manager"),
-     *     "answerManager"  = @DI\Inject("ujm_exo.manager.answer"),
-     *     "paperManager"   = @DI\Inject("ujm_exo.manager.paper"),
-     *     "itemSerializer" = @DI\Inject("ujm_exo.serializer.item")
+     *     "om"            = @DI\Inject("claroline.persistence.object_manager"),
+     *     "answerManager" = @DI\Inject("ujm_exo.manager.answer"),
+     *     "paperManager"  = @DI\Inject("ujm_exo.manager.paper")
      * })
      *
-     * @param ObjectManager  $om
-     * @param AnswerManager  $answerManager
-     * @param PaperManager   $paperManager
-     * @param ItemSerializer $itemSerializer
+     * @param ObjectManager $om
+     * @param AnswerManager $answerManager
+     * @param PaperManager  $paperManager
      */
     public function __construct(
         ObjectManager $om,
         AnswerManager $answerManager,
-        PaperManager $paperManager,
-        ItemSerializer $itemSerializer)
+        PaperManager $paperManager)
     {
         $this->om = $om;
         $this->paperRepository = $this->om->getRepository('UJMExoBundle:Attempt\Paper');
         $this->answerManager = $answerManager;
         $this->paperManager = $paperManager;
-        $this->itemSerializer = $itemSerializer;
     }
 
     public function getToCorrect(Exercise $exercise)
@@ -83,7 +72,7 @@ class CorrectionManager
             /** @var Answer $answer */
             foreach ($paper->getAnswers() as $answer) {
                 if (null === $answer->getScore()) {
-                    $answers[] = $this->answerManager->serialize($answer);
+                    $answers[] = $this->answerManager->export($answer);
 
                     // For now we only get one definition for a question
                     // As the papers are ordered by start date DESC, we will get the most recent version of the question
@@ -122,11 +111,8 @@ class CorrectionManager
                 ]]);
             }
 
-            $question = $answer->getPaper()->getQuestion($answer->getQuestionId());
-            $decodedQuestion = $this->itemSerializer->deserialize($question, new Item());
-
             // Update answer and apply hint penalties
-            $this->answerManager->update($decodedQuestion, $answer, $correctedAnswer, true);
+            $this->answerManager->update($answer, $correctedAnswer, true);
             if (!empty($answer->getUsedHints())) {
                 $this->applyPenalties($answer);
             }

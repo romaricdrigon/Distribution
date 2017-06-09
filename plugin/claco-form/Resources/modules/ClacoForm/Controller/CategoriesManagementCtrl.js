@@ -47,11 +47,7 @@ export default class CategoriesManagementCtrl {
   }
 
   createCategory() {
-    this.CategoryService.createCategory(
-      this.ClacoFormService.getResourceId(),
-      this.CategoryService.getWorkspaceId(),
-      this._addCategoryCallback
-    )
+    this.CategoryService.createCategory(this.ClacoFormService.getResourceId(), this.CategoryService.getWorkspaceId(), this._addCategoryCallback)
   }
 
   editCategory(category) {

@@ -114,8 +114,14 @@ class PaperSerializer extends AbstractSerializer
      */
     public function deserialize($data, $paper = null, array $options = [])
     {
-        $paper = $paper ?: new Paper();
-        $paper->setUuid($data->id);
+        if (empty($paper)) {
+            $paper = new Paper();
+        }
+
+        // Force client ID if needed
+        if (!in_array(Transfer::USE_SERVER_IDS, $options)) {
+            $paper->setUuid($data->id);
+        }
 
         if (isset($data->number)) {
             $paper->setNumber($data->number);
@@ -159,10 +165,8 @@ class PaperSerializer extends AbstractSerializer
         $decoded = json_decode($paper->getStructure());
         foreach ($decoded->steps as $step) {
             foreach ($step->items as $item) {
-                if (1 === preg_match('#^application\/x\.[^/]+\+json$#', $item->type)) {
-                    foreach ($item->hints as $hint) {
-                        $options['hints'][$hint->id] = $hint;
-                    }
+                foreach ($item->hints as $hint) {
+                    $options['hints'][$hint->id] = $hint;
                 }
             }
         }

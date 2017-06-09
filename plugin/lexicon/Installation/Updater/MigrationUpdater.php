@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Claroline\MessageBundle\Installation\Updater;
+namespace Claroline\LexiconBundle\Installation\Updater;
 
 use Claroline\InstallationBundle\Updater\Updater;
 use Doctrine\DBAL\Migrations\Configuration\Configuration;
@@ -28,12 +28,12 @@ class MigrationUpdater extends Updater
 
     public function preInstall()
     {
-        if ($this->conn->getSchemaManager()->tablesExist(['claro_message'])) {
+        if ($this->conn->getSchemaManager()->tablesExist(['claro_lexicon'])) {
             $this->log('Found existing database schema: skipping install migration...');
             $config = new Configuration($this->conn);
-            $config->setMigrationsTableName('doctrine_clarolinemessagebundle_versions');
-            $config->setMigrationsNamespace('claro_message'); // required but useless
-            $config->setMigrationsDirectory('claro_message'); // idem
+            $config->setMigrationsTableName('doctrine_clarolinelexiconbundle_versions');
+            $config->setMigrationsNamespace('claro_lexicon'); // required but useless
+            $config->setMigrationsDirectory('claro_lexicon'); // idem
             $version = new Version($config, '20150429114010', 'stdClass');
             $version->markMigrated();
         }

@@ -23,8 +23,6 @@ export default class FieldCreationModalCtrl {
       type: null,
       required: true,
       isMetadata: false,
-      locked: false,
-      lockedEditionOnly: false,
       choices: []
     }
     this.fieldErrors = {
@@ -38,12 +36,6 @@ export default class FieldCreationModalCtrl {
     this.choicesErrors[this.index] = null
     this.categories = CategoryService.getCategories()
     ++this.index
-  }
-
-  checkValues() {
-    if (this.field['locked'] && !this.field['lockedEditionOnly']) {
-      this.field['required'] = false
-    }
   }
 
   submit() {

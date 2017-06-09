@@ -25,7 +25,7 @@ class ClarolineRemoteUserSynchronizationBundle extends PluginBundle
 
     public function hasMigrations()
     {
-        return true;
+        return false;
     }
 
     public function isActiveByDefault()

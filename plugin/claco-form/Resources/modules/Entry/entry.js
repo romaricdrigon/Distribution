@@ -13,7 +13,6 @@ import 'angular-bootstrap'
 import 'angular-ui-translation/angular-translation'
 
 import '#/main/core/services/module'
-import EntrySharesManagementModalCtrl from './Controller/EntrySharesManagementModalCtrl'
 import EntryService from './Service/EntryService'
 
 angular.module('EntryModule', [
@@ -23,4 +22,3 @@ angular.module('EntryModule', [
   'ClarolineAPI'
 ])
 .service('EntryService', EntryService)
-.controller('EntrySharesManagementModalCtrl', EntrySharesManagementModalCtrl)

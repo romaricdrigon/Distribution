@@ -12,9 +12,8 @@
 import $ from 'jquery'
 
 export default class ClacoFormService {
-  constructor($http, $window, $uibModal, EntryService) {
+  constructor($http, $uibModal, EntryService) {
     this.$http = $http
-    this.$window = $window
     this.$uibModal = $uibModal
     this.EntryService = EntryService
     this.isAnon = ClacoFormService._getGlobal('isAnon')
@@ -25,7 +24,6 @@ export default class ClacoFormService {
     this.resourceDetails = ClacoFormService._getGlobal('resourceDetails')
     this.resourceNodeId = ClacoFormService._getGlobal('resourceNodeId')
     this.resourceNodeName = ClacoFormService._getGlobal('resourceNodeName')
-    this.canGeneratePdf = ClacoFormService._getGlobal('canGeneratePdf')
     this.successMessage = null
     this.errorMessage = null
   }
@@ -50,10 +48,6 @@ export default class ClacoFormService {
 
   getCanSearchEntry() {
     return this.resourceDetails['search_enabled'] || this.canEdit || !this.isAnon
-  }
-
-  getCanGeneratePdf() {
-    return this.canGeneratePdf
   }
 
   getResourceId() {
@@ -239,14 +233,6 @@ export default class ClacoFormService {
     convertedStr = convertedStr.replace(/Ý/g, 'Y')
 
     return convertedStr
-  }
-
-  removeQuote(str) {
-    return str.replace(/'/g, ' ')
-  }
-
-  exportEntries() {
-    this.$window.location.href = Routing.generate('claro_claco_form_entries_export', {clacoForm: this.resourceId})
   }
 
   static _getGlobal(name) {
