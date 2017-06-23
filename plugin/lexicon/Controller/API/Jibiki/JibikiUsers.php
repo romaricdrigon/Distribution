@@ -18,9 +18,10 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Claroline\CoreBundle\Entity\User;
 use GuzzleHttp\Client;
+use Claroline\LexiconBundle\Manager\DictionariesManager;
 
 
-class JBKUsers
+class JibikiUsers
 {
 	public  $base_api_uri = 'http://totoro.imag.fr/lexinnova/apiusers/';
 	public  $header 	  = ['Content-Type' => 'application/json;charset=UTF-8', 'Accept' => 'application/json'];
@@ -34,7 +35,6 @@ class JBKUsers
         'headers'  => $this->header
         ]);
 	}
-	
 
 	public function post_user($name, $login, $password, $email)
     {
@@ -73,13 +73,13 @@ class JBKUsers
     {
         $userlist = array();
         $response = $this->CLIENT_USER->request('GET', 'AdminUsers.po', [
-        'auth' => [$admin, $password],
-        'http_errors' => false, ]);
+                                                'auth' => [$admin, $password],
+                                                'http_errors' => false, ]);
         $code = $response->getStatusCode();
         $body = (string) $response->getBody();
 		$body = preg_replace('/&nbsp;/', '&#160;', $body);
         
-        /*$usersxml = simplexml_load_string($body);
+        $usersxml = simplexml_load_string($body);
         $tables = $usersxml->xpath('//*[@summary]');
         $userstable = '';
         foreach ($tables as $table) {
@@ -94,7 +94,7 @@ class JBKUsers
                     $userlist[$user->login] = $user;
                 }
             }
-        }*/
+        }
         $reason = $response->getReasonPhrase();
         if ($code != 200) {
             echo "<p class='apierror'>REST API POST USER ERROR: $code $reason</p>\n";

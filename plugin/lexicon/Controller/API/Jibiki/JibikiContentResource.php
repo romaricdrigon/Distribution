@@ -18,14 +18,15 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Claroline\CoreBundle\Entity\User;
 use GuzzleHttp\Client;
+use Claroline\LexiconBundle\Manager\DictionariesManager;
 
 
 
 
-class ContentResource
+class JibikiContentResource
 {
-    public  $base_api_uri = 'http://totoro.imag.fr/lexinnova/api/';
-    public  $header       = ['Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml'];
+    public  $base_api_uri = 'http://totoro.imag.fr/lexinnova/api';
+    public  $header       = ['Content-Type' => 'application/json;charset=UTF-8', 'Accept' => 'application/json'];
     private $RESOURCE_CONTENT;
     public $name;
     public $fullname;
@@ -48,6 +49,7 @@ class ContentResource
     public $xslSheet;
     public $volumes = array();
     public $xml;
+    public $instance;
 
     public static function withID($id)
     {
@@ -64,10 +66,10 @@ class ContentResource
         $this->type = $type;
         $this->authors = $authors;
         $this->CLIENT_RESOURCES = new Client([
-        // Base URI is used with relative requests
-        //'base_uri' => 'http://totoro.imag.fr/lexinnova/apiusers/',
-        'base_uri' => $this->base_api_uri,
-        'headers'  => $this->header
+            // Base URI is used with relative requests
+            //'base_uri' => 'http://totoro.imag.fr/lexinnova/apiusers/',
+            'base_uri' => $this->base_api_uri,
+            'headers'  => $this->header
         ]);
     }
 
@@ -87,7 +89,21 @@ class ContentResource
         return $instance;
     }
 
-    public static function fromXML($xmldata)
+    public function XML2Array($xml) 
+    { 
+        $array = simplexml_load_string ($xml); 
+        $newArray = array( ) ; 
+        $array = (array)$array ; 
+        foreach ($array as $key => $value) 
+        { 
+            $value = (array)$value ; 
+            $newArray[$key] = $value[0] ; 
+        } 
+        $newArray = array_map("trim", $newArray); 
+        return $newArray ; 
+    } 
+
+    public function fromXML($xmldata)
     {
         $instance = new self((string) $xmldata->{'dictionary-metadata'}['name'], (string) $xmldata->{'dictionary-metadata'}['category'], (string) $xmldata->{'dictionary-metadata'}['type'], (string) $xmldata->{'dictionary-metadata'}->authors);
         $instance->xml = $xmldata->{'dictionary-metadata'};
@@ -103,31 +119,47 @@ class ContentResource
         $instance->access = (string) $instance->xml->access || 'private';
         $instance->comments = (string) $instance->xml->comments;
         
- //        foreach ($instance->xml->administrators->{'user-ref'} as $user) {
-   //         array_push($instance->administrators, (string) $user['name']);
-     // }
+        //echo var_dump($instance->xml->administrators);
+        $admin = $instance->xml->administrators;
+        if (isset($admin)) {
+            foreach ($admin->{'user-ref'} as $user) {
+               array_push($instance->administrators, (string) $user['name']);
+            }
+        }else {
+            array_push($instance->administrators, (string) $admin['name']);
+        }
+
         $srclangs = array();
        // echo $instance->xml->languages->children();
-        /*if ($instance->xml->languages->{"source-language"}) {
-            foreach ($instance->xml->languages->{"source-language"} as $srclangXML) {
+       
+        $langsrc = $instance->xml->languages;
+        if (isset($langsrc)) {
+            foreach ($langsrc->{"source-language"} as $srclangXML) {
                 $d = $srclangXML->attributes('d', true);
-                $lang = (string) $d['lang'];
-                array_push($instance->src, $lang);
+                $langsrc = (string) $d['lang'];
+                array_push($instance->src, $langsrc);
             }
-        }*/
-/*
+        } else {
+            array_push($instance->src, $langsrc['source-language']);
+        }
+
         $trglangs = array();
-        if ($instance->xml->languages->{"target-language"}) {
-            foreach ($instance->xml->languages->{"target-language"} as $trglangXML) {
+        $langtg = $instance->xml->languages;
+        if (isset($langtg)) {
+            foreach ($langtg->{"target-language"} as $trglangXML) {
                 $d = $trglangXML->attributes('d', true);
                 $lang = (string) $d['lang'];
                 array_push($instance->trg, $lang);
             } 
-        } 
+        } else {
+            array_push($instance->trg, $langtg['target-language']);
+        }
+
         $ns_stylesheet = $xmldata->children('http://www.w3.org/1999/XSL/Transform');
         if (!empty($ns_stylesheet)) {
             $instance->xslSheet = $ns_stylesheet->stylesheet->asXML();
-        }*/
+        }
+        
 
         return $instance;
     }
@@ -285,3 +317,16 @@ class ContentResource
         return $code;
     }
 }
+/*
+class simple_xml_extended extends SimpleXMLElement
+{
+    public    function    Attribute($name)
+    {
+        foreach($this->Attributes() as $key=>$val)
+        {
+            if($key == $name)
+                return (string)$val;
+        }
+    }
+
+}*/

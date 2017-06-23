@@ -43,7 +43,7 @@ class ExerciseController extends Controller
 
         // TODO : no need to count the $nbPapers for regular users as it's only for admins
         $nbPapers = $this->container->get('ujm_exo.manager.paper')->countExercisePapers($exercise);
-        $isAdmin = $this->isAdmin($exercise);
+        $isAdmin  = $this->isAdmin($exercise);
         $exerciseData = $this->get('ujm_exo.manager.exercise')->export(
             $exercise,
             $isAdmin ? [Transfer::INCLUDE_SOLUTIONS] : []
@@ -59,7 +59,7 @@ class ExerciseController extends Controller
             // Used to build the Claroline Breadcrumbs
             'workspace' => $exercise->getResourceNode()->getWorkspace(),
             '_resource' => $exercise,
-            'exercise' => $exerciseData,
+            'exercise'  => $exerciseData,
             'editEnabled' => $isAdmin,
         ];
     }

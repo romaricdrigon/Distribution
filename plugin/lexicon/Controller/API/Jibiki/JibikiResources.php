@@ -16,14 +16,15 @@ use JMS\DiExtraBundle\Annotation as DI;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Claroline\CoreBundle\Entity\User;
 use GuzzleHttp\Client;
-use Claroline\LexiconBundle\Controller\API\Jibiki\ContentResource;
+use Claroline\LexiconBundle\Controller\API\Jibiki\JibikiContentResource;
+use Tcdent\RestClient;
+use Claroline\LexiconBundle\Manager\DictionariesManager;
 
 
 
-
-class JBKResources
+class JibikiResources
 {
-    public  $base_api_uri = 'http://totoro.imag.fr/lexinnova/api';
+    public  $base_api_uri = 'http://totoro.imag.fr/lexinnova/api/';
 	public  $header 	  = ['Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml'];
 	private $CLIENT_RESOURCES;
 
@@ -46,7 +47,7 @@ class JBKResources
             echo "<p class='apierror'>REST API GET VOLUME ERROR: $code $reason</p>\n";
         } else {
             $volumexml = simplexml_load_string($response->getBody());
-            $volume = ContentResource::fromXML($volumexml);
+            $volume = JibikiContentResource::fromXML($volumexml);
         }
 
         return $volume;
@@ -55,43 +56,59 @@ class JBKResources
 
 	public function get_dictionary($dictname)
     {
-        $dict = '';
-        $response = $this->CLIENT_RESOURCES->request('GET', $dictname, ['http_errors' => false]);
+        
+        $answer = array();
+        $response = $this->CLIENT_RESOURCES->request('GET', '', ['http_errors' => false]);
         $code = $response->getStatusCode();
         if ($code != 200) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='panel panel-body'>REST API GET DICT ERROR: $code $reason</p>\n";
+            echo "<p class='apierror'>REST API GET DICTLIST ERROR: $code $reason</p>\n";
         } else {
-        	$dicfile = $response->getBody();
-            //$dictab = array($dicfile->{'last-modification-date'}, $dicfile->{'source'}, $dicfile->{'name'});
-            $dictxml = simplexml_load_string($dicfile);
-            $dict = ContentResource::fromXML($dictxml);
-            foreach ($dict->src as $volumelang) {
-                $volume = $this->get_volume($dict->name, $volumelang);
-                $dict->volumes[$volumelang] = $volume;
-        	}
+            $xml = (string) $response->getBody();
+            //echo $xml;
+            $dictlist = simplexml_load_string($xml);
+            foreach ($dictlist as $dictxml) {
+                echo $dictxml;
+                $dict = JibikiContentResource::fromXML($dictxml);
+                foreach ($dict->src as $volumelang) {
+                    $volume = $this->get_volume($dict->name, $volumelang);
+                    $dict->volumes[$volumelang] = $volume;
+                }
+                $answer[$dict->name] = $dict;
+            }
+        
         }
+
+        return $answer;
+    }
+
+
+    public function get_all_dictionaries($user, $password)
+    {
+        $dict = '';
+        $dictxml = '';
+        $answer = array();
+        $response = $this->CLIENT_RESOURCES->request('GET', '', ['http_errors' => false, 'auth' => [$user, $password]]);
+        $code = $response->getStatusCode();
+        if ($code != 200) {
+            $reason = $response->getReasonPhrase();
+            echo "<p class='apierror'>REST API GET DICTLIST ERROR: $code $reason</p>\n";
+        } else {
+            $dictlist = simplexml_load_string($response->getBody());
+            foreach ($dictlist as $dictxml) {
+                $dict = JibikiContentResource::fromXML($dictxml);
+                foreach ($dict->src as $volumelang) {
+                    $volume = $this->get_volume($dict->name, $volumelang);
+                    $dict->volumes[$volumelang] = $volume;
+                }
+                $answer[$dict->name] = $dict;
+            }
+        }
+
 
         return $dict;
     }
 
-    public function get_all_dictionaries()
-    {
-        $dict = '';
-        $dictxml = '';
-        $response = $this->CLIENT_RESOURCES->request('GET','');
-        $code = $response->getStatusCode();
-        if ($code != 200) {
-            $reason = $response->getReasonPhrase();
-            echo "<p class='panel panel-body'>REST API GET DICT ERROR : $code $reason</p>\n";
-        } else {
-            $dicfile = $response->getBody();
-            $dictxml = simplexml_load_string($dicfile);
-            //$dict = ContentResource::fromXML($dictxml);
-        }
-
-        return $dictxml;
-    }
 
     public function post_volume($dictname, $src, $voldata, $user, $password)
     {
@@ -105,6 +122,7 @@ class JBKResources
 
         return $code;
     }
+
 
     public function put_volume($dictname, $src, $voldata, $user, $password)
     {
@@ -122,6 +140,7 @@ class JBKResources
         return $volume;
     }
 
+
     public function delete_volume($dictname, $src, $voldata, $user, $password)
     {
         $response = $this->CLIENT_RESOURCES->request('DELETE', $dictname.'/'.$src, ['auth' => [$user, $password], 'http_errors' => false]);
@@ -133,5 +152,9 @@ class JBKResources
 
         return $code;
     }
+
+
+
+    
 }
 

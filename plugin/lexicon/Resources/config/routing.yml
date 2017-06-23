@@ -4,21 +4,26 @@ lexicon_bundle:
 
 lexicon_bundle_jibiki_users:
     resource: "@ClarolineLexiconBundle/Controller/API/Jibiki/JibikiUsers.php"
-    prefix: /api
+    prefix: /jibiki
     type: annotation
 
 
 lexicon_bundle_jibiki_content:
     resource: "@ClarolineLexiconBundle/Controller/API/Jibiki/JibikiContentResource.php"
-    prefix: /api
+    prefix: /jibiki
     type: annotation
 
 
 lexicon_bundle_jibiki_resource:
     resource: "@ClarolineLexiconBundle/Controller/API/Jibiki/JibikiResources.php"
-    prefix: /api
-    type: annotation
+    prefix: /jibiki
+    type: annotation 
 
+
+lexicon_bundle_jibiki_api:
+    resource: "@ClarolineLexiconBundle/Controller/API/"
+    prefix: api
+    type: annotation
 
 lexicon_bundle_desktop:
     resource: "@ClarolineLexiconBundle/Controller/openResources/DesktopLexiconController.php"

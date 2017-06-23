@@ -5,7 +5,7 @@
 {% block stylesheets %}
     {# Claroline CSS #}
     {{ parent() }}
-
+   
     {# Dashboard styles #}
     {% stylesheets debug = false filter = 'less, cssmin' output = 'vendor/claroline/claro-lexicon.css'
     '@ClarolineLexiconBundle/Resources/less/main.less'
