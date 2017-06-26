@@ -1,10 +1,21 @@
 import React from 'react'
+import {PropTypes as T, checkPropTypes} from 'prop-types'
 import {
   hashHistory,
   HashRouter as Router,
   Route,
   Switch
 } from 'react-router-dom'
+
+// if you use connected components, you may need to tell them there is a router.
+// @see https://reacttraining.com/react-router/web/guides/redux-integration
+
+const routesTypes = T.arrayOf(T.shape({
+  path: T.string,
+  //default: T.bool,
+  exact: T.bool,
+  component: T.element.isRequired
+}))
 
 function getRouteComponent(route) {
   // todo validate route config
@@ -26,11 +37,6 @@ function getRouteComponent(route) {
 
 /**
  * Creates react router components based on config.
- *
- * NB:
- *   if you use connected components that needs to access route params,
- *   you have to tell them there is a router.
- *   @see https://reacttraining.com/react-router/web/guides/redux-integration
  *
  * Example of simple routing config :
  *   [
