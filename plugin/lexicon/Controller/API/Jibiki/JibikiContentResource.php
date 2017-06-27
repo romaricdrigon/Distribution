@@ -11,11 +11,7 @@
 
 namespace Claroline\LexiconBundle\Controller\API\Jibiki;
 
-use FOS\RestBundle\Controller\FOSRestController;
-use FOS\RestBundle\Controller\Annotations\View;
-use JMS\DiExtraBundle\Annotation as DI;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
+
 use Claroline\CoreBundle\Entity\User;
 use GuzzleHttp\Client;
 use Claroline\LexiconBundle\Manager\DictionariesManager;

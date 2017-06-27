@@ -1,24 +1,28 @@
 <?php
 
 
+/*
+ * This file is part of the Claroline Connect package.
+ *
+ * (c) Claroline Consortium <consortium@claroline.net>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 
 namespace Claroline\LexiconBundle\Manager;
 
  
 
-use Claroline\CoreBundle\Library\Security\Utilities;
 use Claroline\CoreBundle\Manager\GroupManager;
 use Claroline\CoreBundle\Manager\UserManager;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Claroline\LexiconBundle\Controller\API\Jibiki\JibikiUsers;
-use Claroline\CoreBundle\Event\DisplayToolEvent;
 use JMS\DiExtraBundle\Annotation as DI;
-use Symfony\Bundle\TwigBundle\TwigEngine;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 
 /**
- *  @DI\Service("claroline_lexicon.manager.lexicon")
+ *  @DI\Service("claroline_lexicon.authUsers")
  */
 class AuthUsersManager
 {
@@ -43,9 +47,13 @@ class AuthUsersManager
      */
     private $even;
 
+	/**
+	 * @DI\InjectParams({
+	 *     "container"    = @DI\Inject("service_container")
+	 * })
+	 */
 
-
-	public function __construct($container) {
+	public function __construct($container) { 
 		$this->container = $container->get('security.token_storage')->getToken()->getUser();
 	}
 
@@ -70,6 +78,11 @@ class AuthUsersManager
 		return $fname;
 	}
 
+	private function getLname() {
+		$fname = $this->container->getLastName();
+		return $fname;
+	}
+
 	private function getPassword() {
 		$password = $this->container->getPassword();
 		return $password;
@@ -82,10 +95,10 @@ class AuthUsersManager
 	}
 
 	public function generateAuth() {
-		var_dump($this->container->getUsername());
-		$userProprieties              	  = $this->container->getEditableProperties();
+		$userProprieties              	  = array();
 		$userProprieties['username']      = $this->getUsername();
 		$userProprieties['firstName']     = $this->getFname();
+		$userProprieties['LastName']      = $this->getLname();
 		$userProprieties['email']         = $this->getEmail();
 		$userProprieties['id']            = $this->getUserId();
 		$userProprieties['password']      = $this->getPassword();

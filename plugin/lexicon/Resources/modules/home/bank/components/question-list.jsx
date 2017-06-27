@@ -9,7 +9,7 @@ import {
   TableRow,
   TableCell,
   TableTooltipCell,
-  TableHeader,
+  TableHeader, 
   TableHeaderCell,
   TableSortingCell
 } from './../../components/table/table.jsx'

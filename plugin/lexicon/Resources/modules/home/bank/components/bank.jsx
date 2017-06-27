@@ -29,7 +29,7 @@ const Bank = (props) => {
       label: trans('add_resource'),
       handleAction: () => props.openSearchModal(props.searchFilters),
       badge: (
-          <span className='fa fa-language' style={{fontSize:35, fontWeight:''}}> </span>
+          <span className='fa fa-language' style={{fontSize:35, fontWeight:''}} alt="Ajouter une ressouce ?"> </span>
       ),
       primary: true
     },

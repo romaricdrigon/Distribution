@@ -11,14 +11,10 @@
 
 namespace Claroline\LexiconBundle\Controller\API\Jibiki;
 
-use FOS\RestBundle\Controller\FOSRestController;
-use FOS\RestBundle\Controller\Annotations\View;
-use JMS\DiExtraBundle\Annotation as DI;
+
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
-use Claroline\CoreBundle\Entity\User;
 use GuzzleHttp\Client;
-use Claroline\LexiconBundle\Manager\DictionariesManager;
 
 
 class JibikiUsers
@@ -43,16 +39,16 @@ class JibikiUsers
         "login": "'.$login.'",
         "email": "'.$email.'"
         }}';
-        $response = $this->CLIENT_USER->request('POST', 'users/' . $login, ['body' => $userjsondata, 'auth' => [$login, $password], 'http_errors' => false]);
+        $response = $this->CLIENT_USER->request('POST', 'users/' .$login, ['body' => $userjsondata, 'auth' => [$login, $password], 'http_errors' => false]);
         $code = $response->getStatusCode();
         if ($code != 201) {
             $reason = $response->getReasonPhrase();
-            echo "<br/><div className='panel panel-body'>REST APIUSERS POST USER ERROR: $code $reason</div>\n";
+            //echo "<span className='alert alert-danger'>REST APIUSERS POST USER ERROR: $code $reason</span>";
+            return False;
     	}else {
-        	$message = $code."<br/><span className='panel panel-body'>L'utilisateur : ".$name." a bien été enrégistré!</span><br/>";
-        	return $message;
+        	return True; 
         }
-    }
+    } 
 
 
     public function delete_user($user, $password)
@@ -62,45 +58,27 @@ class JibikiUsers
 
         if ($code != 204) {
             $reason = $response->getReasonPhrase();
-            echo "<p className='panel panel-body'>REST API DELETE DICT ERROR: $code $reason</p>\n";
+            echo "<span className='alert alert-danger'>REST API DELETE DICT ERROR: $code $reason</span>";
         }else {
-        	$message = $code."<span className='panel panel-body'>L'utilisateur : ".$name."a bien été supprimé!</span>";
+        	$message = $code."<span className='alert alert-success'>L'utilisateur : ".$name."a bien été supprimé!</span>";
         	return $message;
         }
     }
 
- 	public function get_userlist($admin, $password)
+ 	public function get_userlist()
     {
         $userlist = array();
-        $response = $this->CLIENT_USER->request('GET', 'AdminUsers.po', [
-                                                'auth' => [$admin, $password],
-                                                'http_errors' => false, ]);
+        $response = $this->CLIENT_USER->request('GET', '', ['http_errors' => false, ]);
         $code = $response->getStatusCode();
         $body = (string) $response->getBody();
-		$body = preg_replace('/&nbsp;/', '&#160;', $body);
-        
-        $usersxml = simplexml_load_string($body);
-        $tables = $usersxml->xpath('//*[@summary]');
-        $userstable = '';
-        foreach ($tables as $table) {
-            $hrefs = $table->xpath('.//*[@href]');
-            if (count($hrefs) > 2) {
-                $userstable = $table->tbody;
-                foreach ($userstable->children() as $tr) {
-                    $tds = $tr->children();
-                    $handle = $tds[10]->asXML();
-                    $handle = preg_replace('/^.*Remove=([0-9]+).*$/', '$1', $handle);
-                    $user = new Utilisateur((string) $tds[0]->b->span, (string) $tds[1]->span, (string) $tds[2]->span, $handle);
-                    $userlist[$user->login] = $user;
-                }
-            }
-        }
+    
         $reason = $response->getReasonPhrase();
         if ($code != 200) {
-            echo "<p class='apierror'>REST API POST USER ERROR: $code $reason</p>\n";
+            echo "<span class='alert alert-danger'>REST API POST USER ERROR: $code $reason</span>\n";
         }
 
-        return $userlist;
+        return $body;
     }
+
 
 }

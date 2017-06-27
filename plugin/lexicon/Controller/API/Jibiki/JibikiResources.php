@@ -9,15 +9,13 @@
  * file that was distributed with this source code.
  */
 
+
 namespace Claroline\LexiconBundle\Controller\API\Jibiki;
 
-use FOS\RestBundle\Controller\FOSRestController;
-use JMS\DiExtraBundle\Annotation as DI;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+
 use Claroline\CoreBundle\Entity\User;
 use GuzzleHttp\Client;
 use Claroline\LexiconBundle\Controller\API\Jibiki\JibikiContentResource;
-use Tcdent\RestClient;
 use Claroline\LexiconBundle\Manager\DictionariesManager;
 
 
@@ -92,7 +90,7 @@ class JibikiResources
         $code = $response->getStatusCode();
         if ($code != 200) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='apierror'>REST API GET DICTLIST ERROR: $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>REST API GET DICTLIST ERROR: $code $reason</p>\n";
         } else {
             $dictlist = simplexml_load_string($response->getBody());
             foreach ($dictlist as $dictxml) {
@@ -105,8 +103,7 @@ class JibikiResources
             }
         }
 
-
-        return $dict;
+        return $answer;
     }
 
 
@@ -116,7 +113,7 @@ class JibikiResources
         $code = $response->getStatusCode();
         if ($code != 201) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='apierror'>REST API POST VOLUME ERROR : $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>REST API POST VOLUME ERROR : $code $reason</p>\n";
             echo $response->getBody();
         }
 
@@ -131,7 +128,7 @@ class JibikiResources
         $code = $response->getStatusCode();
         if ($code != 201) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='apierror'>REST API PUT VOLUME ERROR : $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>REST API PUT VOLUME ERROR : $code $reason</p>\n";
         } else {
             $volumexml = simplexml_load_string($response->getBody());
             $volume = ContentResource::fromXML($volumexml);
@@ -147,7 +144,7 @@ class JibikiResources
         $code = $response->getStatusCode();
         if ($code != 204) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='apierror'>REST API DELETE VOLUME ERROR : $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>REST API DELETE VOLUME ERROR : $code $reason</p>\n";
         }
 
         return $code;

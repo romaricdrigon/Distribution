@@ -23,4 +23,9 @@ class ClarolineLexiconBundle extends PluginBundle
 
         return $config->addRoutingResource(__DIR__.'/Resources/config/routing.yml', null, 'lexicon');
     }
+
+    public function hasMigrations()
+	{
+	    return false;
+	}
 }
