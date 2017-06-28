@@ -21,7 +21,7 @@ const SelectedRow = props =>
     </td>
     <td
       colSpan={5}
-      dangerouslySetInnerHTML={{ __html: transChoice('ressource(s) sélectionnée(s)', props.selected.length, {count: props.selected.length})}}
+      dangerouslySetInnerHTML={{ __html: transChoice('questions_selected', props.selected.length, {count: props.selected.length})}}
     >
     </td>
     <td className="table-actions text-right">
@@ -121,21 +121,21 @@ const QuestionRow = props =>
      <small className="text-muted" style={{marginLeft:18}}> {props.question.type}</small>
     </TableCell>
     <TableCell>
-      <span onClick={() => False} style={{marginLeft:18}}>{props.question.title || props.question.content}</span>
+      <span onClick={() => True } style={{marginLeft:18}}>{props.question.title || props.question.content}</span>
     </TableCell>
     <TableCell>
-      <span style={{marginLeft:18}}>
+      <span style={{marginLeft:19}}>
         {props.question.meta.category && props.question.meta.category.name ? props.question.meta.category.name : '-'}
       </span>
     </TableCell>
     <TableCell align="left">
       {props.question.meta.updated ?
-          <small className="text-muted" style={{marginLeft:18}}>{props.question.meta.updated}</small> : '-'
+          <small className="text-muted" style={{marginLeft:19}}>{props.question.meta.updated}</small> : '-'
       }
     </TableCell>
     <TableCell>
       {props.question.meta.authors ?
-        <small className="text-muted" style={{marginLeft:18}}>
+        <small className="text-muted" style={{marginLeft:19}}>
           {props.question.meta.authors[0].name}
         </small> : '-'
       }
@@ -159,7 +159,7 @@ const QuestionRow = props =>
         <MenuItem divider />
 
         <MenuItem
-          className="link-danger"
+          className="link link-danger"
           onClick={() => props.onDelete([props.question.id])}
         >
         <span className="fa fa-fw fa-trash-o" />&nbsp;

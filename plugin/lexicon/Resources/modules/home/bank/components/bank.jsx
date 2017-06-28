@@ -19,30 +19,43 @@ import VisibleQuestions from './../containers/visible-questions.jsx'
 import {Pagination} from './pagination/pagination.jsx'
 
 import {MODAL_SEARCH} from './modal/search.jsx'
+import {MODAL_CREATE} from './modal/create.jsx'
+
 // TODO : do not load from editor
 import {MODAL_ADD_ITEM} from './../../quiz/editor/components/add-item-modal.jsx'
 
 const Bank = (props) => {
   const actions = [
     {
-      icon: 'fa fa-fw fa-plus text-primary',
+      icon: 'fa fa-fw',
       label: trans('add_resource'),
       handleAction: () => props.openSearchModal(props.searchFilters),
       badge: (
-          <span className='fa fa-language' style={{fontSize:35, fontWeight:''}} alt="Ajouter une ressouce ?"> </span>
+        <OverlayTrigger
+        placement="top"
+        overlay={<Tooltip id="activeFiltersCount">{transChoice('Créer une nouvelle ressource lexicale ?', props.activeFilters, {count: props.activeFilters}, 'claroline_lexicon')}</Tooltip>}
+        >
+          <span className="img-circle bg-primary" style={{fontSize:36,paddingLeft:12,paddingRight:12, paddingBottom:3, marginLeft:-10}}>
+            <span className='fa fa-plus' style={{fontSize:25, fontWeight:''}}> </span>
+          </span>
+        </OverlayTrigger>
       ),
       primary: true
     },
     {
-      icon: 'fa fa-fw fa-search text-primary',
+      icon: 'fa fa-fw',
       label: trans('search'),
       handleAction: () => props.openSearchModal(props.searchFilters),
       badge: (
+
       <OverlayTrigger
-        placement="bottom"
-        overlay={<Tooltip id="activeFiltersCount">{transChoice('Filtre actif', props.activeFilters, {count: props.activeFilters}, 'claroline_lexicon')}</Tooltip>}
+        placement="top"
+        overlay={<Tooltip id="activeFiltersCount">{transChoice('Il y a aucun filtre actif', props.activeFilters, {count: props.activeFilters}, 'claroline_lexicon')}</Tooltip>}
       >
-        <small className={classes('label', 0 < props.activeFilters ? 'label-primary' : 'label-default')}>{props.activeFilters}</small>
+          <span className="img-circle" style={{fontSize:30,paddingLeft:1,paddingRight:1, marginLeft:-16}}>
+             <span className='fa fa-search text-primary' style={{fontSize:28, fontWeight:''}}> </span>
+             <small className={classes('label', 0 < props.activeFilters ? 'label-primary' : 'label-default')}>{props.activeFilters}</small>
+          </span>
       </OverlayTrigger>
       ),
       primary: true
@@ -110,6 +123,7 @@ Bank.propTypes = {
   }),
   createModal: T.func.isRequired,
   openSearchModal: T.func.isRequired,
+  openCreateModal: T.func.isRequired,
   openAddModal: T.func.isRequired,
   handlePageChange: T.func.isRequired,
   handlePagePrevious: T.func.isRequired,
@@ -137,6 +151,12 @@ function mapDispatchToProps(dispatch) {
         filters: searchFilters,
         handleSearch: (searchFilters) => dispatch(searchActions.search(searchFilters)),
         clearFilters: () => dispatch(searchActions.clearFilters())
+      }))
+    },
+    openCreateModal(searchFilters) {
+      dispatch(showModal(MODAL_CREATE, {
+        title: trans('Créer une ressource'),
+        handleSelect: () => dispatch(fadeModal())
       }))
     },
     openAddModal() {

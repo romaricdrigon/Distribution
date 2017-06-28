@@ -12,3 +12,5 @@
 
 
 namespace Claroline\LexiconBundle\Manager;
+
+

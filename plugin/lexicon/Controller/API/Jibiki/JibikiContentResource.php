@@ -12,7 +12,6 @@
 namespace Claroline\LexiconBundle\Controller\API\Jibiki;
 
 
-use Claroline\CoreBundle\Entity\User;
 use GuzzleHttp\Client;
 use Claroline\LexiconBundle\Manager\DictionariesManager;
 
@@ -254,6 +253,7 @@ class JibikiContentResource
         return $article;
     }
 
+
     function post_article($dictname, $src, $articleid, $articledata, $user, $password)
     {
         $article = '';
@@ -313,16 +313,4 @@ class JibikiContentResource
         return $code;
     }
 }
-/*
-class simple_xml_extended extends SimpleXMLElement
-{
-    public    function    Attribute($name)
-    {
-        foreach($this->Attributes() as $key=>$val)
-        {
-            if($key == $name)
-                return (string)$val;
-        }
-    }
 
-}*/

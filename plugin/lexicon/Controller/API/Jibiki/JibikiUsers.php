@@ -11,13 +11,12 @@
 
 namespace Claroline\LexiconBundle\Controller\API\Jibiki;
 
-
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
+ 
 use GuzzleHttp\Client;
 
 
-class JibikiUsers
+
+class JibikiUsers 
 {
 	public  $base_api_uri = 'http://totoro.imag.fr/lexinnova/apiusers/';
 	public  $header 	  = ['Content-Type' => 'application/json;charset=UTF-8', 'Accept' => 'application/json'];
@@ -34,16 +33,15 @@ class JibikiUsers
 
 	public function post_user($name, $login, $password, $email)
     {
-        $userjsondata = '{"user": {
-        "name": "'.$name.'",
-        "login": "'.$login.'",
-        "email": "'.$email.'"
-        }}';
+        $userjsondata              = new \stdClass();
+        $userjsondata->user        = new \stdClass();
+        $userjsondata->user->name  = $name;
+        $userjsondata->user->login = $login;
+        $userjsondata->user->email = $email;
         $response = $this->CLIENT_USER->request('POST', 'users/' .$login, ['body' => $userjsondata, 'auth' => [$login, $password], 'http_errors' => false]);
         $code = $response->getStatusCode();
         if ($code != 201) {
             $reason = $response->getReasonPhrase();
-            //echo "<span className='alert alert-danger'>REST APIUSERS POST USER ERROR: $code $reason</span>";
             return False;
     	}else {
         	return True; 
@@ -74,7 +72,7 @@ class JibikiUsers
     
         $reason = $response->getReasonPhrase();
         if ($code != 200) {
-            echo "<span class='alert alert-danger'>REST API POST USER ERROR: $code $reason</span>\n";
+            //echo "<span class='alert alert-danger'>REST API POST USER ERROR: $code $reason</span>\n";
         }
 
         return $body;

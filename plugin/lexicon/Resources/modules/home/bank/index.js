@@ -7,6 +7,7 @@ import {registerDefaultItemTypes} from './../items/item-types'
 import {registerModalType} from './../modal'
 import {MODAL_ADD_ITEM, AddItemModal} from './../quiz/editor/components/add-item-modal.jsx'
 import {MODAL_SEARCH, SearchModal} from './components/modal/search.jsx'
+import {MODAL_CREATE, CreateModal} from './components/modal/create.jsx'
 import {MODAL_SHARE, ShareModal} from './components/modal/share.jsx'
 import {Bank} from './components/bank.jsx'
 
@@ -15,6 +16,7 @@ registerDefaultItemTypes()
 
 // Register needed modals
 registerModalType(MODAL_SEARCH, SearchModal)
+registerModalType(MODAL_CREATE, CreateModal)
 registerModalType(MODAL_ADD_ITEM, AddItemModal)
 registerModalType(MODAL_SHARE, ShareModal)
 

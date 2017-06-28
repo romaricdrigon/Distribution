@@ -15,6 +15,9 @@ use Doctrine\DBAL\Migrations\Configuration\Configuration;
 use Doctrine\DBAL\Migrations\Version;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+
+
+
 class MigrationUpdater extends Updater
 {
     private $container;

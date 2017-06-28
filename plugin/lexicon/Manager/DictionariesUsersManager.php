@@ -1,46 +1,35 @@
 <?php
 
 
-
-namespace Claroline\LexiconBundle\Manager;
-
-
-
 /*
  * This file is part of the Claroline Connect package.
  *
  * (c) Claroline Consortium <consortium@claroline.net>
  *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+ * file that was distributed with this source code.  
+ */ 
+ 
 
+namespace Claroline\LexiconBundle\Manager;  
 
  
-use Claroline\CoreBundle\Library\Security\Utilities;
-use Claroline\CoreBundle\Manager\GroupManager;
-use Claroline\CoreBundle\Manager\UserManager;
-use Claroline\CoreBundle\Manager\WorkspaceManager;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Claroline\LexiconBundle\Controller\API\Jibiki\JibikiUsers;
-use Claroline\CoreBundle\Event\DisplayToolEvent;
 use JMS\DiExtraBundle\Annotation as DI;
-use Symfony\Bundle\TwigBundle\TwigEngine;
 use Claroline\LexiconBundle\Manager\AuthUsersManager;
 
-
-
+  
 
 /**
  *  @DI\Service("claroline_lexicon.manager.users")
  */
-class DictionariesUsersManager extends JibikiUsers
+class DictionariesUsersManager
 {
 
 	/**
      * @var user
      */
-    private $username;
+    public $username;
 
     /**
      * @var name
@@ -65,16 +54,16 @@ class DictionariesUsersManager extends JibikiUsers
     /**
      * @var userResources
      */
-    private $userResources;
+    public $userResources;
 
      /**
      * @var JBKUsers
      */
-    private $JBKUsers;
+    public $JBKUsers;
 
     /**
      * @var ClaroUser
-     */
+     */ 
     private $ClaroUser;
 
     /**
@@ -85,26 +74,30 @@ class DictionariesUsersManager extends JibikiUsers
     /**
      * @var userShareResources
      */
-    public $userShareResources;
-
+    public $userShareResources; 
+ 
 
     /**
      * Dictionaries users Manager constructor.
      * 
      * @DI\InjectParams({
-     *     "userClaro"    = @DI\Inject("claroline_lexicon.authUsers")
+     *     "userClaro"    = @DI\Inject("claroline_lexicon.authusers")
      * })
      */
-
     public function __construct($userClaro)
     {
-        $this->JBKUsers     = new JibikiUsers();
-        $this->ClaroUser    = $userClaro->generateAuth();
-        $this->getUriUser();
+        $this->ClaroUser  = $userClaro->generateAuth();
     } 
 
+
+    /**
+     * Get current login user from claroline
+     * 
+     * @return $userproperties (to global variables)
+     */ 
     public function getUriUser()
     {
+
         $this->username    = $this->ClaroUser['username'];
         $this->email       = $this->ClaroUser['email'];
         $this->id          = $this->ClaroUser['id'];
@@ -112,29 +105,40 @@ class DictionariesUsersManager extends JibikiUsers
         $this->name        = $this->ClaroUser['firstName'].' '.$this->ClaroUser['LastName'];
     }
 
+
+    /**
+     * Get properties of current login user from claroline
+     * 
+     * @return $userproperties (json format)
+     */
     public function getCurrentUser()
     {
         $currentuser        = new \stdClass();
         $currentuser->id    = $this->ClaroUser['id'];
         $currentuser->name  = $this->ClaroUser['firstName'].' '.$this->ClaroUser['LastName'];
         $currentuser->email = $this->ClaroUser['email'];
-        //print_r(json_encode((array) $currentuser, True));
         return json_encode((array) $currentuser, True);
     } 
 
 
+    /**
+     * Get all JIBIKI Users from throught its API
+     * 
+     * @return array($usernames, $login) 
+     */
     public function getAllJBKUsers()  
     {
-        $userlogins    = array();
-        $usernames     = array();
-        $userslist     = array();
-        $userslistjson = json_decode($this->JBKUsers->get_userlist(),true);
+        $this->JBKUsers = new JibikiUsers(); 
+        $userlogins     = array();
+        $usernames      = array();
+        $userslist      = array();
+        $userslistjson  = json_decode($this->JBKUsers->get_userlist(),true);
        	foreach ($userslistjson['user-list']['user'] as $user){
-       		foreach ($user as $nam=>$log){
-       			if ($nam == 'login') {
-       				array_push($userlogins, $log);
+       		foreach ($user as $name=>$login){
+       			if ($name == 'login') {
+       				array_push($userlogins, $login);
        			}else{
-       				array_push($usernames, $log);
+       				array_push($usernames, $login);
        			}
        		}
        	}
@@ -142,7 +146,11 @@ class DictionariesUsersManager extends JibikiUsers
         return array($usernames, $userlogins);
     }
 
-
+    /**
+     * Check if the current claroline username exist in JIBIKI platform
+     * 
+     * @return Boolean (True or False) 
+     */
     public function usernameExist($U)
     {
         $usernames  = $this->getAllJBKUsers()[0];
@@ -153,7 +161,11 @@ class DictionariesUsersManager extends JibikiUsers
         }
     }
 
-
+    /**
+     * Check if the current claroline login exist in JIBIKI platform
+     * 
+     * @return Boolean (True or False) 
+     */
     public function userloginExist($U)
     {
         $userlogins   = $this->getAllJBKUsers()[1];
@@ -164,7 +176,7 @@ class DictionariesUsersManager extends JibikiUsers
         }
     }
 
-
+    /*
     public function userDictionries($U)
     {
         $logins     = $this->getAllJBKUsers()[1];
@@ -181,11 +193,18 @@ class DictionariesUsersManager extends JibikiUsers
         $right = $this->checkRights($this->user);
 
         return False;
-    }
+    }*/
 
-
+    
+    /**
+     * Check if the current claroline user exist in JIBIKI platform.
+     * If not, we create a new user in JIBIKI with the same Claroline login.
+     * 
+     * @return message (success or non-success) 
+     */
     public function createUser()
     {
+        $this->JBKUsers   = new JibikiUsers();
         if ($this->JBKUsers->post_user($this->name, $this->username, $this->password, $this->email)){
             echo "<span class='alert alert-success'> Votre compte utilisateur : '".$this->username."'  a bien été crée sur la plateforme Jibiki &#9786; </span>";
         }

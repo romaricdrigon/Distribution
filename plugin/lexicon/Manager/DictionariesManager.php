@@ -73,22 +73,16 @@ class DictionariesManager
      */
     private $userShareResources;
 
-    /**
-     * @var questionManager
-     */
-    private $questionManager;
-
 
     /**
      * DictionariesManager constructor.
      * 
      * @DI\InjectParams({
-     *     "userClaro"    = @DI\Inject("claroline_lexicon.authUsers"),
-     *     "userManager"  = @DI\Inject("claroline_lexicon.manager.users"),
-     *     "questionManager"  = @DI\Inject("ujm_exo.manager.question")
+     *     "userClaro"    = @DI\Inject("claroline_lexicon.authusers"),
+     *     "userManager"  = @DI\Inject("claroline_lexicon.manager.users")
      * })
      */
-    public function __construct($userClaro, $userManager, $questionManager)
+    public function __construct($userClaro, $userManager)
     {
         $this->lexicon_manager   = $userClaro;
         $JBKresources            = new JibikiResources();
@@ -97,74 +91,91 @@ class DictionariesManager
         $this->userManager       = $userManager;
         $this->JBKusers          = $this->userManager->getAllJBKUsers();
         $this->ClaroUser         = $userClaro->generateAuth();
-        $this->questionManager   = $questionManager;
     }
-
+ 
     /**
-     * Checks if a user is allowed to pass a quiz or not.
-     *
-     */
-    public function getAllUserResources()
-    {
-        $userslogin     = $this->JBKusers[1];
-        $clarousername  = $this->ClaroUser['username'];
+     * Checks if a user have a login into JIBIKI. If not, his login is created. 
+     * otherwise we load all its authorised data from JIBIKI 
+     * 
+     * @return $Resources (json data dictionaries)                
+     */ 
+    public function getAllUserResources()     
+    {    
+        $userslogin     = $this->JBKusers[1]; 
+        $clarousername  = $this->ClaroUser['username'];  
         $claropass      = $this->ClaroUser['password'];
         if ($this->userManager->userloginExist($clarousername)) {
             $dico = $this->JBKresources->get_all_dictionaries($clarousername, $claropass);
             $Resources = $this->serializeResources($dico); 
             return $Resources;
-        }  
-        else{ 
+        }   
+        else{     
             $message = "<span class='alert alert-danger'> Vous n'avez pas un compte utilisateur sur la plateforme Jibiki. 
             Nous allons vous créer un rapidement ! </span>";
             $this->userManager->createUser();
-        }
-         
-    }
-
-
+            $dico = $this->JBKresources->get_all_dictionaries($clarousername, $claropass);
+            $Resources = $this->serializeResources($dico); 
+            return $Resources; 
+        }  
+          
+    }      
+  
+    /**
+     * Create data format resources form JIBIKI for current Claroline user  
+     * 
+     * @return $resourcesjsondata (json data dictionaries and metadata)
+     */ 
     public function serializeResources($resources)
-    { 
-        $resourcesjsondata = new \stdClass();
-        $diconame          = array();
-        $dicocontent       = array();
-        foreach ($resources as $titledico => $dico) {
+    {    
+        $resourcesjsondata = new \stdClass(); 
+        $diconame          = array(); 
+        $dicocontent       = array(); 
+        foreach ($resources as $titledico => $dico) { 
             array_push($diconame, $titledico);
-            $jsondico = $this->encodeToJson($dico);
+            $jsondico = $this->resourcesToJson($dico);
             array_push($dicocontent, $jsondico);
         }
         $resourcesjsondata->totalResults         = count($diconame);
         $resourcesjsondata->questions            = array_map(function($n){return $n;}, $dicocontent);
         $resourcesjsondata->pagination           = new \stdClass();
         $resourcesjsondata->pagination->current  =  0;
-        $resourcesjsondata->pagination->pageSize = -1;
+        $resourcesjsondata->pagination->pageSize = -1; 
         $resourcesjsondata->sortBy               = new \stdClass(); 
-        //print_r(json_encode((array) $resourcesjsondata, True));
-        return json_encode((array) $resourcesjsondata, True);
-    }
-
-    public function encodeToJson($dico)
-    {
-        $resourcejsondata                = new \stdClass();
-        $resourcejsondata->id            = $dico->name;
-        $resourcejsondata->type          = $dico->name;
-        $resourcejsondata->title         = "";
-        $resourcejsondata->category      = $dico->category;
-        $resourcejsondata->content       = $dico->fullname;
-        $resourcejsondata->meta          = new \stdClass();
-        $resourcejsondata->created       = "2017-05-30T12:10:15";
-        $resourcejsondata->updated       = "2017-05-30T17:10:15";
-        $resourcejsondata->model         = false;
-        $resourcejsondata->usedBy        = array(); 
-        $resourcejsondata->sharedWith    = array();
-        $resourcejsondata->description   = $dico->comments;
-        $resourcejsondata->hints         = array();
-        $resourcejsondata->meta->authors = array();
+        return json_encode((array) $resourcesjsondata, True); 
+    } 
+      
+    /**
+     * Create data format for each resources form JIBIKI
+     * 
+     * @return $resourcejsondata (json data dictionaries)    
+     */
+    public function resourcesToJson($dico) 
+    { 
+        $resourcejsondata                    = new \stdClass();
+        $resourcejsondata->id                = $dico->name;
+        $resourcejsondata->type              = $dico->name;
+        $resourcejsondata->title             = "";
+        $resourcejsondata->category          = $dico->category;
+        $resourcejsondata->content           = $dico->fullname;
+        $resourcejsondata->meta              = new \stdClass();
+        $resourcejsondata->meta->created     = $dico->access;
+        $resourcejsondata->meta->updated     = "2017-05-30T17:10:15";
+        $resourcejsondata->meta->model       = false;
+        $resourcejsondata->meta->usedBy      = array(); 
+        $resourcejsondata->meta->sharedWith  = array();
+        $resourcejsondata->description       = $dico->comments;
+        $resourcejsondata->hints             = array();
+        $resourcejsondata->meta->authors     = array();
         array_push($resourcejsondata->meta->authors, $this->author($dico));
-        array_push($resourcejsondata->sharedWith, $this->shareWith($dico));
+        array_push($resourcejsondata->meta->sharedWith, $this->shareWith($dico));
         return $resourcejsondata;
     }
 
+    /**
+     * Create data format for active Claroline user  
+     * 
+     * @return $author (json data for active user)
+     */
     public function author($dico)
     {
         $author        = new \stdClass();
@@ -174,6 +185,11 @@ class DictionariesManager
         return $author;
     }
 
+    /**
+     * Create data format for shared user dictionaries  
+     * 
+     * @return $share (json data for shared user)
+     */
     public function shareWith($dico)
     {
         $share              = new \stdClass();
@@ -185,6 +201,23 @@ class DictionariesManager
         return $share;
     }
 
+   
+    /**
+     * Get properties of current login user from claroline
+     * 
+     * @return $userproperties (json format)
+     */
+    public function getCurrentUser()
+    {
+        $currentuser        = new \stdClass();
+        $currentuser->id    = $this->ClaroUser['id'];
+        $currentuser->name  = $this->ClaroUser['firstName'].' '.$this->ClaroUser['LastName'];
+        $currentuser->email = $this->ClaroUser['email'];
+        return json_encode((array) $currentuser, True);
+    } 
+
+
+    /*
     public function getUserResources()
     {
         $right = $this->checkRights($this->JBKusers);
@@ -204,37 +237,19 @@ class DictionariesManager
         $right = $this->checkRights($this->user);
 
         return False;
-    }
+    }*/
+
 
     /**
-     * Checks if a user can submit answers to a paper or use hints.
-     *
+     * Checks the correct rights of the current user.
+     * (not implemnted)
      */
     public function checkRights($user)
     {
         return False;
     }
 
-    /**
-     * Starts or continues an exercise paper.
-     *
-     */
-    public function startOrContinue()
-    {
-       //$data_content = '{}';
-      //$Users = new JBKUsers();
-      $resources = new JibikiResources();
-      $dicos = $resources->get_all_dictionaries('levis', 'levis');
-      $dico = $resources->get_dictionary('Lexinnova');
-      foreach ($dicos as $dict) {
-          echo 'Nom : ',var_dump($dict), ' <br/><br/><br/>';
-      }
-      //$user = $Users->post_user('Henritest', 'henri', 'hen', 'henri@email.fr');
-      //echo $user;
-      //$data_content = "{'".$user."'}";
-        return False;
-    }
-
+   
    
 }
 

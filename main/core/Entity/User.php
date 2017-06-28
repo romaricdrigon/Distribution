@@ -422,6 +422,8 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
      */
     protected $administratedOrganizations;
 
+
+
     public function __construct()
     {
         parent::__construct();

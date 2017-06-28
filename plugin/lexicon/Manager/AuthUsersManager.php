@@ -22,7 +22,7 @@ use JMS\DiExtraBundle\Annotation as DI;
 
 
 /**
- *  @DI\Service("claroline_lexicon.authUsers")
+ *  @DI\Service("claroline_lexicon.authusers")
  */
 class AuthUsersManager
 {
@@ -54,37 +54,37 @@ class AuthUsersManager
 	 */
 
 	public function __construct($container) { 
-		$this->container = $container->get('security.token_storage')->getToken()->getUser();
+		$this->currentUser = $container->get('security.token_storage')->getToken()->getUser();
 	}
 
 
 	private function getUserId() {
-		$userid = $this->container->getId();
+		$userid = $this->currentUser->getId();
 		return $userid;
 	}
 
 	private function getUsername() {
-		$username = $this->container->getUsername();
+		$username = $this->currentUser->getUsername();
 		return $username;
 	}
 
 	private function getEmail() {
-		$mail = $this->container->getMail();
+		$mail = $this->currentUser->getMail();
 		return $mail;
 	}
 
 	private function getFname() {
-		$fname = $this->container->getFirstName();
+		$fname = $this->currentUser->getFirstName();
 		return $fname;
 	}
 
 	private function getLname() {
-		$fname = $this->container->getLastName();
+		$fname = $this->currentUser->getLastName();
 		return $fname;
 	}
 
 	private function getPassword() {
-		$password = $this->container->getPassword();
+		$password = $this->currentUser->getPassword();
 		return $password;
 	}
 
