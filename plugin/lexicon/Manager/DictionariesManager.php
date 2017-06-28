@@ -161,7 +161,7 @@ class DictionariesManager
         $resourcejsondata->meta->created     = $dico->access;
         $resourcejsondata->meta->updated     = "2017-05-30T17:10:15";
         $resourcejsondata->meta->model       = false;
-        $resourcejsondata->meta->usedBy      = array(); 
+        $resourcejsondata->meta->usedBy      = array();     
         $resourcejsondata->meta->sharedWith  = array();
         $resourcejsondata->description       = $dico->comments;
         $resourcejsondata->hints             = array();
