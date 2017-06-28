@@ -17,7 +17,7 @@ use Claroline\LexiconBundle\Manager\DictionariesManager;
 
 
 
-
+ 
 class JibikiContentResource
 {
     public  $base_api_uri = 'http://totoro.imag.fr/lexinnova/api';

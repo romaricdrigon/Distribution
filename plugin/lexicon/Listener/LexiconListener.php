@@ -79,7 +79,7 @@ class LexiconListener
     {
         $event->setContent($this->desktop());
     }
-
+ 
     private function desktop()
     {   
       $data_content = $this->container->get('claroline_lexicon.manager.dictionaries')->getAllUserResources();

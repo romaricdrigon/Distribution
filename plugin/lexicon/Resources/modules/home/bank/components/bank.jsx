@@ -28,7 +28,7 @@ const Bank = (props) => {
   const actions = [
     {
       icon: 'fa fa-fw',
-      label: trans('add_resource'),
+      label: trans('add_resource'), 
       handleAction: () => props.openSearchModal(props.searchFilters),
       badge: (
         <OverlayTrigger

@@ -65,7 +65,7 @@ class DictionariesUsersManager
      * @var ClaroUser
      */ 
     private $ClaroUser;
-
+ 
     /**
      * @var userRightsResources
      */

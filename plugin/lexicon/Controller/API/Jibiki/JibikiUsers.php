@@ -59,7 +59,7 @@ class JibikiUsers
             echo "<span className='alert alert-danger'>REST API DELETE DICT ERROR: $code $reason</span>";
         }else {
         	$message = $code."<span className='alert alert-success'>L'utilisateur : ".$name."a bien été supprimé!</span>";
-        	return $message;
+        	return $message; 
         }
     }
 

@@ -75,7 +75,7 @@ class JibikiResources
                 $answer[$dict->name] = $dict;
             }
         
-        }
+        } 
 
         return $answer;
     }
