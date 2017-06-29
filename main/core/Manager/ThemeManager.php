@@ -86,17 +86,6 @@ class ThemeManager
     }
 
     /**
-     * Returns all the registered themes.
-     *
-     * @return Theme[]
-     */
-    public function listThemes()
-    {
-        return $this->om->getRepository('ClarolineCoreBundle:Theme\Theme')
-            ->findBy([], ['name' => 'ASC']);
-    }
-
-    /**
      * Returns the names of all the registered themes.
      *
      * @param bool $customOnly
@@ -105,9 +94,10 @@ class ThemeManager
      */
     public function listThemeNames($customOnly = false)
     {
-        $themes = $this->listThemes();
+        $themes = $this->all();
         $themeNames = [];
 
+        /** @var Theme $theme */
         foreach ($themes as $theme) {
             //fetch stock themes from database or config.yml later
             if ($customOnly && in_array($theme->getName(), self::$stockThemes)) {
@@ -147,10 +137,10 @@ class ThemeManager
      *
      * @throws \Exception if the theme is not a custom theme
      */
-    public function deleteTheme(Theme $theme)
+    public function delete(Theme $theme)
     {
-        if (!$theme->isCustom()) {
-            throw new \Exception("Stock theme '{$theme->getName()}' cannot be deleted");
+        if (!empty($theme->getPlugin())) {
+            throw new \Exception("Stock and plugins theme '{$theme->getName()}' cannot be deleted");
         }
 
         $this->om->remove($theme);
@@ -170,8 +160,11 @@ class ThemeManager
     {
         $name = ucwords(str_replace('-', ' ', $this->config->getParameter('theme')));
 
-        return $this->om->getRepository('ClarolineCoreBundle:Theme\Theme')
-            ->findOneBy(['name' => $name]);
+        return $this->om
+            ->getRepository('ClarolineCoreBundle:Theme\Theme')
+            ->findOneBy([
+                'name' => $name,
+            ]);
     }
 
     /**
@@ -215,8 +208,6 @@ class ThemeManager
 
         return $this->om->getRepository('ClarolineCoreBundle:Theme\Theme')
             ->findOneBy(['name' => $name]);
-
-        return count($themes) > 0 ? $themes[count($themes) - 1] : null;
     }
 
     public static function listStockThemesName()

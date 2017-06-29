@@ -1,6 +1,7 @@
 import React from 'react'
 import {PropTypes as T} from 'prop-types'
 import {DropdownButton, MenuItem} from 'react-bootstrap'
+import get from 'lodash/get'
 
 import {t, transChoice} from '#/main/core/translation'
 import {getTypeOrDefault} from '#/main/core/layout/data/index'
@@ -23,11 +24,11 @@ const DataCell = props => {
   return (typeof props.column.renderer === 'function') || !typeDef.components || !typeDef.components.table ?
     <TableCell className={`${props.column.type}-cell`}>
       {typeof props.column.renderer === 'function' ?
-        props.column.renderer(props.rowData) : typeDef.render(props.rowData[props.column.name])
+        props.column.renderer(props.rowData) : typeDef.render(get(props.rowData, props.column.name))
       }
     </TableCell>
     :
-    React.createElement(typeDef.components.table, {data: props.rowData[props.column.name]})
+    React.createElement(typeDef.components.table, {data: get(props.rowData, props.column.name)})
 }
 
 DataCell.propTypes = {
@@ -127,7 +128,8 @@ DataTableRow.propTypes = {
   actions: T.arrayOf(T.shape({
     label: T.string,
     icon: T.string,
-    action: T.oneOfType([T.string, T.func]).isRequired
+    action: T.oneOfType([T.string, T.func]).isRequired,
+    isDangerous: T.bool
   })),
   selected: T.bool.isRequired,
   onSelect: T.func.isRequired

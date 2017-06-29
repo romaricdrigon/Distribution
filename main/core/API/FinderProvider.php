@@ -38,7 +38,7 @@ class FinderProvider
     private $finders = [];
 
     /**
-     * Finder constructor.
+     * FinderProvider constructor.
      *
      * @DI\InjectParams({
      *     "om"         = @DI\Inject("claroline.persistence.object_manager"),
@@ -88,35 +88,25 @@ class FinderProvider
 
     public function search($class, $page, $limit, array $searches = [])
     {
-        $serializer = $this->serializer;
-        $filters = isset($searches['filters']) ? $searches['filters'] : [];
-        $orderBy = isset($searches['orderBy']) ? $searches['orderBy'] : [];
-
-        // execute queries
-        $data = $this->fetch($class, $page, $limit, $searches);
+        $data  = $this->fetch($class, $page, $limit, $searches);
         $count = $this->fetch($class, $page, $limit, $searches, true);
 
-        $data = array_map(function ($el) use ($serializer) {
-            return $serializer->serialize($el);
-        }, $data);
-
+        $filters = isset($searches['filters']) ? $searches['filters'] : [];
         $filterObjects = [];
-
         foreach ($filters as $property => $value) {
-            $filterObject = new \stdClass();
-            $filterObject->value = $value;
-            $filterObject->property = $property;
-            $filterObjects[] = $filterObject;
+            $filterObjects[] = ['value' => $value, 'property' => $property];
         }
 
         return [
-          'results' => $data,
-          'total' => $count,
-          'page' => $page,
-          'limit' => $limit,
-          'class' => $class,
-          'filters' => $filterObjects,
-          'orderBy' => $orderBy,
+            'class' => $class,
+            'total' => $count,
+            'results' => array_map(function ($el) {
+                return $this->serializer->serialize($el);
+            }, $data),
+            'page' => $page,
+            'limit' => $limit,
+            'filters' => $filterObjects,
+            'sortBy' => isset($searches['sortBy']) ? $searches['sortBy'] : null,
         ];
     }
 

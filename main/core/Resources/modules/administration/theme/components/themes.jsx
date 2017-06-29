@@ -10,20 +10,20 @@ import {actions as modalActions} from '#/main/core/layout/modal/actions'
 import {actions as listActions} from '#/main/core/layout/list/actions'
 import {actions} from '#/main/core/administration/theme/actions'
 
-import {select as modalSelect} from '#/main/core/layout/modal/selectors'
 import {select as listSelect} from '#/main/core/layout/list/selectors'
 import {select} from '#/main/core/administration/theme/selectors'
 
-import {Page, PageHeader, PageContent} from '#/main/core/layout/page/components/page.jsx'
-import {PageActions, PageAction} from '#/main/core/layout/page/components/page-actions.jsx'
+import {
+  PageContainer as Page,
+  PageHeader,
+  PageContent,
+  PageActions,
+  PageAction,
+} from '#/main/core/layout/page/index'
 
 import {DataList} from '#/main/core/layout/list/components/data-list.jsx'
 
 class Themes extends Component {
-  constructor(props) {
-    super(props)
-  }
-
   getThemes(themeIds) {
     return themeIds.map(themeId => this.props.themes.find(theme => themeId === theme.id))
   }
@@ -58,14 +58,9 @@ class Themes extends Component {
 
   render() {
     return (
-      <Page
-        id="theme-management"
-        modal={this.props.modal}
-        fadeModal={this.props.fadeModal}
-        hideModal={this.props.hideModal}
-      >
+      <Page id="theme-management">
         <PageHeader
-          title={trans('theme_management', {}, 'theme')}
+          title={t('themes_management')}
         >
           <PageActions>
             <PageAction
@@ -97,12 +92,10 @@ class Themes extends Component {
                 label: trans('theme_name', {}, 'theme'),
                 renderer: (rowData) => <NavLink to={`/${rowData.id}`}>{rowData.name}</NavLink>
               },
-              {
-                name: 'plugin',
-                type: 'string',
-                label: t('plugin')
-              },
-              {name: 'current', type: 'flag', label: trans('theme_current', {}, 'theme')},
+              {name: 'meta.description', type: 'string', label: trans('theme_description', {}, 'theme')},
+              {name: 'meta.plugin',      type: 'string', label: trans('theme_plugin', {}, 'theme')},
+              {name: 'meta.enabled',     type: 'flag',   label: trans('theme_enabled', {}, 'theme')},
+              {name: 'current',          type: 'flag',   label: trans('theme_current', {}, 'theme')},
             ]}
 
             actions={[
@@ -115,16 +108,16 @@ class Themes extends Component {
                 icon: 'fa fa-fw fa-copy',
                 label: trans('copy_theme', {}, 'theme'),
                 action: (row) => this.props.copyTheme(this.getTheme(row.id))
-              }, {
-                icon: 'fa fa-fw fa-trash-o',
-                label: t('delete'),
-                action: (row) => this.removeThemes([row.id]),
-                isDangerous: true
               },
               {
                 icon: 'fa fa-fw fa-upload',
                 label: t('export'),
                 action: (row) => true,
+              }, {
+                icon: 'fa fa-fw fa-trash-o',
+                label: t('delete'),
+                action: (row) => this.removeThemes([row.id]),
+                isDangerous: true
               }
             ]}
 
@@ -164,23 +157,14 @@ Themes.propTypes = {
   toggleSelect: T.func.isRequired,
   toggleSelectAll: T.func.isRequired,
 
-  modal: T.shape({
-    type: T.string,
-    fading: T.bool.isRequired,
-    props: T.object.isRequired
-  }),
-  showModal: T.func.isRequired,
-  fadeModal: T.func.isRequired,
-  hideModal: T.func.isRequired
+  showModal: T.func.isRequired
 }
 
 function mapStateToProps(state) {
   return {
-    /*currentTheme: select.currentTheme(state),*/
     themes: select.themes(state),
     selected: listSelect.selected(state),
-    sortBy: listSelect.sortBy(state),
-    modal: modalSelect.modal(state)
+    sortBy: listSelect.sortBy(state)
   }
 }
 
@@ -189,10 +173,6 @@ function mapDispatchToProps(dispatch) {
     createTheme: () => {
       dispatch(actions.createTheme())
     },
-
-    /*selectTheme: (theme) => {
-      dispatch(actions.selectTheme(theme))
-    },*/
 
     copyTheme: () => {
       dispatch(actions.copyTheme())
@@ -218,12 +198,6 @@ function mapDispatchToProps(dispatch) {
     // modals
     showModal(modalType, modalProps) {
       dispatch(modalActions.showModal(modalType, modalProps))
-    },
-    fadeModal() {
-      dispatch(modalActions.fadeModal())
-    },
-    hideModal() {
-      dispatch(modalActions.hideModal())
     }
   }
 }

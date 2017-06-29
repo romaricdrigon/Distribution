@@ -1,5 +1,5 @@
 
-const themes = (state) => state.themes.all
+const themes = (state) => state.themes
 
 export const select = {
   themes

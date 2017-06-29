@@ -64,7 +64,7 @@ class WorkspacesController extends Controller
      *
      * @return array
      */
-    public function managementAction()
+    public function indexAction()
     {
         return $this->finder->search(
           'Claroline\CoreBundle\Entity\Workspace\Workspace',

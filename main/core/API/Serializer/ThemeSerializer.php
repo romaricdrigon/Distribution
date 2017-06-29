@@ -23,11 +23,16 @@ class ThemeSerializer
         return [
             'id' => $theme->getUuid(),
             'name' => $theme->getName(),
-            'description' => null, // todo : add field
             'current' => false,
-            'builtIn' => true, // todo : add field
-            'plugin' => $theme->getPlugin() ? $theme->getPlugin()->getShortName() : null,
-            'user' => null, // todo : add field
+            'meta' => [
+                'description' => $theme->getDescription(),
+                'enabled' => $theme->isEnabled(),
+                'plugin' => $theme->getPlugin() ? $theme->getPlugin()->getShortName() : null,
+                'user' => null, // todo : add field
+            ],
+            'parameters' => [
+                'extendDefault' => $theme->isExtendingDefault(),
+            ],
         ];
     }
 }

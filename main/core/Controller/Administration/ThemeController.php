@@ -13,58 +13,48 @@ namespace Claroline\CoreBundle\Controller\Administration;
 
 use Claroline\CoreBundle\API\SerializerProvider;
 use Claroline\CoreBundle\Entity\Theme\Theme;
-use Claroline\CoreBundle\Form\ThemeType;
 use Claroline\CoreBundle\Manager\ThemeManager;
 use JMS\DiExtraBundle\Annotation as DI;
 use JMS\SecurityExtraBundle\Annotation as SEC;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
-use Symfony\Component\Form\FormFactoryInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\RouterInterface;
 
 /**
  * @DI\Tag("security.secure_service")
+ *
  * @SEC\PreAuthorize("hasRole('ADMIN')")
- * @EXT\Route("/admin/themes", requirements={"id"="\d+"}, options={"expose"=true})
- * @EXT\Method("GET")
+ *
+ * @EXT\Route("/admin/themes", options={"expose"=true})
  */
 class ThemeController
 {
+    /** @var SerializerProvider */
     private $serializer;
+
+    /** @var ThemeManager */
     private $manager;
-    private $formFactory;
-    private $router;
 
     /**
      * ThemeController constructor.
      *
      * @DI\InjectParams({
      *     "serializer" = @DI\Inject("claroline.api.serializer"),
-     *     "manager"    = @DI\Inject("claroline.manager.theme_manager"),
-     *     "factory"    = @DI\Inject("form.factory"),
-     *     "router"     = @DI\Inject("router")
+     *     "manager"    = @DI\Inject("claroline.manager.theme_manager")
      * })
      *
      * @param SerializerProvider $serializer
-     * @param ThemeManager $manager
-     * @param FormFactoryInterface $factory
-     * @param RouterInterface $router
+     * @param ThemeManager       $manager
      */
     public function __construct(
         SerializerProvider $serializer,
-        ThemeManager $manager,
-        FormFactoryInterface $factory,
-        RouterInterface $router)
+        ThemeManager $manager)
     {
         $this->serializer = $serializer;
         $this->manager = $manager;
-        $this->formFactory = $factory;
-        $this->router = $router;
     }
 
     /**
+     * Displays themes management tool.
+     *
      * @EXT\Route("/", name="claro_admin_theme_list")
      * @EXT\Method("GET")
      * @EXT\Template()
@@ -75,54 +65,7 @@ class ThemeController
             'isReadOnly' => !$this->manager->isThemeDirWritable(),
             'themes' => array_map(function (Theme $theme) {
                 return $this->serializer->serialize($theme);
-            }, $this->manager->listThemes()),
+            }, $this->manager->all()),
         ];
-    }
-
-    /**
-     * @EXT\Route("/{id}", name="claro_admin_theme_delete")
-     * @EXT\Method("DELETE")
-     */
-    public function deleteAction(Theme $theme)
-    {
-        $this->manager->deleteTheme($theme);
-
-        return new JsonResponse();
-    }
-
-    /**
-     * @EXT\Route("/new", name="claro_admin_new_theme")
-     * @EXT\Template()
-     */
-    public function formAction()
-    {
-        return ['form' => $this->formFactory->create(new ThemeType())];
-    }
-
-    /**
-     * @EXT\Route("/", name="claro_admin_create_theme")
-     * @EXT\Method("POST")
-     * @EXT\Template("ClarolineCoreBundle:Theme:form.html.twig")
-     *
-     * @param Request $request
-     *
-     * @return RedirectResponse|array
-     */
-    public function createThemeAction(Request $request)
-    {
-        $form = $this->formFactory->create(new ThemeType());
-        $form->handleRequest($request);
-
-        if ($form->isValid()) {
-            $this->manager->createCustomTheme(
-                $form['name']->getData(),
-                $form['stylesheet']->getData(),
-                $form['extendingDefault']->getData()
-            );
-
-            return new RedirectResponse($this->router->generate('claro_admin_theme_list'));
-        }
-
-        return ['form' => $form];
     }
 }

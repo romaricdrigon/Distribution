@@ -16,7 +16,7 @@ bootstrap(
 
   // app main component (accepts either a `routedApp` or a `ReactComponent`)
   routedApp([
-    {path: '/',     component: Themes, exact: true},
+    {path: '/',    component: Themes, exact: true},
     {path: '/:id', component: Theme}
   ]),
 
@@ -24,18 +24,10 @@ bootstrap(
   {
     // app reducers
     themes: themesReducer,
+
     // generic reducers
     currentRequests: apiReducer,
-    list: makeListReducer(false), // disable filters
-    modal: modalReducer
-  },
-
-  // transform data attributes for redux store
-  (initialData) => {
-    return {
-      themes: {
-        all: initialData.themes
-      }
-    }
+    modal: modalReducer,
+    list: makeListReducer(false) // disable filters
   }
 )

@@ -7,16 +7,6 @@ import {
   Switch
 } from 'react-router-dom'
 
-// if you use connected components, you may need to tell them there is a router.
-// @see https://reacttraining.com/react-router/web/guides/redux-integration
-
-const routesTypes = T.arrayOf(T.shape({
-  path: T.string,
-  //default: T.bool,
-  exact: T.bool,
-  component: T.element.isRequired
-}))
-
 function getRouteComponent(route) {
   // todo validate route config
 
@@ -38,6 +28,11 @@ function getRouteComponent(route) {
 /**
  * Creates react router components based on config.
  *
+ * NB:
+ *   if you use connected components that needs to access route params,
+ *   you have to tell them there is a router.
+ *   @see https://reacttraining.com/react-router/web/guides/redux-integration
+ *
  * Example of simple routing config :
  *   [
  *     {path: '',     component: MyComponent, exact: true},
@@ -57,13 +52,6 @@ function getRouteComponent(route) {
  * @param {string} basePath
  */
 export function routedApp(routesConfig, basePath = '') {
-  return () => {
-    const RoutedApp = React.createElement(Router, {
-      history: hashHistory
-    }, React.createElement(Route, {
-      path: basePath
-    }, React.createElement(Switch, {}, routesConfig.map(route => getRouteComponent(route)))))
-
     return RoutedApp
   }
 }

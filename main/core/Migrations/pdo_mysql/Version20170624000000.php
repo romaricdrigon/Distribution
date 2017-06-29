@@ -16,7 +16,9 @@ class Version20170624000000 extends AbstractMigration
     {
         $this->addSql('
             ALTER TABLE claro_theme 
-            ADD uuid VARCHAR(36) NOT NULL
+            ADD uuid VARCHAR(36) NOT NULL,
+            ADD description LONGTEXT DEFAULT NULL,
+            ADD enabled TINYINT(1) NOT NULL
         ');
 
         // The new column needs to be filled to be able to add the UNIQUE constraint
@@ -25,14 +27,18 @@ class Version20170624000000 extends AbstractMigration
         ');
 
         $this->addSql('
-            CREATE UNIQUE INDEX UNIQ_384DF525D17F50A5 ON claro_theme (uuid)
+            UPDATE claro_theme SET enabled = true
+        ');
+
+        $this->addSql('
+            CREATE UNIQUE INDEX UNIQ_1D76301AD17F50A6 ON claro_theme (uuid)
         ');
     }
 
     public function down(Schema $schema)
     {
         $this->addSql('
-            DROP INDEX UNIQ_384DF525D17F50A5 ON claro_theme
+            DROP INDEX UNIQ_1D76301AD17F50A6 ON claro_theme
         ');
 
         $this->addSql('

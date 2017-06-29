@@ -23,40 +23,79 @@ use Doctrine\ORM\Mapping as ORM;
 class Theme
 {
     /**
-     * @var int
+     * Unique identifier of the theme.
      *
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
+     *
+     * @var int
      */
     private $id;
 
     use UuidTrait;
 
     /**
-     * @var string
+     * Name of the theme.
      *
      * @ORM\Column()
+     *
+     * @var string
      */
     private $name;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Claroline\CoreBundle\Entity\Plugin")
-     * @ORM\JoinColumn(onDelete="CASCADE")
+     * Small description for the theme.
+     *
+     * @ORM\Column(type="text", nullable=true)
+     *
+     * @var string
      */
-    protected $plugin;
+    private $description = null;
 
     /**
-     * @ORM\Column(name="extending_default", type="boolean")
+     * Is the theme enabled (aka. can be selected as current theme) ?
+     *
+     * @ORM\Column(type="boolean")
+     *
+     * @var bool
      */
-    protected $extendingDefault = false;
+    private $enabled = true;
 
+    /**
+     * The plugin to which the theme belongs, if any.
+     *
+     * @ORM\ManyToOne(targetEntity="Claroline\CoreBundle\Entity\Plugin")
+     * @ORM\JoinColumn(onDelete="CASCADE")
+     *
+     * @var Plugin
+     */
+    private $plugin;
+
+    /**
+     * If true, the default theme will be included in the templates too.
+     *
+     * Notice :
+     *   This is kept for retro-compatibility purpose.
+     *   LESS themes should directly include the default theme.
+     *
+     * @ORM\Column(name="extending_default", type="boolean")
+     *
+     * @var bool
+     */
+    private $extendingDefault = false;
+
+    /**
+     * Theme constructor.
+     */
     public function __construct()
     {
         $this->refreshUuid();
     }
 
     /**
+     * Get id.
+     *
      * @return int
      */
     public function getId()
@@ -65,6 +104,8 @@ class Theme
     }
 
     /**
+     * Set name.
+     *
      * @param string $name
      */
     public function setName($name)
@@ -73,6 +114,8 @@ class Theme
     }
 
     /**
+     * Get name.
+     *
      * @return string
      */
     public function getName()
@@ -81,6 +124,48 @@ class Theme
     }
 
     /**
+     * Set description.
+     *
+     * @param string $description
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+    }
+
+    /**
+     * Get description.
+     *
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * Set enabled.
+     *
+     * @param bool $enabled
+     */
+    public function setEnabled($enabled)
+    {
+        $this->enabled = $enabled;
+    }
+
+    /**
+     * Is enabled ?
+     *
+     * @return bool
+     */
+    public function isEnabled()
+    {
+        return $this->enabled;
+    }
+
+    /**
+     * Set plugin.
+     *
      * @param Plugin $plugin
      */
     public function setPlugin(Plugin $plugin)
@@ -89,6 +174,8 @@ class Theme
     }
 
     /**
+     * Get plugin.
+     *
      * @return Plugin
      */
     public function getPlugin()
@@ -119,7 +206,7 @@ class Theme
     {
         // TODO: use a dedicated db field to store that information
 
-        return !in_array($this->name, ThemeManager::listStockThemeNames());
+        return !in_array($this->name, ThemeManager::listStockThemesName());
     }
 
     /**
