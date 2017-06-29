@@ -38,10 +38,12 @@ class JibikiUsers
         $userjsondata->user->name  = $name;
         $userjsondata->user->login = $login;
         $userjsondata->user->email = $email;
+        $userjsondata = (string) json_encode((array) $userjsondata);
         $response = $this->CLIENT_USER->request('POST', 'users/' .$login, ['body' => $userjsondata, 'auth' => [$login, $password], 'http_errors' => false]);
         $code = $response->getStatusCode();
         if ($code != 201) {
             $reason = $response->getReasonPhrase();
+            echo "<span className='alert alert-danger'>REST API DELETE DICT ERROR: $code $reason</span>";
             return False;
     	}else {
         	return True; 

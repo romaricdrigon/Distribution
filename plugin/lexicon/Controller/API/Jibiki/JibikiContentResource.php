@@ -12,8 +12,8 @@
 namespace Claroline\LexiconBundle\Controller\API\Jibiki;
 
 
+
 use GuzzleHttp\Client;
-use Claroline\LexiconBundle\Manager\DictionariesManager;
 
 
 
@@ -68,6 +68,7 @@ class JibikiContentResource
         ]);
     }
 
+
     public static function fromData($name, $category, $type, $authors)
     {
         $shortname = preg_replace('/[^A-Za-z0-9\-]/', '', $shortname);
@@ -84,6 +85,7 @@ class JibikiContentResource
         return $instance;
     }
 
+
     public function XML2Array($xml) 
     { 
         $array = simplexml_load_string ($xml); 
@@ -98,12 +100,15 @@ class JibikiContentResource
         return $newArray ; 
     } 
 
+
     public function fromXML($xmldata)
     {
         $instance = new self((string) $xmldata->{'dictionary-metadata'}['name'], (string) $xmldata->{'dictionary-metadata'}['category'], (string) $xmldata->{'dictionary-metadata'}['type'], (string) $xmldata->{'dictionary-metadata'}->authors);
         $instance->xml = $xmldata->{'dictionary-metadata'};
         $instance->fullname = (string) $instance->xml['fullname'];
         $instance->owner = (string) $instance->xml['owner'];
+        $instance->lastModifdate = (string) $instance->xml['last-modification-date'];
+        $instance->createdate = (string) $instance->xml['creation-date'];
         $instance->homepage = (string) $instance->xml['homepage'];
         $instance->creationDate = (string) $instance->xml['creation-date'];
         $instance->installationDate = (string) $instance->xml['installation-date'];

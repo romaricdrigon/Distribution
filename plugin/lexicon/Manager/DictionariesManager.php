@@ -15,20 +15,19 @@ namespace Claroline\LexiconBundle\Manager;
 
 
 use Claroline\LexiconBundle\Controller\API\Jibiki\JibikiResources;
-use Claroline\CoreBundle\Event\DisplayToolEvent;
 use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Bundle\TwigBundle\TwigEngine;
-use Claroline\LexiconBundle\Manager\DictionariesUsersManager as DUM;
 
 
 /**
- *  @DI\Service("claroline_lexicon.manager.dictionaries")
+ *  @DI\Service("claroline_lexicon.manager.dictionaries") 
  */
 
 class DictionariesManager
 {
    
     /**
+     *  
      * @var users
      */
     public $users;
@@ -75,7 +74,7 @@ class DictionariesManager
 
 
     /**
-     * DictionariesManager constructor.
+     * DictionariesManager constructor. 
      * 
      * @DI\InjectParams({
      *     "userClaro"    = @DI\Inject("claroline_lexicon.authusers"),
@@ -99,26 +98,27 @@ class DictionariesManager
      * 
      * @return $Resources (json data dictionaries)                
      */ 
-    public function getAllUserResources()     
+    public function getAllUserResources()       
     {    
-        $userslogin     = $this->JBKusers[1]; 
-        $clarousername  = $this->ClaroUser['username'];  
+        $userslogin     = $this->JBKusers[1];  
+        $clarousername  = $this->ClaroUser['username'];   
         $claropass      = $this->ClaroUser['password'];
         if ($this->userManager->userloginExist($clarousername)) {
             $dico = $this->JBKresources->get_all_dictionaries($clarousername, $claropass);
             $Resources = $this->serializeResources($dico); 
             return $Resources;
-        }   
+        }    
         else{     
             $message = "<span class='alert alert-danger'> Vous n'avez pas un compte utilisateur sur la plateforme Jibiki. 
             Nous allons vous créer un rapidement ! </span>";
+            echo $message;
             $this->userManager->createUser();
             $dico = $this->JBKresources->get_all_dictionaries($clarousername, $claropass);
             $Resources = $this->serializeResources($dico); 
-            return $Resources; 
+            return $Resources;
         }  
           
-    }      
+    }       
   
     /**
      * Create data format resources form JIBIKI for current Claroline user  
@@ -132,7 +132,7 @@ class DictionariesManager
         $dicocontent       = array(); 
         foreach ($resources as $titledico => $dico) { 
             array_push($diconame, $titledico);
-            $jsondico = $this->resourcesToJson($dico);
+            $jsondico = $this->resourcesToJson($dico); 
             array_push($dicocontent, $jsondico);
         }
         $resourcesjsondata->totalResults         = count($diconame);
@@ -150,23 +150,23 @@ class DictionariesManager
      * @return $resourcejsondata (json data dictionaries)    
      */
     public function resourcesToJson($dico) 
-    { 
+    {  
         $resourcejsondata                    = new \stdClass();
-        $resourcejsondata->id                = $dico->name;
-        $resourcejsondata->type              = $dico->name;
+        $resourcejsondata->id                = $dico->name; 
+        $resourcejsondata->type              = $dico->name; 
         $resourcejsondata->title             = "";
         $resourcejsondata->category          = $dico->category;
         $resourcejsondata->content           = $dico->fullname;
-        $resourcejsondata->meta              = new \stdClass();
-        $resourcejsondata->meta->created     = $dico->access;
-        $resourcejsondata->meta->updated     = "2017-05-30T17:10:15";
+        $resourcejsondata->meta              = new \stdClass(); 
+        $resourcejsondata->meta->created     = $dico->creationDate;
+        $resourcejsondata->meta->updated     = $dico->lastModifdate;
         $resourcejsondata->meta->model       = false;
-        $resourcejsondata->meta->usedBy      = array();     
+        $resourcejsondata->meta->usedBy      = array();      
         $resourcejsondata->meta->sharedWith  = array();
         $resourcejsondata->description       = $dico->comments;
         $resourcejsondata->hints             = array();
         $resourcejsondata->meta->authors     = array();
-        array_push($resourcejsondata->meta->authors, $this->author($dico));
+        array_push($resourcejsondata->meta->authors, $this->author($dico)); 
         array_push($resourcejsondata->meta->sharedWith, $this->shareWith($dico));
         return $resourcejsondata;
     }
@@ -175,7 +175,7 @@ class DictionariesManager
      * Create data format for active Claroline user  
      * 
      * @return $author (json data for active user)
-     */
+     */ 
     public function author($dico)
     {
         $author        = new \stdClass();
@@ -184,7 +184,7 @@ class DictionariesManager
         $author->email = $dico->owner.'@yahoo.fr';
         return $author;
     }
-
+ 
     /**
      * Create data format for shared user dictionaries  
      * 
@@ -197,7 +197,7 @@ class DictionariesManager
         $share->user        = new \stdClass();
         $share->user->id    = (string) $this->ClaroUser['id'];
         $share->user->name  = $dico->authors;
-        $share->user->email = $dico->owner.'@yahoo.fr';
+        $share->user->email = $dico->owner.'@yahoo.fr'; 
         return $share;
     }
 
@@ -227,7 +227,7 @@ class DictionariesManager
 
     public function getShareUserResources()
     {
-        $right = $this->checkRights($this->user);
+        $right = $this->checkRights($this->user); 
 
         return False;
     }

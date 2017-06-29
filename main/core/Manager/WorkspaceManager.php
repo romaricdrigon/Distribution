@@ -1199,7 +1199,7 @@ class WorkspaceManager
         }
 
         $archive = new \ZipArchive();
-        $fileName = $file->getBasename('.zip');
+        $fileName    = $file->getBasename('.zip');
         $extractPath = $this->templateDirectory.$fileName;
 
         if ($archive->open($file->getPathname())) {

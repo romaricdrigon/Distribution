@@ -13,10 +13,8 @@
 namespace Claroline\LexiconBundle\Controller\API\Jibiki;
 
 
-use Claroline\CoreBundle\Entity\User;
 use GuzzleHttp\Client;
 use Claroline\LexiconBundle\Controller\API\Jibiki\JibikiContentResource;
-use Claroline\LexiconBundle\Manager\DictionariesManager;
 
 
 
@@ -34,6 +32,7 @@ class JibikiResources
         'headers'  => $this->header
         ]);
 	}
+
 
     public function get_volume($dictname, $lang)
     {

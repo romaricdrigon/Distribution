@@ -14,9 +14,6 @@
 namespace Claroline\LexiconBundle\Manager;
 
  
-
-use Claroline\CoreBundle\Manager\GroupManager;
-use Claroline\CoreBundle\Manager\UserManager;
 use Claroline\LexiconBundle\Controller\API\Jibiki\JibikiUsers;
 use JMS\DiExtraBundle\Annotation as DI;
  

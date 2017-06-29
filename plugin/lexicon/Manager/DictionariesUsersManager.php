@@ -62,8 +62,8 @@ class DictionariesUsersManager
     public $JBKUsers;
 
     /**
-     * @var ClaroUser
-     */ 
+     * @var ClaroUser  
+     */  
     private $ClaroUser;
  
     /**
@@ -84,9 +84,11 @@ class DictionariesUsersManager
      *     "userClaro"    = @DI\Inject("claroline_lexicon.authusers")
      * })
      */
-    public function __construct($userClaro)
+    public function __construct($userClaro) 
     {
+        $this->JBKUsers   = new JibikiUsers();
         $this->ClaroUser  = $userClaro->generateAuth();
+        $this->getUriUser();
     } 
 
 
@@ -114,9 +116,9 @@ class DictionariesUsersManager
     public function getCurrentUser()
     {
         $currentuser        = new \stdClass();
-        $currentuser->id    = $this->ClaroUser['id'];
-        $currentuser->name  = $this->ClaroUser['firstName'].' '.$this->ClaroUser['LastName'];
-        $currentuser->email = $this->ClaroUser['email'];
+        $currentuser->id    = $this->id;
+        $currentuser->name  = $this->name;
+        $currentuser->email = $this->email;
         return json_encode((array) $currentuser, True);
     } 
 
@@ -128,7 +130,6 @@ class DictionariesUsersManager
      */
     public function getAllJBKUsers()  
     {
-        $this->JBKUsers = new JibikiUsers(); 
         $userlogins     = array();
         $usernames      = array();
         $userslist      = array();
@@ -204,9 +205,9 @@ class DictionariesUsersManager
      */
     public function createUser()
     {
-        $this->JBKUsers   = new JibikiUsers();
         if ($this->JBKUsers->post_user($this->name, $this->username, $this->password, $this->email)){
-            echo "<span class='alert alert-success'> Votre compte utilisateur : '".$this->username."'  a bien été crée sur la plateforme Jibiki &#9786; </span>";
+            echo "<span class='alert alert-success'> Votre compte utilisateur : '".$this->username."'  
+            a bien été crée sur la plateforme Jibiki &#9786; </span>";
         }
         else{
             echo "<span class='alert alert-danger'> Votre compte utilisateur : '".$this->username."'  n'a pas pu être crée sur la plateforme Jibiki. 
