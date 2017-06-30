@@ -133,6 +133,12 @@ class ResourceEvaluationManager
                 $reu->setScoreMin($evaluation->getScoreMin());
             }
         }
+        if (($evaluation->isSuccessful() && !$reu->isSuccessful()) ||
+            ($evaluation->isTerminated() && !$reu->isTerminated() && !$reu->isSuccessful()) ||
+            empty($reu->getStatus())
+        ) {
+            $reu->setStatus($evaluation->getStatus());
+        }
         $this->persistResourceUserEvaluation($reu);
     }
 }
