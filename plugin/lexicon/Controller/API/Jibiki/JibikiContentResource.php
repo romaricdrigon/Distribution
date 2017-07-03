@@ -14,10 +14,13 @@ namespace Claroline\LexiconBundle\Controller\API\Jibiki;
 
 
 use GuzzleHttp\Client;
+use JMS\DiExtraBundle\Annotation as DI;
 
 
 
- 
+/**
+ *  @DI\Service("claroline_lexicon.api.JibikiContentResource") 
+ */
 class JibikiContentResource
 {
     public  $base_api_uri = 'http://totoro.imag.fr/lexinnova/api';

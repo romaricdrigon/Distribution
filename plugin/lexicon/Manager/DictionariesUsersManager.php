@@ -26,31 +26,6 @@ use Claroline\LexiconBundle\Manager\AuthUsersManager;
 class DictionariesUsersManager
 {
 
-	/**
-     * @var user
-     */
-    public $username;
-
-    /**
-     * @var name
-     */
-    private $name;
-
-    /**
-     * @var email
-     */
-    private $email;
-
-    /**
-     * @var id
-     */
-    private $id;
-
-    /**
-     * @var password
-     */
-    private $password;
-
     /**
      * @var userResources
      */
@@ -81,14 +56,14 @@ class DictionariesUsersManager
      * Dictionaries users Manager constructor.
      * 
      * @DI\InjectParams({
-     *     "userClaro"    = @DI\Inject("claroline_lexicon.authusers")
+     *     "userClaro"   = @DI\Inject("claroline_lexicon.authusers"),
+     *     "JBKUsers"    = @DI\Inject("claroline_lexicon.api.JibikiUsers")
      * })
      */
-    public function __construct($userClaro) 
+    public function __construct($userClaro, $JBKUsers) 
     {
-        $this->JBKUsers   = new JibikiUsers();
-        $this->ClaroUser  = $userClaro->generateAuth();
-        $this->getUriUser();
+        $this->JBKUsers   = $JBKUsers;
+        $this->userClaro  = $userClaro;
     } 
 
 
@@ -99,12 +74,15 @@ class DictionariesUsersManager
      */ 
     public function getUriUser()
     {
-
-        $this->username    = $this->ClaroUser['username'];
-        $this->email       = $this->ClaroUser['email'];
-        $this->id          = $this->ClaroUser['id'];
-        $this->password    = $this->ClaroUser['password'];
-        $this->name        = $this->ClaroUser['firstName'].' '.$this->ClaroUser['LastName'];
+        $ClaroUser   = $this->userClaro->generateAuth();
+        $username    = $ClaroUser['username'];
+        $email       = $ClaroUser['email'];
+        $id          = $ClaroUser['id'];
+        $password    = $ClaroUser['password'];
+        $name        = $ClaroUser['firstName'].' '.$ClaroUser['LastName'];
+        $result      = array();
+        array_push($result, $username, $password, $name, $email, $id);
+        return $result;
     }
 
 
@@ -115,10 +93,11 @@ class DictionariesUsersManager
      */
     public function getCurrentUser()
     {
+        $userInfo           = $this->getUriUser();
         $currentuser        = new \stdClass();
-        $currentuser->id    = $this->id;
-        $currentuser->name  = $this->name;
-        $currentuser->email = $this->email;
+        $currentuser->id    = $userInfo[4];
+        $currentuser->name  = $userInfo[2];
+        $currentuser->email = $userInfo[3];
         return json_encode((array) $currentuser, True);
     } 
 
@@ -205,12 +184,13 @@ class DictionariesUsersManager
      */
     public function createUser()
     {
-        if ($this->JBKUsers->post_user($this->name, $this->username, $this->password, $this->email)){
-            echo "<span class='alert alert-success'> Votre compte utilisateur : '".$this->username."'  
+        $userInfo = $this->getUriUser();
+        if ($this->JBKUsers->post_user($userInfo[2], $userInfo[0], $userInfo[1], $userInfo[3])){
+            echo "<span class='alert alert-success'> Votre compte utilisateur : '".$userInfo[0]."'  
             a bien été crée sur la plateforme Jibiki &#9786; </span>";
         }
         else{
-            echo "<span class='alert alert-danger'> Votre compte utilisateur : '".$this->username."'  n'a pas pu être crée sur la plateforme Jibiki. 
+            echo "<span class='alert alert-danger'> Votre compte utilisateur : '".$userInfo[0]."'  n'a pas pu être crée sur la plateforme Jibiki. 
             Veuillez vérifier la disponibilité de votre login ou réessayer plutard &#9785; </span>";
         }
     }

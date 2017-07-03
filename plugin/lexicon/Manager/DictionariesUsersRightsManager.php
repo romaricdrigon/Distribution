@@ -14,4 +14,30 @@
 namespace Claroline\LexiconBundle\Manager;
 
 
- 
+use JMS\DiExtraBundle\Annotation as DI;
+
+
+class DictionariesRightsManager
+{
+   
+    /**
+     *  
+     * @var users
+     */
+    public $users;
+
+    /**
+     * @var userClaro
+     */
+    public $userClaro;
+
+
+
+
+    public function getRights() {
+
+    	return false;
+    }
+
+
+}

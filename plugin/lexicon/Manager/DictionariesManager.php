@@ -78,18 +78,15 @@ class DictionariesManager
      * 
      * @DI\InjectParams({
      *     "userClaro"    = @DI\Inject("claroline_lexicon.authusers"),
-     *     "userManager"  = @DI\Inject("claroline_lexicon.manager.users")
+     *     "userManager"  = @DI\Inject("claroline_lexicon.manager.users"),
+     *     "JBKresources" = @DI\Inject("claroline_lexicon.api.JibikiResources")
      * })
      */
-    public function __construct($userClaro, $userManager)
+    public function __construct($userClaro, $userManager, $JBKresources)
     {
-        $this->lexicon_manager   = $userClaro;
-        $JBKresources            = new JibikiResources();
-        $this->JBKresources      = $JBKresources;
-        $this->userClaro         = $userClaro;
-        $this->userManager       = $userManager;
-        $this->JBKusers          = $this->userManager->getAllJBKUsers();
-        $this->ClaroUser         = $userClaro->generateAuth();
+        $this->JBKresources     = $JBKresources;
+        $this->userClaro        = $userClaro;
+        $this->userManager      = $userManager;
     }
  
     /**
@@ -100,20 +97,21 @@ class DictionariesManager
      */ 
     public function getAllUserResources()       
     {    
-        $userslogin     = $this->JBKusers[1];  
-        $clarousername  = $this->ClaroUser['username'];   
-        $claropass      = $this->ClaroUser['password'];
+        $JBKusers      = $this->userManager->getAllJBKUsers();
+        $ClaroUser     = $this->userClaro->generateAuth();
+        $userslogin    = $JBKusers[1];  
+        $clarousername = $ClaroUser['username'];   
+        $claropass     = $ClaroUser['password'];
         if ($this->userManager->userloginExist($clarousername)) {
-            $dico = $this->JBKresources->get_all_dictionaries($clarousername, $claropass);
+            $dico      = $this->JBKresources->get_all_dictionaries($clarousername, $claropass);
             $Resources = $this->serializeResources($dico); 
             return $Resources;
         }    
         else{     
-            $message = "<span class='alert alert-danger'> Vous n'avez pas un compte utilisateur sur la plateforme Jibiki. 
+            $message   = "<span class='alert alert-danger'> Vous n'avez pas un compte utilisateur sur la plateforme Jibiki. 
             Nous allons vous créer un rapidement ! </span>";
-            echo $message;
             $this->userManager->createUser();
-            $dico = $this->JBKresources->get_all_dictionaries($clarousername, $claropass);
+            $dico      = $this->JBKresources->get_all_dictionaries($clarousername, $claropass);
             $Resources = $this->serializeResources($dico); 
             return $Resources;
         }  
@@ -178,8 +176,9 @@ class DictionariesManager
      */ 
     public function author($dico)
     {
+        $ClaroUser     = $this->userClaro->generateAuth();
         $author        = new \stdClass();
-        $author->id    = (string) $this->ClaroUser['id'];
+        $author->id    = (string) $ClaroUser['id'];
         $author->name  = $dico->authors;
         $author->email = $dico->owner.'@yahoo.fr';
         return $author;
@@ -192,6 +191,7 @@ class DictionariesManager
      */
     public function shareWith($dico)
     {
+        $ClaroUser          = $this->userClaro->generateAuth();
         $share              = new \stdClass();
         $share->adminRights = false;
         $share->user        = new \stdClass();
@@ -209,10 +209,11 @@ class DictionariesManager
      */
     public function getCurrentUser()
     {
+        $ClaroUser          = $this->userClaro->generateAuth();
         $currentuser        = new \stdClass();
-        $currentuser->id    = $this->ClaroUser['id'];
-        $currentuser->name  = $this->ClaroUser['firstName'].' '.$this->ClaroUser['LastName'];
-        $currentuser->email = $this->ClaroUser['email'];
+        $currentuser->id    = $ClaroUser['id'];
+        $currentuser->name  = $ClaroUser['firstName'].' '.$ClaroUser['LastName'];
+        $currentuser->email = $ClaroUser['email'];
         return json_encode((array) $currentuser, True);
     } 
 

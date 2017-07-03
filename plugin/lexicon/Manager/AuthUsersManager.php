@@ -24,16 +24,6 @@ use JMS\DiExtraBundle\Annotation as DI;
 class AuthUsersManager
 {
 
-	/**
-     * @var login
-     */
-    public $login;
-
-    /**
-     * @var password
-     */
-    private $password;
-
     /**
      * @var container
      */
@@ -51,55 +41,26 @@ class AuthUsersManager
 	 */
 
 	public function __construct($container) { 
-		$this->currentUser = $container->get('security.token_storage')->getToken()->getUser();
+		$this->container = $container;
 	}
 
 
-	private function getUserId() {
-		$userid = $this->currentUser->getId();
-		return $userid;
-	}
-
-	private function getUsername() {
-		$username = $this->currentUser->getUsername();
-		return $username;
-	}
-
-	private function getEmail() {
-		$mail = $this->currentUser->getMail();
-		return $mail;
-	}
-
-	private function getFname() {
-		$fname = $this->currentUser->getFirstName();
-		return $fname;
-	}
-
-	private function getLname() {
-		$fname = $this->currentUser->getLastName();
-		return $fname;
-	}
-
-	private function getPassword() {
-		$password = $this->currentUser->getPassword();
-		return $password;
-	}
-
-	private function makePassword(){
-		$user     = $this->getUsername();
+	private function makePassword($currentUser){
+		$user     = $currentUser->getUsername();
 		$password = md5($user);
 		return $password;
 	}
 
 	public function generateAuth() {
+		$currentUser                      = $this->container->get('security.token_storage')->getToken()->getUser();
 		$userProprieties              	  = array();
-		$userProprieties['username']      = $this->getUsername();
-		$userProprieties['firstName']     = $this->getFname();
-		$userProprieties['LastName']      = $this->getLname();
-		$userProprieties['email']         = $this->getEmail();
-		$userProprieties['id']            = $this->getUserId();
-		$userProprieties['password']      = $this->getPassword();
-		$userProprieties['makepassword']  = $this->makePassword();
+		$userProprieties['username']      = $currentUser->getUsername();
+		$userProprieties['firstName']     = $currentUser->getFirstName();
+		$userProprieties['LastName']      = $currentUser->getLastName();
+		$userProprieties['email']         = $currentUser->getMail();
+		$userProprieties['id']            = $currentUser->getId();
+		$userProprieties['password']      = $currentUser->getPassword();
+		$userProprieties['makepassword']  = $this->makePassword($currentUser);
 		
 		return $userProprieties; 
 	}
