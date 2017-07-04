@@ -144,7 +144,7 @@ class AbilityRepositoryTest extends RepositoryTestCase
     }
 
     /**
-     * @expectedException Exception
+     * @expectedException \Exception
      */
     public function testFindEvaluationsByCompetencyThrowsAnExceptionIfNotLeafCompetency()
     {
@@ -158,12 +158,12 @@ class AbilityRepositoryTest extends RepositoryTestCase
     public function testFindEvaluationsByCompetency()
     {
         // Users:
-        //
+
         // u1
         // u2
-        //
+
         // Frameworks:
-        //
+
         // c1
         //   - a1 (l1)
         //     - ac1
@@ -180,7 +180,6 @@ class AbilityRepositoryTest extends RepositoryTestCase
         //   - a4 (l1)
         //     - ac3
         //       - e4 (u1, passed)
-        //
 
         $u1 = $this->persistUser('u1');
         $u2 = $this->persistUser('u2'); // extra data

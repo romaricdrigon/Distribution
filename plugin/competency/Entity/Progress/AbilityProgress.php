@@ -2,7 +2,7 @@
 
 namespace HeVinci\CompetencyBundle\Entity\Progress;
 
-use Claroline\CoreBundle\Entity\Resource\Activity;
+use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Claroline\CoreBundle\Entity\User;
 use Doctrine\ORM\Mapping as ORM;
 use HeVinci\CompetencyBundle\Entity\Ability;
@@ -37,14 +37,14 @@ class AbilityProgress
     private $user;
 
     /**
-     * @ORM\Column(name="passed_activity_ids", type="simple_array", nullable=true)
+     * @ORM\Column(name="passed_resource_ids", type="simple_array", nullable=true)
      */
-    private $passedActivityIds = [];
+    private $passedResourceIds = [];
 
     /**
-     * @ORM\Column(name="passed_activity_count", type="integer")
+     * @ORM\Column(name="passed_resource_count", type="integer")
      */
-    private $passedActivityCount = 0;
+    private $passedResourceCount = 0;
 
     /**
      * @ORM\Column
@@ -93,37 +93,37 @@ class AbilityProgress
     /**
      * @return int
      */
-    public function getPassedActivityCount()
+    public function getPassedResourceCount()
     {
-        return $this->passedActivityCount;
+        return $this->passedResourceCount;
     }
 
     /**
      * @return int
      */
-    public function getPassedActivityIds()
+    public function getPassedResourceIds()
     {
-        return $this->passedActivityIds;
+        return $this->passedResourceIds;
     }
 
     /**
-     * @param Activity $activity
+     * @param ResourceNode $resource
      *
      * @return bool
      */
-    public function hasPassedActivity(Activity $activity)
+    public function hasPassedResource(ResourceNode $resource)
     {
-        return in_array($activity->getId(), $this->passedActivityIds);
+        return in_array($resource->getId(), $this->passedResourceIds);
     }
 
     /**
-     * @param Activity $activity
+     * @param ResourceNode $resource
      */
-    public function addPassedActivity(Activity $activity)
+    public function addPassedResource(ResourceNode $resource)
     {
-        if (!$this->hasPassedActivity($activity)) {
-            $this->passedActivityIds[] = $activity->getId();
-            ++$this->passedActivityCount;
+        if (!$this->hasPassedResource($resource)) {
+            $this->passedResourceIds[] = $resource->getId();
+            ++$this->passedResourceCount;
         }
     }
 

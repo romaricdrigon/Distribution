@@ -17,3 +17,13 @@ plugin:
           is_displayable_in_workspace: false
           is_displayable_in_desktop: true
           class: database
+
+    resource_actions:
+        - name: manage-competencies
+          is_form: false
+          is_async: false
+          is_custom: true
+          group: activity
+          class: activity-class
+          resource_type: ujm_exercise
+          value: edit

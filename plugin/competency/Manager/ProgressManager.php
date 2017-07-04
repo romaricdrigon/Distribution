@@ -2,8 +2,8 @@
 
 namespace HeVinci\CompetencyBundle\Manager;
 
-use Claroline\CoreBundle\Entity\Activity\Evaluation;
 use Claroline\CoreBundle\Entity\Group;
+use Claroline\CoreBundle\Entity\Resource\ResourceUserEvaluation;
 use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Persistence\ObjectManager;
 use HeVinci\CompetencyBundle\Entity\Ability;
@@ -57,23 +57,23 @@ class ProgressManager
     /**
      * Computes and logs the progression of a user.
      *
-     * @param Evaluation $evaluation
+     * @param ResourceUserEvaluation $evaluation
      */
-    public function handleEvaluation(Evaluation $evaluation)
+    public function handleEvaluation(ResourceUserEvaluation $evaluation)
     {
         $this->clearCache();
 
-        $activity = $evaluation->getActivityParameters()->getActivity();
-        $abilities = $this->abilityRepo->findByActivity($activity);
+        $resource = $evaluation->getResourceNode();
+        $abilities = $this->abilityRepo->findByResource($resource);
         $user = $evaluation->getUser();
 
         foreach ($abilities as $ability) {
             $progress = $this->getAbilityProgress($ability, $user);
 
-            if ($evaluation->isSuccessful() && !$progress->hasPassedActivity($activity)) {
-                $progress->addPassedActivity($activity);
+            if ($evaluation->isSuccessful() && !$progress->hasPassedResource($resource)) {
+                $progress->addPassedResource($resource);
 
-                if ($progress->getPassedActivityCount() >= $ability->getMinActivityCount()) {
+                if ($progress->getPassedResourceCount() >= $ability->getMinResourceCount()) {
                     $progress->setStatus(AbilityProgress::STATUS_ACQUIRED);
                 } else {
                     $progress->setStatus(AbilityProgress::STATUS_PENDING);

@@ -94,7 +94,7 @@ class CompetencyManagerTest extends UnitTestCase
     }
 
     /**
-     * @expectedException LogicException
+     * @expectedException \LogicException
      */
     public function testUpdateScaleThrowsIfScaleIsBoundToAbilities()
     {
@@ -133,7 +133,7 @@ class CompetencyManagerTest extends UnitTestCase
     }
 
     /**
-     * @expectedException LogicException
+     * @expectedException \LogicException
      */
     public function testDeleteScaleThrowsIfScaleIsBoundToFramework()
     {
@@ -214,7 +214,7 @@ class CompetencyManagerTest extends UnitTestCase
     }
 
     /**
-     * @expectedException LogicException
+     * @expectedException \LogicException
      */
     public function testEnsureIsRootExpectsARootCompetency()
     {
@@ -242,7 +242,7 @@ class CompetencyManagerTest extends UnitTestCase
     }
 
     /**
-     * @expectedException LogicException
+     * @expectedException \LogicException
      */
     public function testCreateSubCompetencyExpectsParentHasNoAbilities()
     {
@@ -272,7 +272,7 @@ class CompetencyManagerTest extends UnitTestCase
     }
 
     /**
-     * @expectedException LogicException
+     * @expectedException \LogicException
      */
     public function testCreateAbilityExpectsCompetencyToBeALeafNode()
     {
@@ -390,7 +390,7 @@ class CompetencyManagerTest extends UnitTestCase
     }
 
     /**
-     * @expectedException LogicException
+     * @expectedException \LogicException
      */
     public function testLinkAbilityThrowsIfLinkAlreadyExists()
     {
