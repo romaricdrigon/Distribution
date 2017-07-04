@@ -417,7 +417,7 @@ class PaperManager
     }
 
     /**
-     * Creates a ResourceEvaluation for the attempt
+     * Creates a ResourceEvaluation for the attempt.
      *
      * @param Paper $paper
      * @param bool  $finished
@@ -430,7 +430,7 @@ class PaperManager
         $data = [];
         $data['paper'] = [
             'id' => $paper->getId(),
-            'uuid' => $paper->getUuid()
+            'uuid' => $paper->getUuid(),
         ];
 
         if ($finished) {

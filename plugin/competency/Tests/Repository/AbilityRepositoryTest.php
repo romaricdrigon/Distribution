@@ -158,12 +158,12 @@ class AbilityRepositoryTest extends RepositoryTestCase
     public function testFindEvaluationsByCompetency()
     {
         // Users:
-
+        //
         // u1
         // u2
-
+        //
         // Frameworks:
-
+        //
         // c1
         //   - a1 (l1)
         //     - ac1

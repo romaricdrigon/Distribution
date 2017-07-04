@@ -71,12 +71,12 @@ class AttemptManager
      *     "itemSerializer"      = @DI\Inject("ujm_exo.serializer.item")
      * })
      *
-     * @param ObjectManager             $om
-     * @param PaperGenerator            $paperGenerator
-     * @param PaperManager              $paperManager
-     * @param AnswerManager             $answerManager
-     * @param ItemManager               $itemManager
-     * @param ItemSerializer            $itemSerializer
+     * @param ObjectManager  $om
+     * @param PaperGenerator $paperGenerator
+     * @param PaperManager   $paperManager
+     * @param AnswerManager  $answerManager
+     * @param ItemManager    $itemManager
+     * @param ItemSerializer $itemSerializer
      */
     public function __construct(
         ObjectManager $om,
