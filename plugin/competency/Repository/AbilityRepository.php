@@ -184,16 +184,17 @@ class AbilityRepository extends EntityRepository
             ->select(
                 'e.id AS evaluationId',
                 'e.status',
-                'e.latestDate',
+                'e.date',
                 'n.id AS resourceId',
                 'n.name AS resourceName',
                 'a.id AS abilityId',
                 'a.name AS abilityName',
                 'l.name AS levelName'
             )
-            ->from('Claroline\CoreBundle\Entity\Resource\ResourceUserEvaluation', 'e')
-            ->join('e.user', 'u')
-            ->join('e.resourceNode', 'n')
+            ->from('Claroline\CoreBundle\Entity\Resource\ResourceEvaluation', 'e')
+            ->join('e.resourceUserEvaluation', 'eru')
+            ->join('eru.user', 'u')
+            ->join('eru.resourceNode', 'n')
             ->join(
                 'HeVinci\CompetencyBundle\Entity\Ability',
                 'a',
@@ -209,7 +210,7 @@ class AbilityRepository extends EntityRepository
                 $resourceQb->getQuery()->getDQL()
             ))
             ->andWhere('u = :user')
-            ->orderBy('e.latestDate, e.id, a.id', 'ASC')
+            ->orderBy('e.date, e.id, a.id', 'ASC')
             ->setParameters([
                 ':competency' => $competency,
                 ':user' => $user,

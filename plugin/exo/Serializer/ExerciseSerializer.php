@@ -306,10 +306,13 @@ class ExerciseSerializer implements SerializerInterface
         if (isset($parameters->totalScoreOn)) {
             $exercise->setTotalScoreOn($parameters->totalScoreOn);
         }
-
-        if (isset($parameters->successScore)) {
-            $exercise->setSuccessScore($parameters->successScore);
-        }
+        $success =  isset($parameters->successScore) &&
+            $parameters->successScore !== '' &&
+            $parameters->successScore >= 0 &&
+            $parameters->successScore <= 100 ?
+            $parameters->successScore :
+            null;
+        $exercise->setSuccessScore($success);
 
         if (isset($parameters->showCorrectionAt)) {
             $correctionDate = null;

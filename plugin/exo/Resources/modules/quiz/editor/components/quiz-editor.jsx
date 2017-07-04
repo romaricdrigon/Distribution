@@ -301,7 +301,7 @@ class Correction extends Component {
         >
           <input
             id="quiz-success-score"
-            onChange={e => this.props.onChange('parameters.successScore', Number(e.target.value))}
+            onChange={e => this.props.onChange('parameters.successScore', e.target.value)}
             type="number"
             min="0"
             max="100"

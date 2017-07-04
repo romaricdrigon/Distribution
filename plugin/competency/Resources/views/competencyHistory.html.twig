@@ -23,7 +23,7 @@
                 {% for log in logs %}
                     <tr>
                         <td>{{ log.date|date('date_format'|trans({}, 'platform')) }}</td>
-                        <td>{{ log.activityName }}</td>
+                        <td>{{ log.resourceName }}</td>
                         <td>{{ log.abilityName }}</td>
                         <td>{{ log.levelName }}</td>
                         <td class="{{ log.status == 'passed' or log.status == 'completed' ? 'success' : (log.status == 'failed' ? 'danger' : 'warning') }}">
