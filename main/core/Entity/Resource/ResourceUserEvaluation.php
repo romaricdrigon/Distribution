@@ -206,7 +206,7 @@ class ResourceUserEvaluation
         $this->scoreMax = $scoreMax;
     }
 
-    public function getEvalations()
+    public function getEvaluations()
     {
         return $this->evaluations->toArray();
     }

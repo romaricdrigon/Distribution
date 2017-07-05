@@ -50,7 +50,7 @@ class AbilityRepositoryTest extends RepositoryTestCase
         $l1 = $this->persistLevel('l1', $scale);
         $l2 = $this->persistLevel('l2', $scale);
         $c1 = $this->persistCompetency('c1', null, $scale);
-        $c2 = $this->persistCompetency('c2', $c1); // extra data
+        $this->persistCompetency('c2', $c1); // extra data
         $a1 = $this->persistAbility('a1');
         $a2 = $this->persistAbility('a2');
         $a3 = $this->persistAbility('a3');
@@ -150,7 +150,7 @@ class AbilityRepositoryTest extends RepositoryTestCase
     {
         $u1 = $this->persistUser('u1');
         $c1 = $this->persistCompetency('c1');
-        $c2 = $this->persistCompetency('c2', $c1);
+        $this->persistCompetency('c2', $c1);
         $this->om->flush();
         $this->repo->findEvaluationsByCompetency($c1, $u1);
     }
@@ -158,12 +158,10 @@ class AbilityRepositoryTest extends RepositoryTestCase
     public function testFindEvaluationsByCompetency()
     {
         // Users:
-        //
         // u1
         // u2
-        //
+
         // Frameworks:
-        //
         // c1
         //   - a1 (l1)
         //     - ac1
@@ -214,8 +212,8 @@ class AbilityRepositoryTest extends RepositoryTestCase
         $e1 = $this->persistEvaluation($ac1, $u1, AbstractEvaluation::STATUS_FAILED);
         $e2 = $this->persistEvaluation($ac1, $u1, AbstractEvaluation::STATUS_PASSED, $e1);
         $e3 = $this->persistEvaluation($ac2, $u1, AbstractEvaluation::STATUS_PASSED);
-        $e4 = $this->persistEvaluation($ac3, $u1, AbstractEvaluation::STATUS_PASSED); // extra data
-        $e5 = $this->persistEvaluation($ac1, $u2, AbstractEvaluation::STATUS_PASSED, null, $e1->getActivityParameters()); // extra data
+        $this->persistEvaluation($ac3, $u1, AbstractEvaluation::STATUS_PASSED); // extra data
+        $this->persistEvaluation($ac1, $u2, AbstractEvaluation::STATUS_PASSED, null, $e1->getActivityParameters()); // extra data
 
         $this->om->flush();
 

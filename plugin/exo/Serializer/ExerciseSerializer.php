@@ -306,7 +306,7 @@ class ExerciseSerializer implements SerializerInterface
         if (isset($parameters->totalScoreOn)) {
             $exercise->setTotalScoreOn($parameters->totalScoreOn);
         }
-        $success =  isset($parameters->successScore) &&
+        $success = isset($parameters->successScore) &&
             $parameters->successScore !== '' &&
             $parameters->successScore >= 0 &&
             $parameters->successScore <= 100 ?
