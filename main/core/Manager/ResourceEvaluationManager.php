@@ -110,7 +110,7 @@ class ResourceEvaluationManager
     private function updateResourceUserEvaluation(ResourceEvaluation $evaluation)
     {
         $reu = $evaluation->getResourceUserEvaluation();
-        $reu->setLatestDate($evaluation->getDate());
+        $reu->setDate($evaluation->getDate());
         $duration = $evaluation->getDuration();
         $score = $evaluation->getScore();
 
