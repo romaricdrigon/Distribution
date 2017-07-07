@@ -10,13 +10,7 @@ import searchReducer       from './search'
 import totalResultsReducer from './total-results'
 
 export const bankApp = combineReducers({
-  modal: modalReducer,
-  currentRequests: apiReducers.currentRequests,
-  questions: questionsReducer,
-  selected: selectReducer,
-  sortBy: sortByReducer,
-  pagination: paginationReducer,
-  search: searchReducer,
-  totalResults: totalResultsReducer,
-  currentUser: (state = null) => state
+  data: questionsReducer,
+  totalResults: totalResultsReducer
+  //currentUser: (state = null) => state
 })

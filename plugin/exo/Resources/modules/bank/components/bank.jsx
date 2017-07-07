@@ -3,17 +3,23 @@ import {PropTypes as T} from 'prop-types'
 import {connect} from 'react-redux'
 import classes from 'classnames'
 
-import {tex, transChoice} from '#/main/core/translation'
+import {DataList} from '#/main/core/layout/list/components/data-list.jsx'
+import {tex, transChoice, t} from '#/main/core/translation'
 import {makeModal} from '#/main/core/layout/modal'
-import {actions as modalActions} from '#/main/core/layout/modal/actions'
+
 import { Page, PageHeader, PageContent} from '#/main/core/layout/page/components/page.jsx'
 import { PageActions, PageAction } from '#/main/core/layout/page/components/page-actions.jsx'
 import { Pagination } from '#/main/core/layout/pagination/components/pagination.jsx'
 
 import {select} from './../selectors'
-import {actions as paginationActions} from './../actions/pagination'
-import {actions as searchActions} from './../actions/search'
-import {select as paginationSelect} from './../selectors/pagination'
+
+import {actions as modalActions} from '#/main/core/layout/modal/actions'
+import {actions as paginationActions} from '#/main/core/layout/pagination/actions'
+import {actions as listActions} from '#/main/core/layout/list/actions'
+import {actions} from '../actions/search'
+
+import {select as paginationSelect} from '#/main/core/layout/pagination/selectors'
+import {select as listSelect} from '#/main/core/layout/list/selectors'
 
 import VisibleQuestions from './../containers/visible-questions.jsx'
 
@@ -31,20 +37,7 @@ const Bank = props =>
   >
     <PageHeader
       title={tex('questions_bank')}
-    >
-      <PageActions>
-        <PageAction
-          id="bank-search"
-          title={transChoice('active_filters', props.activeFilters, {count: props.activeFilters}, 'ujm_exo')}
-          icon="fa fa-search"
-          action={() => props.openSearchModal(props.searchFilters)}
-        >
-            <span className={classes('label', 0 < props.activeFilters ? 'label-primary' : 'label-default')}>
-              {props.activeFilters}
-            </span>
-        </PageAction>
-      </PageActions>
-    </PageHeader>
+    />
 
     {props.modal.type &&
       props.createModal(
@@ -55,25 +48,31 @@ const Bank = props =>
     }
 
     <PageContent>
-      {0 === props.totalResults &&
-      <div className="list-empty">No results found.</div>
-      }
+      <DataList
+          data={props.questions}
+          totalResults={props.totalResults}
 
-      {0 < props.totalResults &&
-      <VisibleQuestions />
-      }
+          definition={[
+            {name: 'content', type: 'string', label: t('name')},
+          ]}
 
-      {0 < props.totalResults &&
-      <Pagination
-        current={props.pagination.current}
-        pageSize={props.pagination.pageSize}
-        pages={props.pages}
-        handlePageChange={props.handlePageChange}
-        handlePagePrevious={props.handlePagePrevious}
-        handlePageNext={props.handlePageNext}
-        handlePageSizeUpdate={props.handlePageSizeUpdate}
+          filters={{
+              current: props.filters,
+              addFilter: props.addListFilter,
+              removeFilter: props.removeListFilter
+            }}
+
+          sorting={{
+              current: props.sortBy,
+              updateSort: props.updateSort
+            }}
+
+          pagination={Object.assign({}, props.pagination, {
+              handlePageChange: props.handlePageChange,
+              handlePageSizeUpdate: props.handlePageSizeUpdate
+            })}
+
       />
-      }
     </PageContent>
   </Page>
 
@@ -104,12 +103,22 @@ Bank.propTypes = {
 
 function mapStateToProps(state) {
   return {
-    searchFilters: select.filters(state),
-    activeFilters: select.countFilters(state),
+    questions: state.questions.data,
+    /*searchFilters: select.filters(state),
+    activeFilters: select.countFilters(state),*/
+    // filters: listSelect.filters(state),
     modal: select.modal(state),
-    totalResults: paginationSelect.getTotalResults(state),
-    pagination: paginationSelect.getPagination(state),
-    pages: paginationSelect.countPages(state)
+    totalResults: state.questions.totalResults,
+    // pagination: paginationSelect.getPagination(state),
+    // pages: paginationSelect.countPages(state)
+
+    selected: listSelect.selected(state),
+    pagination: {
+      pageSize: paginationSelect.pageSize(state),
+      current:  paginationSelect.current(state)
+    },
+    filters: listSelect.filters(state),
+    sortBy: listSelect.sortBy(state)
   }
 }
 
@@ -122,7 +131,7 @@ function mapDispatchToProps(dispatch) {
     hideModal() {
       dispatch(modalActions.hideModal())
     },
-    openSearchModal(searchFilters) {
+    /*openSearchModal(searchFilters) {
       dispatch(modalActions.showModal(MODAL_SEARCH, {
         title: tex('search'),
         filters: searchFilters,
@@ -130,25 +139,60 @@ function mapDispatchToProps(dispatch) {
         clearFilters: () => dispatch(searchActions.clearFilters()),
         fadeModal: () => dispatch(modalActions.fadeModal())
       }))
-    },
+    },**/
     openAddModal() {
       dispatch(modalActions.showModal(MODAL_ADD_ITEM, {
         title: tex('add_question_from_new'),
         handleSelect: () => dispatch(modalActions.fadeModal())
       }))
     },
-    handlePagePrevious() {
-      dispatch(paginationActions.previousPage())
+    // handlePagePrevious() {
+    //   dispatch(paginationActions.previousPage())
+    // },
+    // handlePageNext() {
+    //   dispatch(paginationActions.nextPage())
+    // },
+    // handlePageChange(page) {
+    //   dispatch(paginationActions.changePage(page))
+    // },
+    // handlePageSizeUpdate(pageSize) {
+    //   dispatch(paginationActions.updatePageSize(pageSize))
+    // }
+
+    // search
+    addListFilter: (property, value) => {
+      dispatch(listActions.addFilter(property, value))
+      // grab updated workspace list
+      dispatch(actions.fetchQuestions())
     },
-    handlePageNext() {
-      dispatch(paginationActions.nextPage())
+    removeListFilter: (filter) => {
+      dispatch(listActions.removeFilter(filter))
+      // grab updated workspace list
+      dispatch(actions.fetchQuestions())
     },
-    handlePageChange(page) {
-      dispatch(paginationActions.changePage(page))
-    },
-    handlePageSizeUpdate(pageSize) {
+
+    // pagination
+    handlePageSizeUpdate: (pageSize) => {
       dispatch(paginationActions.updatePageSize(pageSize))
-    }
+      // grab updated workspace list
+      dispatch(actions.fetchQuestions())
+    },
+    handlePageChange: (page) => {
+      dispatch(paginationActions.changePage(page))
+      // grab updated workspace list
+      dispatch(actions.fetchQuestions())
+    },
+
+    // sorting
+    updateSort: (property) => {
+      dispatch(listActions.updateSort(property))
+      // grab updated workspace list
+      dispatch(actions.fetchQuestions())
+    },
+
+    // selection
+    toggleSelect: (id) => dispatch(listActions.toggleSelect(id)),
+    toggleSelectAll: (items) => dispatch(listActions.toggleSelectAll(items)),
   }
 }
 
