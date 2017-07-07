@@ -1,6 +1,3 @@
-import React from 'react'
-import {Provider} from 'react-redux'
-
 import {bootstrap} from '#/main/core/utilities/app/bootstrap'
 
 import {registerDefaultItemTypes} from './../items/item-types'
@@ -36,31 +33,31 @@ bootstrap(
     Bank,
 
     // app store configuration
-    {
+  {
       // app reducers
-        questions: questionsReducer,
+    questions: questionsReducer,
 
       // generic reducers
-      currentRequests: apiReducer,
-      modal: modalReducer,
-      list: makeListReducer(),
-      pagination: paginationReducer
-    },
+    currentRequests: apiReducer,
+    modal: modalReducer,
+    list: makeListReducer(),
+    pagination: paginationReducer
+  },
     (initialData) => {
-        return {
-            questions: {
-                data: initialData.initial.questions,
-                totalResults: initialData.initial.totalResults
-            },
-            pagination: {
-                pageSize: initialData.initial.pagination.pageSize,
-                current: initialData.initial.pagination.current
-            },
-            list: {
-                filters: [],
-                sortBy: 'content'
-            }
+      return {
+        questions: {
+          data: initialData.initial.questions,
+          totalResults: initialData.initial.totalResults
+        },
+        pagination: {
+          pageSize: initialData.initial.pagination.pageSize,
+          current: initialData.initial.pagination.current
+        },
+        list: {
+          filters: [],
+          sortBy: 'content'
         }
+      }
     }
 
 

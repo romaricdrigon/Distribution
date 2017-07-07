@@ -6,7 +6,6 @@ import {actions as questionActions} from './questions'
 import {actions as totalResultsActions} from './total-results'
 
 import {actions as listActions} from '#/main/core/layout/list/actions'
-import {actions as paginationActions} from '#/main/core/layout/pagination/actions'
 import {select as listSelect} from '#/main/core/layout/list/selectors'
 
 import {generateUrl} from '#/main/core/fos-js-router'
@@ -18,6 +17,8 @@ export const actions = {}
 
 actions.fetchQuestions = () => (dispatch, getState) => {
   const state = getState()
+  const page = 0
+  const pageSize = 20
 
   // build queryString
   let queryString = ''

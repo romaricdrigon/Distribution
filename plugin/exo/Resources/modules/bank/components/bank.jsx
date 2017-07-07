@@ -1,15 +1,12 @@
 import React from 'react'
 import {PropTypes as T} from 'prop-types'
 import {connect} from 'react-redux'
-import classes from 'classnames'
 
 import {DataList} from '#/main/core/layout/list/components/data-list.jsx'
-import {tex, transChoice, t} from '#/main/core/translation'
+import {tex, t} from '#/main/core/translation'
 import {makeModal} from '#/main/core/layout/modal'
 
 import { Page, PageHeader, PageContent} from '#/main/core/layout/page/components/page.jsx'
-import { PageActions, PageAction } from '#/main/core/layout/page/components/page-actions.jsx'
-import { Pagination } from '#/main/core/layout/pagination/components/pagination.jsx'
 
 import {select} from './../selectors'
 
@@ -21,9 +18,6 @@ import {actions} from '../actions/search'
 import {select as paginationSelect} from '#/main/core/layout/pagination/selectors'
 import {select as listSelect} from '#/main/core/layout/list/selectors'
 
-import VisibleQuestions from './../containers/visible-questions.jsx'
-
-import {MODAL_SEARCH} from './modal/search.jsx'
 import {MODAL_ADD_ITEM} from './../../quiz/editor/components/add-item-modal.jsx'
 
 // TODO : do not load add item modal from editor
@@ -53,24 +47,24 @@ const Bank = props =>
           totalResults={props.totalResults}
 
           definition={[
-            {name: 'content', type: 'string', label: t('name')},
+            {name: 'content', type: 'string', label: t('name')}
           ]}
 
           filters={{
-              current: props.filters,
-              addFilter: props.addListFilter,
-              removeFilter: props.removeListFilter
-            }}
+            current: props.filters,
+            addFilter: props.addListFilter,
+            removeFilter: props.removeListFilter
+          }}
 
           sorting={{
-              current: props.sortBy,
-              updateSort: props.updateSort
-            }}
+            current: props.sortBy,
+            updateSort: props.updateSort
+          }}
 
           pagination={Object.assign({}, props.pagination, {
-              handlePageChange: props.handlePageChange,
-              handlePageSizeUpdate: props.handlePageSizeUpdate
-            })}
+            handlePageChange: props.handlePageChange,
+            handlePageSizeUpdate: props.handlePageSizeUpdate
+          })}
 
       />
     </PageContent>
@@ -90,6 +84,16 @@ Bank.propTypes = {
     current: T.number.isRequired,
     pageSize: T.number.isRequired
   }),
+  questions: T.shapes({
+    name: T.string.isRequired
+  }),
+  filters: T.shapes({
+    current: T.string.isRequired
+  }),
+  addListFilter: T.func.isRequired,
+  removeListFilter: T.func.isRequired,
+  sortBy: T.string.isRequired,
+  updateSort: T.func.isRequired,
   createModal: T.func.isRequired,
   fadeModal: T.func.isRequired,
   hideModal: T.func.isRequired,
@@ -104,13 +108,8 @@ Bank.propTypes = {
 function mapStateToProps(state) {
   return {
     questions: state.questions.data,
-    /*searchFilters: select.filters(state),
-    activeFilters: select.countFilters(state),*/
-    // filters: listSelect.filters(state),
     modal: select.modal(state),
     totalResults: state.questions.totalResults,
-    // pagination: paginationSelect.getPagination(state),
-    // pages: paginationSelect.countPages(state)
 
     selected: listSelect.selected(state),
     pagination: {
@@ -131,33 +130,12 @@ function mapDispatchToProps(dispatch) {
     hideModal() {
       dispatch(modalActions.hideModal())
     },
-    /*openSearchModal(searchFilters) {
-      dispatch(modalActions.showModal(MODAL_SEARCH, {
-        title: tex('search'),
-        filters: searchFilters,
-        handleSearch: (searchFilters) => dispatch(searchActions.search(searchFilters)),
-        clearFilters: () => dispatch(searchActions.clearFilters()),
-        fadeModal: () => dispatch(modalActions.fadeModal())
-      }))
-    },**/
     openAddModal() {
       dispatch(modalActions.showModal(MODAL_ADD_ITEM, {
         title: tex('add_question_from_new'),
         handleSelect: () => dispatch(modalActions.fadeModal())
       }))
     },
-    // handlePagePrevious() {
-    //   dispatch(paginationActions.previousPage())
-    // },
-    // handlePageNext() {
-    //   dispatch(paginationActions.nextPage())
-    // },
-    // handlePageChange(page) {
-    //   dispatch(paginationActions.changePage(page))
-    // },
-    // handlePageSizeUpdate(pageSize) {
-    //   dispatch(paginationActions.updatePageSize(pageSize))
-    // }
 
     // search
     addListFilter: (property, value) => {
@@ -192,7 +170,7 @@ function mapDispatchToProps(dispatch) {
 
     // selection
     toggleSelect: (id) => dispatch(listActions.toggleSelect(id)),
-    toggleSelectAll: (items) => dispatch(listActions.toggleSelectAll(items)),
+    toggleSelectAll: (items) => dispatch(listActions.toggleSelectAll(items))
   }
 }
 

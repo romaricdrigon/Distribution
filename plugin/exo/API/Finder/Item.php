@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Claroline\ExoBundle\API\Finder;
+namespace UJM\ExoBundle\Entity\Item\Item;
 
 use Claroline\CoreBundle\API\FinderInterface;
 use Doctrine\ORM\QueryBuilder;
