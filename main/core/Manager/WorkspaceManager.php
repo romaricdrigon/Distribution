@@ -44,6 +44,7 @@ use Claroline\CoreBundle\Repository\WorkspaceRepository;
 use Doctrine\Common\Persistence\ObjectRepository;
 use JMS\DiExtraBundle\Annotation as DI;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\File;
@@ -1345,6 +1346,14 @@ class WorkspaceManager
         User $user,
         ResourceNode $rootNode
     ) {
+        $ids = [];
+        $resourceNodes = array_filter($resourceNodes, function($node) use ($ids) {
+            if (!in_array($node->getId(), $ids)) {
+                $ids[] = $node->getId();
+                return true;
+            }
+            return false;
+        });
         $this->om->flush();
         $this->om->startFlushSuite();
         $copies = [];
@@ -1352,7 +1361,7 @@ class WorkspaceManager
         $this->log('Duplicating '.count($resourceNodes).' children...');
         foreach ($resourceNodes as $resourceNode) {
             try {
-                $this->log('Duplicating '.$resourceNode->getName().' from type '.$resourceNode->getResourceType()->getName().' into '.$rootNode->getName());
+                $this->log('Duplicating '.$resourceNode->getName(). ' - ' .  $resourceNode->getId().' - from type '.$resourceNode->getResourceType()->getName().' into '.$rootNode->getName());
                 $copy = $this->resourceManager->copy(
                     $resourceNode,
                     $rootNode,
@@ -1407,6 +1416,8 @@ class WorkspaceManager
         ResourceNode $copy,
         array $workspaceRoles
     ) {
+        //return;
+        $this->log('Start duplicate');
         $rights = $resourceNode->getRights();
 
         foreach ($rights as $right) {
@@ -1418,17 +1429,25 @@ class WorkspaceManager
             $newRight->setCreatableResourceTypes(
                 $right->getCreatableResourceTypes()->toArray()
             );
+            if ($role->getWorkspace()) {            
+
+            var_dump($workspaceRoles[$key]->getWorkspace()->getGuid());
+            var_dump($role->getWorkspace()->getGuid());
             if (
                 isset($workspaceRoles[$key]) &&
-                !empty($workspaceRoles[$key])) {
+                !empty($workspaceRoles[$key]) &&
+                $workspaceRoles[$key]->getWorkspace()->getGuid() === $role->getWorkspace()->getGuid()
+                ) {
+
                 $newRight->setRole($workspaceRoles[$key]);
 
-                $this->log('Duplicating resource rights for '.$copy->getName().' - '.$role->getName().'...');
+                $this->log('Duplicating resource rights for '.$copy->getName(). ' - ' . $copy->getId() . ' - '.$role->getName().'...');
                 $this->om->persist($newRight);
             } else {
-                $newRight->setRole($role);
+                $this->log('Dont do anything');
+             //   $newRight->setRole($role);
                 //TODO MODEL persist here aswell later
-            }
+            }}
         }
         $this->om->flush();
     }

@@ -62,6 +62,11 @@ class Updater090300 extends Updater
         $toCheck = [];
         $i = 0;
         $this->connection->query('SET FOREIGN_KEY_CHECKS=0');
+        //$debug = $this->container->get('claroline.doctrine.debug');
+        //$debug->activateLog();
+        //$debug->setLogger($this->logger);
+        //$debug->setDebugLevel(1);
+        //$this->om->allowForceFlush(false);
 
         foreach ($models as $model) {
             $code = '[MOD]'.$model['name'];
@@ -72,6 +77,7 @@ class Updater090300 extends Updater
                 $this->log('Creating workspace from model '.$model['name'].': '.$i.'/'.count($models));
 
                 try {
+                    $this->om->startFlushSuite();
                     $modelUsers = $this->connection->query("SELECT * FROM claro_workspace_model_user u where u.workspacemodel_id = {$model['id']}")->fetchAll();
                     $modelGroups = $this->connection->query("SELECT * FROM claro_workspace_model_group g where g.workspacemodel_id = {$model['id']}")->fetchAll();
                     $modelResources = $this->connection->query("SELECT * FROM claro_workspace_model_resource r where r.model_id = {$model['id']}")->fetchAll();
@@ -114,11 +120,13 @@ class Updater090300 extends Updater
                     $this->workspaceManager->duplicateOrderedTools($baseWorkspace, $newWorkspace, $resourceInfos);
 
                     $newWorkspace->setIsModel(true);
+                    $this->om->endFlushSuite();
                     $managerRole = $roleManager->getManagerRole($newWorkspace);
                     $roleManager->associateRoleToMultipleSubjects($users, $managerRole);
                     $roleManager->associateRoleToMultipleSubjects($groups, $managerRole);
                     $this->om->persist($newWorkspace);
-                    $this->om->forceFlush();
+                    $this->log('Flushing...');
+                    $this->om->flush();
                     $this->om->clear();
                     $defaultUser = $this->container->get('claroline.manager.user_manager')->getDefaultUser();
                     $token = new UsernamePasswordToken($defaultUser, '123', 'main', $defaultUser->getRoles());
@@ -143,8 +151,11 @@ class Updater090300 extends Updater
                 }
             } else {
                 $this->log('Workspace already exists');
-            }
+           }
         }
+
+
+        $this->om->allowForceFlush(true);
 
         $this->connection->query('SET FOREIGN_KEY_CHECKS=1');
         $this->dropModelTable();
