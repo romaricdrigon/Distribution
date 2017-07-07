@@ -1272,6 +1272,7 @@ class WorkspaceManager
         $this->createWorkspace($newWorkspace);
         $token = $this->container->get('security.token_storage')->getToken();
         $user = null;
+        $resourceInfos = ['copies' => []];
 
         if ($token && $token->getUser() !== 'anon.') {
             $user = $workspace->getCreator() ?
@@ -1287,14 +1288,15 @@ class WorkspaceManager
         $this->om->startFlushSuite();
         $this->duplicateWorkspaceOptions($workspace, $newWorkspace);
         $this->duplicateWorkspaceRoles($workspace, $newWorkspace, $user);
-        $this->duplicateOrderedTools($workspace, $newWorkspace);
         $baseRoot = $this->duplicateRoot($workspace, $newWorkspace, $user);
         $this->duplicateResources(
           $this->resourceManager->getWorkspaceRoot($workspace)->getChildren()->toArray(),
           $this->getArrayRolesByWorkspace($newWorkspace),
           $user,
-          $baseRoot
+          $baseRoot,
+          $resourceInfos
         );
+        $this->duplicateOrderedTools($workspace, $newWorkspace, $resourceInfos);
         $this->om->endFlushSuite();
 
         return $newWorkspace;
@@ -1360,6 +1362,7 @@ class WorkspaceManager
                 );
                 $copy->getResourceNode()->setIndex($resourceNode->getIndex());
                 $this->om->persist($copy->getResourceNode());
+                $resourceInfos['copies'][] = ['original' => $resourceNode, 'copy' => $copy->getResourceNode()];                
                 /*** Copies rights ***/
                 $this->duplicateRights(
                     $resourceNode,
@@ -1434,7 +1437,7 @@ class WorkspaceManager
      * @param Workspace $source
      * @param Workspace $workspace
      */
-    public function duplicateOrderedTools(Workspace $source, Workspace $workspace)
+    public function duplicateOrderedTools(Workspace $source, Workspace $workspace, $resourceInfos = ['copies' => []])
     {
         $this->log('Duplicating tools...');
         $orderedTools = $source->getOrderedTools();
@@ -1475,7 +1478,7 @@ class WorkspaceManager
         $homeTabs = $this->container->get('claroline.manager.home_tab_manager')->getHomeTabByWorkspace($source);
         //get home tabs from source
 
-        $this->duplicateHomeTabs($source, $workspace, $homeTabs);
+        $this->duplicateHomeTabs($source, $workspace, $homeTabs, $resourceInfos);
     }
 
     /**
@@ -1486,7 +1489,9 @@ class WorkspaceManager
     private function duplicateHomeTabs(
         Workspace $source,
         Workspace $workspace,
-        array $homeTabs
+        array $homeTabs,
+        $resourceInfos,
+        &$tabInfos = []
     ) {
         $this->log('Duplicating home tabs...');
         $this->om->startFlushSuite();
@@ -1579,7 +1584,7 @@ class WorkspaceManager
                     $this->dispatcher->dispatch(
                         'copy_widget_config_'.$widget['widget']->getName(),
                         'CopyWidgetConfiguration',
-                        [$widget['original'], $widget['copy'], [], $tabsInfos]
+                        [$widget['original'], $widget['copy'], $resourceInfos, $tabsInfos]
                     );
                 } catch (NotPopulatedEventException $e) {
                     $widgetCongigErrors[] = [

@@ -101,15 +101,17 @@ class Updater090300 extends Updater
                     $this->workspaceManager->createWorkspace($newWorkspace);
                     $this->workspaceManager->duplicateWorkspaceOptions($baseWorkspace, $newWorkspace);
                     $this->workspaceManager->duplicateWorkspaceRoles($baseWorkspace, $newWorkspace, $user);
-                    $this->workspaceManager->duplicateOrderedTools($baseWorkspace, $newWorkspace);
                     $baseRoot = $this->workspaceManager->duplicateRoot($baseWorkspace, $newWorkspace, $user);
+                    $resourceInfos = ['copies' => []];
 
                     $this->workspaceManager->duplicateResources(
                       $nodes,
                       $this->workspaceManager->getArrayRolesByWorkspace($baseWorkspace),
                       $user,
-                      $baseRoot
+                      $baseRoot,
+                      $resourceInfos
                     );
+                    $this->workspaceManager->duplicateOrderedTools($baseWorkspace, $newWorkspace, $resourceInfos);
 
                     $newWorkspace->setIsModel(true);
                     $managerRole = $roleManager->getManagerRole($newWorkspace);

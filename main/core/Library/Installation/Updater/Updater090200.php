@@ -21,7 +21,7 @@ class Updater090200 extends Updater
 
     public function postUpdate()
     {
-        $this->syncUserRoles();
+        //$this->syncUserRoles();
     }
 
     /**
