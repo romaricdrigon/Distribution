@@ -53,7 +53,12 @@ class Updater090300 extends Updater
         $this->createDefaultModel();
         $roleManager = $this->container->get('claroline.manager.role_manager');
         $om = $this->container->get('claroline.persistence.object_manager');
-        $models = $this->connection->query('SELECT * FROM claro_workspace_model')->fetchAll();
+        try {
+            $models = $this->connection->query('SELECT * FROM claro_workspace_model')->fetchAll();
+        } catch (\Exception $e) {
+            $models = [];
+            $this->log('Table already removed');
+        }
         $toCheck = [];
         $i = 0;
         $this->connection->query('SET FOREIGN_KEY_CHECKS=0');
@@ -86,7 +91,7 @@ class Updater090300 extends Updater
                     $groups = $om->findByIds('Claroline\CoreBundle\Entity\User', $groupIds);
                     $nodes = $om->findByIds('Claroline\CoreBundle\Entity\Resource\ResourceNode', $nodeIds);
                     if (count($users) === 0) {
-                        $users[0] = $this->connection->get('claroline.manager.user_manager')->getDefaultUser();
+                        $users[0] = $this->container->get('claroline.manager.user_manager')->getDefaultUser();
                     }
                     $user = $users[0];
 
