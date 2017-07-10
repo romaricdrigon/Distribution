@@ -1,5 +1,4 @@
 import React from 'react'
-import {PropTypes as T, checkPropTypes} from 'prop-types'
 import {
   hashHistory,
   HashRouter as Router,
@@ -52,6 +51,13 @@ function getRouteComponent(route) {
  * @param {string} basePath
  */
 export function routedApp(routesConfig, basePath = '') {
+  return () => {
+    const RoutedApp = React.createElement(Router, {
+      history: hashHistory
+    }, React.createElement(Route, {
+      path: basePath
+    }, React.createElement(Switch, {}, routesConfig.map(route => getRouteComponent(route)))))
+
     return RoutedApp
   }
 }
