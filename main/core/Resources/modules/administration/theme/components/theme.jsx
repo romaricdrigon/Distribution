@@ -21,14 +21,15 @@ import {
   MoreAction
 } from '#/main/core/layout/page/index'
 
+import {HelpBlock} from '#/main/core/layout/form/components/help-block.jsx'
 import {FormSections} from '#/main/core/layout/form/components/form-sections.jsx'
-//import {FormGroup}    from '#/main/core/layout/form/components/form-group.jsx'
 import {TextGroup}    from '#/main/core/layout/form/components/text-group.jsx'
 import {FlagGroup}    from '#/main/core/layout/form/components/flag-group.jsx'
 
-import {FontSize} from './fields/font-size.jsx'
+import {Color}        from './fields/color.jsx'
+import {FontSize}     from './fields/font-size.jsx'
 import {FontSelector} from './fields/font-selector.jsx'
-import {Size} from './fields/size.jsx'
+import {Size}         from './fields/size.jsx'
 
 const GeneralSection = props =>
   <div className="panel panel-default">
@@ -83,27 +84,31 @@ GeneralSection.propTypes = {
 }
 
 const TypoSection = props =>
-  <fieldset>
-    <h3>Headings</h3>
-    <div className="sub-fields">
-      <FontSelector
-        controlId="headings-font"
-        value="Century Gothic"
-        onChange={(value) => true}
-      />
-      <FontSize controlId="headings-size" />
-    </div>
+  <div>
+    <fieldset>
+      <legend>{trans('font_headings', {}, 'theme')}</legend>
+      <div className="sub-fields">
+        <FontSelector
+          controlId="headings-font"
+          value="Century Gothic"
+          onChange={(value) => true}
+        />
+        <FontSize controlId="headings-size" />
+      </div>
+    </fieldset>
 
-    <h3>Content</h3>
-    <div className="sub-fields">
-      <FontSelector
-        controlId="content-font"
-        value="Arial"
-        onChange={(value) => true}
-      />
-      <FontSize controlId="content-size" />
-    </div>
-  </fieldset>
+    <fieldset>
+      <legend>{trans('font_content', {}, 'theme')}</legend>
+      <div className="sub-fields">
+        <FontSelector
+          controlId="content-font"
+          value="Arial"
+          onChange={(value) => true}
+        />
+        <FontSize controlId="content-size" />
+      </div>
+    </fieldset>
+  </div>
 
 TypoSection.propTypes = {
 
@@ -111,7 +116,64 @@ TypoSection.propTypes = {
 
 const ColorsSection = props =>
   <fieldset>
-    Colors section
+    <div className="form-group">
+      <label className="control-label">Primary & secondary</label>
+      <div className="row primary-colors">
+        <div className="col-md-6">
+          <Color color="#148AC7" label={{text: 'primary', color: '#FFFFFF'}} />
+          <HelpBlock help="Primary color is used to highlight important components." />
+        </div>
+
+        <div className="col-md-6">
+          <Color color="#C51162" label={{text: 'secondary', color: '#FCD9E9'}} />
+          <HelpBlock help="Secondary color is used to highlight user progression components." />
+        </div>
+      </div>
+    </div>
+
+    <div className="form-group">
+      <label className="control-label">Gray scale</label>
+      <div className="gray-scale">
+        <Color color="#000000" />
+        <Color color="#222222" />
+        <Color color="#333333" />
+        <Color color="#555555" />
+        <Color color="#777777" />
+        <Color color="#EEEEEE" />
+        <Color color="#FFFFFF" />
+      </div>
+    </div>
+
+    <div className="form-group">
+      <label className="control-label">States</label>
+
+      <div className="row semantic-colors">
+        <div className="col-md-3">
+          <Color color="#4F7302" label={{text : 'success', color: '#DAFD8D'}} />
+        </div>
+
+        <div className="col-md-3">
+          <Color color="#ED9E2F" label={{text : 'warning', color: '#FAE0BC'}} />
+        </div>
+
+        <div className="col-md-3">
+          <Color color="#BF0404" label={{text : 'danger', color: '#FFD5D5'}} />
+        </div>
+
+        <div className="col-md-3">
+          <Color color="#024F73" label={{text : 'info', color: '#C9EDFE'}} />
+        </div>
+      </div>
+
+      <a href=""><span className="fa fa-fw fa-retweet" /> Show reverse</a>
+    </div>
+
+    <div className="form-group layout-colors">
+      <label className="control-label">Layout</label>
+      <Color color="#262626" label={{text: 'header',  color: '#BFBFBF'}} style={{borderBottom: '3px solid #148ac7'}} />
+      <Color color="#FAFAFA" label={{text: 'content', color: '#333333'}} />
+      <Color color="#F3F3F3" label={{text: 'footer',  color: '#777777'}} />
+    </div>
   </fieldset>
 
 ColorsSection.propTypes = {
@@ -122,6 +184,7 @@ const SizingSection = props =>
   <fieldset>
     <Size
       controlId="app-width"
+      label={trans('app_max_width', {}, 'theme')}
       value={1200}
       onChange={(value) => true}
     />
@@ -167,13 +230,6 @@ const Theme = props =>
             primary={true}
             action="#"
           />
-
-          <PageAction
-            id="themes-rebuild"
-            title={trans('theme_rebuild', {}, 'theme')}
-            icon="fa fa-refresh"
-            action="#"
-          />
         </PageGroupActions>
 
         <PageGroupActions>
@@ -183,34 +239,27 @@ const Theme = props =>
             icon="fa fa-list"
             action="#/"
           />
+          <MoreAction id="theme-more">
+            <MenuItem header={true}>{t('more_actions')}</MenuItem>
 
-          <MoreAction id="resource-more">
-            <MenuItem
-              key="resource-group-type"
-              header={true}
-            >
-              {t('more_actions')}
+            <MenuItem href="#">
+              <span className="fa fa-fw fa-refresh" />
+              {trans('rebuild_theme', {}, 'theme')}
             </MenuItem>
-            <MenuItem
-              key="theme-copy"
-              eventKey="theme-copy"
-              href="#"
-            >
+
+            <MenuItem href="#">
               <span className="fa fa-fw fa-copy" />
               {trans('copy_theme', {}, 'theme')}
             </MenuItem>
-            <MenuItem
-              key="theme-export"
-              eventKey="theme-export"
-              href="#"
-            >
+
+            <MenuItem href="#">
               <span className="fa fa-fw fa-upload" />
-              {trans('export', {}, 'theme')}
+              {trans('export_theme', {}, 'theme')}
             </MenuItem>
-            <MenuItem key="theme-delete-divider" divider={true} />
+
+            <MenuItem divider={true} />
+
             <MenuItem
-              key="theme-delete"
-              eventKey="theme-delete"
               className="dropdown-link-danger"
               onClick={e => {
                 {/*e.stopPropagation()
@@ -222,7 +271,7 @@ const Theme = props =>
               }}
             >
               <span className="fa fa-fw fa-trash" />
-              {trans('delete', {}, 'theme')}
+              {trans('delete_theme', {}, 'theme')}
             </MenuItem>
           </MoreAction>
         </PageGroupActions>
@@ -236,24 +285,24 @@ const Theme = props =>
         level={2}
         sections={[
           {
-            id: 'theme-colors',
-            label: 'Color schemes',
-            icon: 'fa fa-fw fa-tint',
+            id      : 'theme-colors',
+            label   : 'Color schemes',
+            icon    : 'fa fa-fw fa-tint',
             children: <ColorsSection />
           }, {
-            id: 'theme-typo',
-            label: 'Typo & fonts',
-            icon: 'fa fa-fw fa-font',
+            id      : 'theme-typo',
+            label   : 'Typo & fonts',
+            icon    : 'fa fa-fw fa-font',
             children: <TypoSection />
           }, {
-            id: 'theme-sizing',
-            label: 'Sizing',
-            icon: 'fa fa-fw fa-arrows-h',
+            id      : 'theme-sizing',
+            label   : 'Sizing',
+            icon    : 'fa fa-fw fa-arrows-h',
             children: <SizingSection />
           }, {
-            id: 'theme-extra',
-            label: 'Extra features',
-            icon: 'fa fa-fw fa-ellipsis-h',
+            id      : 'theme-extra',
+            label   : 'Extra features',
+            icon    : 'fa fa-fw fa-ellipsis-h',
             children: <ExtraSection />
           }
         ]}
@@ -262,6 +311,7 @@ const Theme = props =>
   </Page>
 
 Theme.propTypes = {
+  // themes
   theme: T.shape({
     name: T.string.isRequired,
     current: T.bool.isRequired,
@@ -272,7 +322,13 @@ Theme.propTypes = {
     parameters: T.shape({
       extendDefault: T.bool
     }).isRequired
-  }).isRequired
+  }).isRequired,
+  copyTheme: T.func.isRequired,
+  rebuildThemes: T.func.isRequired,
+  removeThemes: T.func.isRequired,
+
+  // modals
+  showModal: T.func.isRequired
 }
 
 function mapStateToProps(state, onwProps) {
@@ -283,6 +339,12 @@ function mapStateToProps(state, onwProps) {
 
 function mapDispatchToProps(dispatch) {
   return {
+    // modals
+    showModal(modalType, modalProps) {
+      dispatch(modalActions.showModal(modalType, modalProps))
+    },
+
+    // themes
     copyTheme: () => {
       dispatch(actions.copyTheme())
     },
@@ -293,11 +355,6 @@ function mapDispatchToProps(dispatch) {
 
     removeThemes: (themes) => {
       dispatch(actions.removeThemes(themes))
-    },
-
-    // modals
-    showModal(modalType, modalProps) {
-      dispatch(modalActions.showModal(modalType, modalProps))
     }
   }
 }

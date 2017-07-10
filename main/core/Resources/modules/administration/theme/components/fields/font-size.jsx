@@ -10,23 +10,21 @@ const FontSize = props =>
     label={trans('font_size', {}, 'theme')}
   >
     <div>
-      <div className="btn-group">
-        <button type="button" className="btn btn-default">
-          small
-        </button>
+      <button type="button" className="btn btn-sm btn-default" style={{marginRight: '5px'}}>
+        small
+      </button>
 
-        <button type="button" className="btn btn-primary">
-          normal
-        </button>
+      <button type="button" className="btn btn-sm btn-primary" style={{marginRight: '5px'}}>
+        normal
+      </button>
 
-        <button type="button" className="btn btn-default">
-          large
-        </button>
+      <button type="button" className="btn btn-sm btn-default" style={{marginRight: '5px'}}>
+        large
+      </button>
 
-        <button type="button" className="btn btn-default">
-          x-large
-        </button>
-      </div>
+      <button type="button" className="btn btn-sm btn-default">
+        x-large
+      </button>
     </div>
   </FormGroup>
 

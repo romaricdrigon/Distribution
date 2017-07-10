@@ -111,11 +111,11 @@ class Themes extends Component {
               },
               {
                 icon: 'fa fa-fw fa-upload',
-                label: t('export'),
+                label: trans('export_theme', {}, 'theme'),
                 action: (row) => true,
               }, {
                 icon: 'fa fa-fw fa-trash-o',
-                label: t('delete'),
+                label:trans('remove_theme', {}, 'theme'),
                 action: (row) => this.removeThemes([row.id]),
                 isDangerous: true
               }
@@ -143,6 +143,7 @@ class Themes extends Component {
 }
 
 Themes.propTypes = {
+  // themes
   themes: T.arrayOf(T.object),
 
   createTheme: T.func.isRequired,
@@ -150,13 +151,14 @@ Themes.propTypes = {
   removeThemes: T.func.isRequired,
   rebuildThemes: T.func.isRequired,
 
+  // list
   sortBy: T.object.isRequired,
   updateSort: T.func.isRequired,
-
   selected: T.array.isRequired,
   toggleSelect: T.func.isRequired,
   toggleSelectAll: T.func.isRequired,
 
+  // modals
   showModal: T.func.isRequired
 }
 

@@ -11,7 +11,7 @@ import {FormGroup} from '#/main/core/layout/form/components/form-group.jsx'
 const Size = props =>
   <FormGroup
     controlId={props.controlId}
-    label={trans('size', {}, 'theme')}
+    label={props.label}
   >
     <div style={{maxWidth: '159px'}}>
       <InputGroup>
@@ -41,6 +41,7 @@ const Size = props =>
 
 Size.propTypes = {
   controlId: T.string.isRequired,
+  label: T.string.isRequired,
   value: T.number,
   onChange: T.func.isRequired
 }

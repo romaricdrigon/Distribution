@@ -16,8 +16,8 @@
 
 @brand-primary:         #148AC7; // bootstrap original : #337ab7
 @brand-success:         #4f7302;
-@brand-info:            #5bc0de;
-@brand-warning:         #f0ad4e;
+@brand-info:            #024F73;
+@brand-warning:         #ED9E2F;
 @brand-danger:          #bf0404;
 
 
@@ -500,13 +500,13 @@
 @state-success-bg:               #dafd8d;
 @state-success-border:           @state-success-bg;
 
-@state-info-text:                #024f73;
+@state-info-text:                @brand-info;
 @state-info-bg:                  #c9edfe;
 @state-info-border:              @state-info-bg;
 
-@state-warning-text:             #c09853;
-@state-warning-bg:               lighten(#FFEE00, 35%);
-@state-warning-border:           darken(spin(@state-warning-bg, -10), 3%);
+@state-warning-text:             @brand-warning;
+@state-warning-bg:               #FAE0BC; // fixme : not accessible
+@state-warning-border:           @state-warning-bg;
 
 @state-danger-text:              @brand-danger;
 @state-danger-bg:                #ffd5d5;
