@@ -1,8 +1,8 @@
 <?php
 
-namespace Claroline\CoreBundle\Tests\Library\Model;
+namespace Claroline\CoreBundle\Tests\Unit\Entity\Model;
 
-use Claroline\CoreBundle\Library\Model\UuidTrait;
+use Claroline\CoreBundle\Entity\Model\UuidTrait;
 
 class UuidTraitTest extends \PHPUnit_Framework_TestCase
 {

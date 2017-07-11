@@ -2,7 +2,7 @@
 
 namespace UJM\ExoBundle\Entity\Item;
 
-use Claroline\CoreBundle\Library\Model\UuidTrait;
+use Claroline\CoreBundle\Entity\Model\UuidTrait;
 use Doctrine\ORM\Mapping as ORM;
 use UJM\ExoBundle\Library\Model\OrderTrait;
 

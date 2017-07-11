@@ -27,7 +27,7 @@ class ThemeController
     /** @var SerializerProvider */
     private $serializer;
 
-    /** @var ThemeManager  */
+    /** @var ThemeManager */
     private $manager;
 
     /**

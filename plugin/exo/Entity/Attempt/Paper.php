@@ -3,7 +3,7 @@
 namespace UJM\ExoBundle\Entity\Attempt;
 
 use Claroline\CoreBundle\Entity\User;
-use Claroline\CoreBundle\Library\Model\UuidTrait;
+use Claroline\CoreBundle\Entity\Model\UuidTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use UJM\ExoBundle\Entity\Exercise;
