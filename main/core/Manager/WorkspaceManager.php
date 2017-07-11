@@ -1433,8 +1433,7 @@ class WorkspaceManager
             if ($role->getWorkspace()) {
                 if (
                 isset($workspaceRoles[$key]) &&
-                !empty($workspaceRoles[$key]) &&
-                $workspaceRoles[$key]->getWorkspace()->getGuid() === $role->getWorkspace()->getGuid()
+                !empty($workspaceRoles[$key])
                 ) {
                     $newRight->setRole($workspaceRoles[$key]);
 
