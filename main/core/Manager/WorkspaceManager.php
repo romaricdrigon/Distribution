@@ -1343,7 +1343,8 @@ class WorkspaceManager
         array $resourceNodes,
         array $workspaceRoles,
         User $user,
-        ResourceNode $rootNode
+        ResourceNode $rootNode,
+        &$resourceInfos
     ) {
         $ids = [];
         $resourceNodes = array_filter($resourceNodes, function ($node) use ($ids) {
@@ -1417,7 +1418,6 @@ class WorkspaceManager
         ResourceNode $copy,
         array $workspaceRoles
     ) {
-        //return;
         $this->log('Start duplicate');
         $rights = $resourceNode->getRights();
 
@@ -1507,7 +1507,7 @@ class WorkspaceManager
         Workspace $source,
         Workspace $workspace,
         array $homeTabs,
-        $resourceInfos,
+        &$resourceInfos,
         &$tabInfos = []
     ) {
         $this->log('Duplicating home tabs...');
