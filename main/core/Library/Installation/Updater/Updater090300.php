@@ -62,11 +62,6 @@ class Updater090300 extends Updater
         $toCheck = [];
         $i = 0;
         $this->connection->query('SET FOREIGN_KEY_CHECKS=0');
-        //$debug = $this->container->get('claroline.doctrine.debug');
-        //$debug->activateLog();
-        //$debug->setLogger($this->logger);
-        //$debug->setDebugLevel(1);
-        //$this->om->allowForceFlush(false);
 
         foreach ($models as $model) {
             $code = '[MOD]'.$model['name'];
@@ -151,9 +146,8 @@ class Updater090300 extends Updater
                 }
             } else {
                 $this->log('Workspace already exists');
-           }
+            }
         }
-
 
         $this->om->allowForceFlush(true);
 

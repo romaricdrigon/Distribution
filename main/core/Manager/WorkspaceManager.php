@@ -44,7 +44,6 @@ use Claroline\CoreBundle\Repository\WorkspaceRepository;
 use Doctrine\Common\Persistence\ObjectRepository;
 use JMS\DiExtraBundle\Annotation as DI;
 use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\File;
@@ -1347,11 +1346,13 @@ class WorkspaceManager
         ResourceNode $rootNode
     ) {
         $ids = [];
-        $resourceNodes = array_filter($resourceNodes, function($node) use ($ids) {
+        $resourceNodes = array_filter($resourceNodes, function ($node) use ($ids) {
             if (!in_array($node->getId(), $ids)) {
                 $ids[] = $node->getId();
+
                 return true;
             }
+
             return false;
         });
         $this->om->flush();
@@ -1361,7 +1362,7 @@ class WorkspaceManager
         $this->log('Duplicating '.count($resourceNodes).' children...');
         foreach ($resourceNodes as $resourceNode) {
             try {
-                $this->log('Duplicating '.$resourceNode->getName(). ' - ' .  $resourceNode->getId().' - from type '.$resourceNode->getResourceType()->getName().' into '.$rootNode->getName());
+                $this->log('Duplicating '.$resourceNode->getName().' - '.$resourceNode->getId().' - from type '.$resourceNode->getResourceType()->getName().' into '.$rootNode->getName());
                 $copy = $this->resourceManager->copy(
                     $resourceNode,
                     $rootNode,
@@ -1371,7 +1372,7 @@ class WorkspaceManager
                 );
                 $copy->getResourceNode()->setIndex($resourceNode->getIndex());
                 $this->om->persist($copy->getResourceNode());
-                $resourceInfos['copies'][] = ['original' => $resourceNode, 'copy' => $copy->getResourceNode()];                
+                $resourceInfos['copies'][] = ['original' => $resourceNode, 'copy' => $copy->getResourceNode()];
                 /*** Copies rights ***/
                 $this->duplicateRights(
                     $resourceNode,
@@ -1429,25 +1430,22 @@ class WorkspaceManager
             $newRight->setCreatableResourceTypes(
                 $right->getCreatableResourceTypes()->toArray()
             );
-            if ($role->getWorkspace()) {            
-
-            var_dump($workspaceRoles[$key]->getWorkspace()->getGuid());
-            var_dump($role->getWorkspace()->getGuid());
-            if (
+            if ($role->getWorkspace()) {
+                if (
                 isset($workspaceRoles[$key]) &&
                 !empty($workspaceRoles[$key]) &&
                 $workspaceRoles[$key]->getWorkspace()->getGuid() === $role->getWorkspace()->getGuid()
                 ) {
+                    $newRight->setRole($workspaceRoles[$key]);
 
-                $newRight->setRole($workspaceRoles[$key]);
-
-                $this->log('Duplicating resource rights for '.$copy->getName(). ' - ' . $copy->getId() . ' - '.$role->getName().'...');
-                $this->om->persist($newRight);
-            } else {
-                $this->log('Dont do anything');
+                    $this->log('Duplicating resource rights for '.$copy->getName().' - '.$copy->getId().' - '.$role->getName().'...');
+                    $this->om->persist($newRight);
+                } else {
+                    $this->log('Dont do anything');
              //   $newRight->setRole($role);
                 //TODO MODEL persist here aswell later
-            }}
+                }
+            }
         }
         $this->om->flush();
     }
