@@ -1,6 +1,6 @@
 <?php
 
-namespace Claroline\CoreBundle\Manager\Theme;
+namespace Claroline\CoreBundle\Manager;
 
 use Claroline\CoreBundle\Entity\Theme\Theme;
 use JMS\DiExtraBundle\Annotation as DI;
@@ -9,7 +9,7 @@ use Symfony\Component\HttpKernel\KernelInterface;
 /**
  * @DI\Service("claroline.manager.theme_builder")
  */
-class BuildManager
+class ThemeBuilderManager
 {
     const INSTALLED_THEME_PATH = 'Resources/themes';
 

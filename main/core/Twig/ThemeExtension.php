@@ -12,7 +12,7 @@
 namespace Claroline\CoreBundle\Twig;
 
 use Claroline\CoreBundle\Entity\Theme\Theme;
-use Claroline\CoreBundle\Manager\Theme\ThemeManager;
+use Claroline\CoreBundle\Manager\ThemeManager;
 use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Bridge\Twig\Extension\AssetExtension;
 

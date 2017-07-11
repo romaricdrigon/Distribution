@@ -1,6 +1,6 @@
 <?php
 
-namespace Claroline\CoreBundle\API\Serializer\Workspace;
+namespace Claroline\CoreBundle\API\Serializer;
 
 use Claroline\CoreBundle\Entity\Role;
 use Claroline\CoreBundle\Entity\User;

@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Claroline\CoreBundle\Manager\Theme;
+namespace Claroline\CoreBundle\Manager;
 
 use Claroline\CoreBundle\Entity\Theme\Theme;
 use Claroline\CoreBundle\Library\Configuration\PlatformConfigurationHandler;

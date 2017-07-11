@@ -11,8 +11,8 @@
 
 namespace Claroline\CoreBundle\Command\Theme;
 
-use Claroline\CoreBundle\Manager\Theme\BuildManager;
-use Claroline\CoreBundle\Manager\Theme\ThemeManager;
+use Claroline\CoreBundle\Manager\ThemeBuilderManager;
+use Claroline\CoreBundle\Manager\ThemeManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -31,7 +31,7 @@ class BuildCommand extends ContainerAwareCommand
         /** @var ThemeManager $themeManager */
         $themeManager = $this->getContainer()->get('claroline.manager.theme_manager');
 
-        /** @var BuildManager $builder */
+        /** @var ThemeBuilderManager $builder */
         $builder = $this->getContainer()->get('claroline.manager.theme_builder');
 
         $output->writeln('Rebuilding themes...');
