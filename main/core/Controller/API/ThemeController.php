@@ -13,7 +13,7 @@ namespace Claroline\CoreBundle\Controller\API;
 
 use Claroline\CoreBundle\API\SerializerProvider;
 use Claroline\CoreBundle\Entity\Theme\Theme;
-use Claroline\CoreBundle\Manager\ThemeManager;
+use Claroline\CoreBundle\Manager\Theme\ThemeManager;
 use JMS\DiExtraBundle\Annotation as DI;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Symfony\Component\HttpFoundation\JsonResponse;

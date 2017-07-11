@@ -12,8 +12,9 @@
 namespace Claroline\CoreBundle\Entity\Theme;
 
 use Claroline\CoreBundle\Entity\Plugin;
+use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Library\Model\UuidTrait;
-use Claroline\CoreBundle\Manager\ThemeManager;
+use Claroline\CoreBundle\Manager\Theme\ThemeManager;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -71,6 +72,16 @@ class Theme
      * @var Plugin
      */
     private $plugin;
+
+    /**
+     * The user who owns the theme, if any.
+     *
+     * @ORM\ManyToOne(targetEntity="Claroline\CoreBundle\Entity\User")
+     * @ORM\JoinColumn(onDelete="CASCADE")
+     *
+     * @var User
+     */
+    private $user;
 
     /**
      * If true, the default theme will be included in the templates too.
@@ -184,6 +195,26 @@ class Theme
     }
 
     /**
+     * Get user.
+     *
+     * @return User
+     */
+    public function getUser()
+    {
+        return $this->user;
+    }
+
+    /**
+     * Set user.
+     *
+     * @param User $user
+     */
+    public function setUser(User $user)
+    {
+        $this->user = $user;
+    }
+
+    /**
      * @return bool
      */
     public function isExtendingDefault()
@@ -204,9 +235,7 @@ class Theme
      */
     public function isCustom()
     {
-        // TODO: use a dedicated db field to store that information
-
-        return !in_array($this->name, ThemeManager::listStockThemesName());
+        return empty($this->plugin);
     }
 
     /**
