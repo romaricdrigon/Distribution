@@ -361,6 +361,34 @@ class ObjectiveManager
         return $this->progressManager->recomputeUserProgress($user);
     }
 
+    /**
+     * Retrieves an objective object by its id.
+     *
+     * @param int $objectiveId
+     *
+     * @return Objecttive|null
+     */
+    public function getObjectiveById($objectiveId)
+    {
+        return $this->objectiveRepo->findOneById($objectiveId);
+    }
+
+    public function getCompetencyFinalChildren(array $competency, &$list, $requiredLevel = 0, $nbLevels = 1)
+    {
+        if (isset($competency['__children']) && count($competency['__children']) > 0) {
+            foreach ($competency['__children'] as $child) {
+                self::getCompetencyFinalChildren($child, $list, $requiredLevel, $nbLevels);
+            }
+        } else {
+            $competency['requiredLevel'] = $requiredLevel;
+            $competency['nbLevels'] = $nbLevels;
+
+            if (!isset($list[$competency['id']]) || $list[$competency['id']]['requiredLevel'] < $requiredLevel) {
+                $list[$competency['id']] = $competency;
+            }
+        }
+    }
+
     private function doLoadObjectiveCompetencies(Objective $objective, $loadAbilities)
     {
         $links = $objective->getObjectiveCompetencies();
@@ -373,6 +401,7 @@ class ObjectiveManager
             $competency['framework'] = $link->getFramework()->getName();
             $competency['level'] = $link->getLevel()->getName();
             $competency['levelValue'] = $link->getLevel()->getValue();
+            $competency['nbLevels'] = count($link->getLevel()->getScale()->getLevels());
             $competencies[] = $competency;
         }
 

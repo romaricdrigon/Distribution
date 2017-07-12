@@ -62,6 +62,7 @@ class ProgressManager
     public function handleEvaluation(ResourceUserEvaluation $evaluation)
     {
         $this->clearCache();
+        $this->om->startFlushSuite();
 
         $resource = $evaluation->getResourceNode();
         $abilities = $this->abilityRepo->findByResource($resource);
@@ -83,7 +84,7 @@ class ProgressManager
             }
         }
 
-        $this->om->flush();
+        $this->om->endFlushSuite();
     }
 
     /**
@@ -161,7 +162,7 @@ class ProgressManager
         $this->cachedUserProgress = null;
     }
 
-    private function getAbilityProgress(Ability $ability, User $user)
+    public function getAbilityProgress(Ability $ability, User $user)
     {
         $progress = $this->abilityProgressRepo->findOneBy([
             'ability' => $ability,
@@ -222,7 +223,7 @@ class ProgressManager
         }
     }
 
-    private function getCompetencyProgress(Competency $competency, User $user)
+    public function getCompetencyProgress(Competency $competency, User $user)
     {
         if (!isset($this->cachedCompetencyProgresses[$competency->getId()])) {
             $progress = $this->competencyProgressRepo->findOneBy([
@@ -238,6 +239,7 @@ class ProgressManager
             } else {
                 $this->om->persist($progress->makeLog());
             }
+            $this->om->flush();
 
             $this->cachedCompetencyProgresses[$competency->getId()] = $progress;
         }

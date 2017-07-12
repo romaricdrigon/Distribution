@@ -9,31 +9,37 @@
  * file that was distributed with this source code.
  */
 
-namespace Claroline\CoreBundle\Manager;
+namespace Claroline\CoreBundle\Manager\Resource;
 
 use Claroline\CoreBundle\Entity\Resource\ResourceEvaluation;
 use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Claroline\CoreBundle\Entity\Resource\ResourceUserEvaluation;
 use Claroline\CoreBundle\Entity\User;
+use Claroline\CoreBundle\Event\ResourceEvaluationEvent;
 use Claroline\CoreBundle\Persistence\ObjectManager;
 use JMS\DiExtraBundle\Annotation as DI;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @DI\Service("claroline.manager.resource_evaluation_manager")
  */
 class ResourceEvaluationManager
 {
+    private $eventDispatcher;
     private $om;
 
     /**
      * @DI\InjectParams({
-     *     "om" = @DI\Inject("claroline.persistence.object_manager")
+     *     "eventDispatcher" = @DI\Inject("event_dispatcher"),
+     *     "om"              = @DI\Inject("claroline.persistence.object_manager")
      * })
      *
-     * @param ObjectManager $om
+     * @param EventDispatcherInterface $eventDispatcher
+     * @param ObjectManager            $om
      */
-    public function __construct(ObjectManager $om)
+    public function __construct(EventDispatcherInterface $eventDispatcher, ObjectManager $om)
     {
+        $this->eventDispatcher = $eventDispatcher;
         $this->om = $om;
 
         $this->resourceUserEvaluationRepo = $om->getRepository('ClarolineCoreBundle:Resource\ResourceUserEvaluation');
@@ -102,6 +108,7 @@ class ResourceEvaluationManager
         $evaluation->setData($data);
         $this->persistResourceEvaluation($evaluation);
         $this->updateResourceUserEvaluation($evaluation);
+        $this->eventDispatcher->dispatch('resource_evaluation', new ResourceEvaluationEvent($resourceUserEvaluation));
         $this->om->endFlushSuite();
 
         return $evaluation;

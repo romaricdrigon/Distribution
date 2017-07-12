@@ -18,11 +18,7 @@ plugin:
            is_configurable: false
 
     resource_actions:
-        - name: manage-competencies
+        - name: manage_competencies
           is_form: false
-          is_async: false
           is_custom: true
-          group: activity
-          class: activity-class
-          resource_type: activity
           value: edit

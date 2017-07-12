@@ -67,11 +67,11 @@ class PluginListener
     }
 
     /**
-     * @DI\Observe("manage-competencies_ujm_exercise")
+     * @DI\Observe("resource_action_manage_competencies")
      *
      * @param CustomActionResourceEvent $event
      */
-    public function onOpenExerciseCompetencies(CustomActionResourceEvent $event)
+    public function onOpenResourceCompetencies(CustomActionResourceEvent $event)
     {
         $this->forward('HeVinciCompetencyBundle:Resource:competencies', $event, true);
     }
