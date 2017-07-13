@@ -3,6 +3,7 @@
 namespace Claroline\CoreBundle\API\Serializer;
 
 use Claroline\CoreBundle\Entity\Theme\Theme;
+use Claroline\CoreBundle\Manager\ThemeManager;
 use JMS\DiExtraBundle\Annotation as DI;
 
 /**
@@ -11,6 +12,23 @@ use JMS\DiExtraBundle\Annotation as DI;
  */
 class ThemeSerializer
 {
+    /** @var ThemeManager */
+    private $themeManager;
+
+    /**
+     * ThemeSerializer constructor.
+     *
+     * @DI\InjectParams({
+     *     "themeManager" = @DI\Inject("claroline.manager.theme_manager")
+     * })
+     *
+     * @param ThemeManager $themeManager
+     */
+    public function __construct(ThemeManager $themeManager)
+    {
+        $this->themeManager = $themeManager;
+    }
+
     /**
      * Serializes a Theme entity for the JSON api.
      *
@@ -23,12 +41,12 @@ class ThemeSerializer
         return [
             'id' => $theme->getUuid(),
             'name' => $theme->getName(),
-            'current' => false,
+            'current' => $this->themeManager->isCurrentTheme($theme),
             'meta' => [
                 'description' => $theme->getDescription(),
                 'enabled' => $theme->isEnabled(),
+                'custom' => $theme->isCustom(),
                 'plugin' => $theme->getPlugin() ? $theme->getPlugin()->getShortName() : null,
-                'user' => null, // todo : add field
             ],
             'parameters' => [
                 'extendDefault' => $theme->isExtendingDefault(),

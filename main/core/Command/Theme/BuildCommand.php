@@ -15,6 +15,7 @@ use Claroline\CoreBundle\Manager\ThemeBuilderManager;
 use Claroline\CoreBundle\Manager\ThemeManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class BuildCommand extends ContainerAwareCommand
@@ -23,20 +24,46 @@ class BuildCommand extends ContainerAwareCommand
     {
         $this
             ->setName('claroline:theme:build')
-            ->setDescription('Build themes which are installed in the platform');
+            ->setDescription('Build themes which are installed in the platform')
+            ->addOption('theme',    't',  InputOption::VALUE_OPTIONAL, 'Theme name. Rebuild only this theme.')
+            ->addOption('no-cache', 'nc', InputOption::VALUE_NONE,     'Rebuild themes without using cache.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         /** @var ThemeManager $themeManager */
         $themeManager = $this->getContainer()->get('claroline.manager.theme_manager');
-
         /** @var ThemeBuilderManager $builder */
         $builder = $this->getContainer()->get('claroline.manager.theme_builder');
 
         $output->writeln('Rebuilding themes...');
 
-        $builder->rebuild($themeManager->all());
+        // Get themes to build (either a single theme or all themes)
+        $themeName = $input->getOption('theme');
+        if (!empty($themeName)) {
+            $theme = $themeManager->getThemeByName($themeName);
+            if (!empty($theme)) {
+                $themesToRebuild = [$themeManager->getThemeByName($themeName)];
+            } else {
+                $output->writeln('Can not find theme "'.$themeName.'".');
+            }
+        } else {
+            $themesToRebuild = $themeManager->all();
+        }
+
+        if (!empty($themesToRebuild)) {
+            $logs = $builder->rebuild(
+                $themesToRebuild,
+                !$input->getOption('no-cache')
+            );
+
+            foreach ($logs as $themeName => $themeLogs) {
+                $output->writeln('Theme: '.$themeName);
+                foreach ($themeLogs as $log) {
+                    $output->writeln($log);
+                }
+            }
+        }
 
         $output->writeln('Done !');
     }

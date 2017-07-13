@@ -132,19 +132,6 @@ const ColorsSection = props =>
     </div>
 
     <div className="form-group">
-      <label className="control-label">Gray scale</label>
-      <div className="gray-scale">
-        <Color color="#000000" />
-        <Color color="#222222" />
-        <Color color="#333333" />
-        <Color color="#555555" />
-        <Color color="#777777" />
-        <Color color="#EEEEEE" />
-        <Color color="#FFFFFF" />
-      </div>
-    </div>
-
-    <div className="form-group">
       <label className="control-label">States</label>
 
       <div className="row semantic-colors">
@@ -165,7 +152,22 @@ const ColorsSection = props =>
         </div>
       </div>
 
-      <a href=""><span className="fa fa-fw fa-retweet" /> Show reverse</a>
+      <a href="">
+        <span className="fa fa-fw fa-retweet" /> Show reverse
+      </a>
+    </div>
+
+    <div className="form-group">
+      <label className="control-label">Gray scale</label>
+      <div className="gray-scale">
+        <Color color="#000000" />
+        <Color color="#222222" />
+        <Color color="#333333" />
+        <Color color="#555555" />
+        <Color color="#777777" />
+        <Color color="#EEEEEE" />
+        <Color color="#FFFFFF" />
+      </div>
     </div>
 
     <div className="form-group layout-colors">

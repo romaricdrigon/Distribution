@@ -24,23 +24,14 @@ use Symfony\Component\HttpFoundation\File\File;
  */
 class ThemeManager
 {
-    /**
-     * @var array
-     * @deprecated
-     */
-    private static $stockThemes = [
-        'Claroline',
-        'Claroline Black',
-        'Claroline Mint',
-        'Claroline Ruby',
-    ];
-
     /** @var ObjectManager */
     private $om;
     /** @var PlatformConfigurationHandler */
     private $config;
     /** @var string */
     private $themeDir;
+    /** @var Theme */
+    private $currentTheme;
 
     /**
      * ThemeManager constructor.
@@ -86,6 +77,19 @@ class ThemeManager
      */
     public function create(array $data)
     {
+        /*$theme = new Theme();
+        $theme->setName($name);
+        $theme->setExtendingDefault($extendDefault);
+        $themeDir = "{$this->themeDir}/{$theme->getNormalizedName()}";
+
+        $fs = new Filesystem();
+        $fs->mkdir($themeDir);
+
+        $file->move($themeDir, 'bootstrap.css');
+
+        $this->om->persist($theme);
+        $this->om->flush();*/
+
         return $this->update(new Theme(), $data);
     }
 
@@ -183,51 +187,46 @@ class ThemeManager
     }
 
     /**
-     * Returns the current
-     * platform theme.
+     * Checks whether a theme is the current one.
+     *
+     * @param Theme $theme
+     *
+     * @return bool
+     */
+    public function isCurrentTheme(Theme $theme)
+    {
+        return $theme->getNormalizedName() === $this->config->getParameter('theme');
+    }
+
+    /**
+     * Returns the current platform theme.
+     *
+     * NB. This method is called many times
+     *     in the platform execution (find theme assets, locate custom templates, etc).
+     *     So we cache the current theme in the service to avoid many DB calls.
      *
      * @return Theme
      */
     public function getCurrentTheme()
     {
-        $name = ucwords(str_replace('-', ' ', $this->config->getParameter('theme')));
+        if (empty($this->currentTheme)) {
+            $this->currentTheme = $this->getThemeByNormalizedName(
+                $this->config->getParameter('theme')
+            );
+        }
 
-        return $this->om
-            ->getRepository('ClarolineCoreBundle:Theme\Theme')
-            ->findOneBy([
-                'name' => $name,
-            ]);
+        return $this->currentTheme;
     }
 
     /**
-     * Creates a custom theme based on a css file.
+     * Finds a theme by its name.
      *
      * @param string $name
-     * @param File   $file
-     * @param bool   $extendDefault
      *
-     * @deprecated
+     * @return Theme
      */
-    public function createCustomTheme($name, File $file, $extendDefault = false)
+    public function getThemeByName($name)
     {
-        $theme = new Theme();
-        $theme->setName($name);
-        $theme->setExtendingDefault($extendDefault);
-        $themeDir = "{$this->themeDir}/{$theme->getNormalizedName()}";
-
-        $fs = new Filesystem();
-        $fs->mkdir($themeDir);
-
-        $file->move($themeDir, 'bootstrap.css');
-
-        $this->om->persist($theme);
-        $this->om->flush();
-    }
-
-    public function getThemeByNormalizedName($normalizedName)
-    {
-        $name = ucwords(str_replace('-', ' ', $normalizedName));
-
         return $this->om
             ->getRepository('ClarolineCoreBundle:Theme\Theme')
             ->findOneBy([
@@ -236,12 +235,16 @@ class ThemeManager
     }
 
     /**
-     * @return array
+     * Finds a theme by its normalized name.
      *
-     * @deprecated
+     * @param string $normalizedName
+     *
+     * @return Theme
      */
-    public static function listStockThemesName()
+    public function getThemeByNormalizedName($normalizedName)
     {
-        return self::$stockThemes;
+        return $this->getThemeByName(
+            ucwords(str_replace('-', ' ', $normalizedName))
+        );
     }
 }

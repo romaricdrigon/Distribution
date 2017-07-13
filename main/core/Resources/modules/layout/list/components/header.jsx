@@ -24,8 +24,8 @@ const ColumnsButton = props =>
           className={classes('fa fa-fw fa-columns')}
         />
       }
-      bsStyle=""
-      className="btn btn-link-default"
+      bsStyle="link"
+      className="btn-link-default"
       noCaret={true}
       pullRight={true}
       onSelect={(e) => e.stopPropagation()}
@@ -69,8 +69,8 @@ const ListDisplayButton = props => {
         title={currentFormat[2] ?
           <span className={currentFormat[2]} /> : currentFormat[1]
         }
-        bsStyle=""
-        className="btn btn-link-default"
+        bsStyle="link"
+        className="btn-link-default"
         noCaret={true}
         pullRight={true}
       >

@@ -122,8 +122,13 @@
     &.disabled {
 
     }
-    &:hover {
-        color: #333; // body color
+    &:hover,
+    &:focus,
+    &:active,
+    &.active,
+    &.open > .dropdown-toggle {
+        color: #333333; // body color
+        background: #e6e6e6; // todo use a var (same value as btn-default for now)
     }
 }
 

@@ -70,7 +70,8 @@ const DataTableRow = props =>
           <DropdownButton
             id={`data-row-${props.index}-actions`}
             title={<span className="fa fa-fw fa-ellipsis-v" />}
-            bsStyle="link-default"
+            className="btn-link-default"
+            bsStyle="link"
             noCaret={true}
             pullRight={true}
           >
